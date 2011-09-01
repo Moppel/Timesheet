@@ -1,0 +1,139 @@
+package com.uwusoft.timesheet;
+
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.util.Date;
+
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
+import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.part.ViewPart;
+
+import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.PropertiesUtil;
+
+public class View extends ViewPart implements ISelectionChangedListener {
+	public static final String ID = "com.uwusoft.timesheet.view";
+
+	private StorageService storageService;
+	private PropertiesUtil props = new PropertiesUtil("Timesheet");
+	private TableViewer viewer;
+	private static String selectedTask = "";
+	
+
+	/**
+	 * The content provider class is responsible for providing objects to the
+	 * view. It can wrap existing objects in adapters or simply return objects
+	 * as-is. These objects may be sensitive to the current input of the view,
+	 * or ignore it and always show the same content (like Task List, for
+	 * example).
+	 */
+	class ViewContentProvider implements IStructuredContentProvider {
+		public void inputChanged(Viewer v, Object oldInput, Object newInput) {
+		}
+
+		public void dispose() {
+		}
+
+		public Object[] getElements(Object parent) {
+			if (parent instanceof Object[]) {
+				return (Object[]) parent;
+			}
+			return new Object[0];
+		}
+	}
+
+	class ViewLabelProvider extends LabelProvider implements
+			ITableLabelProvider {
+		public String getColumnText(Object obj, int index) {
+			return getText(obj);
+		}
+
+		public Image getColumnImage(Object obj, int index) {
+			return getImage(obj);
+		}
+
+		public Image getImage(Object obj) {
+			return PlatformUI.getWorkbench().getSharedImages()
+					.getImage(ISharedImages.IMG_OBJ_ELEMENT);
+		}
+	}
+
+	/**
+	 * This is a callback that will allow us to create the viewer and initialize
+	 * it.
+	 */
+	public void createPartControl(Composite parent) {
+		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL
+				| SWT.V_SCROLL);
+		viewer.setContentProvider(new ArrayContentProvider());
+		viewer.setLabelProvider(new ViewLabelProvider());
+		
+		IConfigurationElement[] config = Platform.getExtensionRegistry()
+				.getConfigurationElementsFor(StorageService.SERVICE_ID);
+		try {
+			for (IConfigurationElement e : config) {
+				System.out.println("Evaluating extension "
+						+ e.getContributor().getName());
+				final Object o = e.createExecutableExtension("class");
+				if (o instanceof StorageService) {
+					storageService = (StorageService) o;
+					// Provide the input to the ContentProvider
+					viewer.setInput(storageService.getTasks().get("Primavera")); // TODO
+				}
+			}
+		} catch (CoreException ex) {
+			ex.printStackTrace();
+		}
+		viewer.addSelectionChangedListener(this);
+		Button setButton = new Button(parent, SWT.PUSH);
+		setButton.setText("Set");
+		setButton.addSelectionListener(new SelectionListener() {
+
+		      public void widgetSelected(SelectionEvent event) {
+	                Date now = new Date();
+	                storageService.storeTimeEntry(now, props.getProperty("task.last"));
+	                try {
+						props.storeProperty("task.last", selectedTask);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+		      }
+
+		      public void widgetDefaultSelected(SelectionEvent event) {
+		      }
+		});
+	}
+
+	/**
+	 * Passing the focus request to the viewer's control.
+	 */
+	public void setFocus() {
+		viewer.getControl().setFocus();
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		if (event.getSelection() instanceof IStructuredSelection) {
+			selectedTask = (String) ((IStructuredSelection) event.getSelection()).getFirstElement();
+		}
+	}
+}

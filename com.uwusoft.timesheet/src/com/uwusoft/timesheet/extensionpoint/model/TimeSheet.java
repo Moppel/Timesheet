@@ -1,12 +1,4 @@
-package com.uwusoft.timesheet;
-
-import com.google.gdata.util.ServiceException;
-import com.google.gdata.client.calendar.CalendarService;
-import com.google.gdata.data.calendar.CalendarEntry;
-import com.google.gdata.data.calendar.CalendarFeed;
-import com.google.gdata.data.calendar.CalendarEventFeed;
-import com.google.gdata.data.calendar.CalendarEventEntry;
-import com.google.gdata.data.extensions.When;
+package com.uwusoft.timesheet.extensionpoint.model;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -20,7 +12,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Properties;
-import java.net.URL;
+
+import com.uwusoft.timesheet.extensionpoint.StorageService;
 
 /**
  * the time management app
@@ -87,14 +80,13 @@ public class TimeSheet implements ActionListener {
             props = new File("TimeSheet.properties");
             if (!props.exists()) props.createNewFile();
 
-            //transferProps.load(TimeSheet.class.getResourceAsStream("TimeSheet.properties"));
             loadProperties();
 
             String shutdownTime = formatter.format(formatter.parse(transferProps.getProperty("system.shutdown")));
 
             storeProperty("system.start", startTime);
 
-            /*storageService = new StorageServiceImpl();
+            //storageService = new StorageServiceImpl(transferProps.getProperty("spreadsheet.key")); // todo get properties of special storage service
 
             Calendar calDay = Calendar.getInstance();
             Calendar calWeek = new GregorianCalendar();
@@ -118,39 +110,20 @@ public class TimeSheet implements ActionListener {
             calWeek.setTime(startDate);
             int startDay = calDay.get(Calendar.DAY_OF_YEAR);
             int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-            if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
+            if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebootet
                 if (startWeek != shutdownWeek) storageService.storeLastWeekTotal(); //  store Week and Overtime
                 storageService.storeTimeEntry(startDate, StorageService.CHECK_IN);
                 storeProperty("task.last", transferProps.getProperty("task.default"));
             }
             displayMessage("System Shutdown/Start", shutdownTime + System.getProperty("line.separator") + startTime);
 
-            URL feedUrl = new URL("https://www.google.com/calendar/feeds/default/allcalendars/full");
-            CalendarService myService = new CalendarService("Timesheet");
-            myService.setUserCredentials("Uta.Wunderlich@sii.com", "gunnar0351");
-            /*CalendarFeed resultFeed = myService.getFeed(feedUrl, CalendarFeed.class);
-            System.out.println("Your calendars:");
-            System.out.println();
-            for (int i = 0; i < resultFeed.getEntries().size(); i++) {
-                CalendarEntry entry = resultFeed.getEntries().get(i);
-                System.out.println("\t" + entry.getTitle().getPlainText());
-            }
-            CalendarEventFeed resultEventFeed = myService.getFeed(feedUrl, CalendarEventFeed.class);
-            for (CalendarEventEntry entry : resultEventFeed.getEntries()) {
-                System.out.println(entry.getTitle().getPlainText());
-                for (When when : entry.getTimes())
-                    System.out.println(when.getStartTime());
-            }*/
-
             timeSheet.addShutdownHook();
         }
         catch (java.io.IOException e) {
             helpAndTerminate(e.getMessage());
-        /*} catch (ServiceException e) {
-            helpAndTerminate(e.getMessage());*/
         } catch (ParseException e) {
             helpAndTerminate(e.getMessage());
-        }
+		}
     }
 
     private static void loadProperties() throws IOException {
@@ -199,10 +172,6 @@ public class TimeSheet implements ActionListener {
                 storageService.submitEntries();
             }
         } catch (IOException e1) {
-            helpAndTerminate(e1.getMessage());
-        } catch (ServiceException e1) {
-            helpAndTerminate(e1.getMessage());
-        } catch (ParseException e1) {
             helpAndTerminate(e1.getMessage());
         }
     }

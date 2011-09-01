@@ -4,7 +4,7 @@
    <extension
          point="com.uwusoft.timesheet.storageservice">
       <client
-            class="com.uwusoft.timesheet.GoogleStorageService">
+            class="com.uwusoft.timesheet.googlestorage.GoogleStorageService">
       </client>
    </extension>
 
