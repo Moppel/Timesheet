@@ -23,9 +23,13 @@ public class PropertiesUtil {
 
 		transferProps = new Properties();
 
-		props = new File(fileName);
+		String dir = System.getProperty("user.home") + "/.timesheet/";
+		File userDir = new File(dir);
+		
+		props = new File(dir + fileName);
 		try {
 			if (!props.exists()) {
+				userDir.mkdir();
 				transferProps.load(this.getClass().getResourceAsStream(fileName));
 				transferProps.store(new FileOutputStream(props), comment);
 			} else
