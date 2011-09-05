@@ -1,12 +1,8 @@
 package com.uwusoft.timesheet;
 
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.Date;
 
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -27,6 +23,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.ExtensionUtil;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class View extends ViewPart implements ISelectionChangedListener {
@@ -86,23 +83,13 @@ public class View extends ViewPart implements ISelectionChangedListener {
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		
-		IConfigurationElement[] config = Platform.getExtensionRegistry()
-				.getConfigurationElementsFor(StorageService.SERVICE_ID);
-		try {
-			for (IConfigurationElement e : config) {
-				System.out.println("Evaluating extension "
-						+ e.getContributor().getName());
-				final Object o = e.createExecutableExtension("class");
-				if (o instanceof StorageService) {
-					storageService = (StorageService) o;
-					// Provide the input to the ContentProvider
-					viewer.setInput(storageService.getTasks().get("Primavera")); // TODO
-				}
-			}
-		} catch (CoreException ex) {
-			ex.printStackTrace();
-		}
+		storageService = new ExtensionUtil<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
+		if (storageService == null) return;
+		
+		// Provide the input to the ContentProvider
+		viewer.setInput(storageService.getTasks().get("Primavera")); // TODO
 		viewer.addSelectionChangedListener(this);
+		
 		Button setButton = new Button(parent, SWT.PUSH);
 		setButton.setText("Set");
 		setButton.addSelectionListener(new SelectionListener() {

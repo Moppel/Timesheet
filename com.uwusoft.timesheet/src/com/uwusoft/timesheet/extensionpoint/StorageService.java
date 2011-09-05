@@ -15,6 +15,7 @@ import java.util.Date;
  */
 public interface StorageService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.storageservice";
+	public static final String PROPERTY = "storage.system";
 
 	public static final String DATE = "Date";
     public static final String TIME = "Time";
