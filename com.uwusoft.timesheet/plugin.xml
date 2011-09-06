@@ -23,9 +23,9 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="View"
-            class="com.uwusoft.timesheet.View"
-            id="com.uwusoft.timesheet.view">
+            name="TasksView"
+            class="com.uwusoft.timesheet.TasksView"
+            id="com.uwusoft.timesheet.tasksview">
       </view>
    </extension>
    <extension
@@ -37,7 +37,7 @@
                minimized="false"
                relative="org.eclipse.ui.editorss"
                relationship="left"
-               id="com.uwusoft.timesheet.view">
+               id="com.uwusoft.timesheet.tasksview">
          </view>
       </perspectiveExtension>
    </extension>

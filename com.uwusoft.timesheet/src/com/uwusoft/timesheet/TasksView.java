@@ -26,8 +26,8 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionUtil;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
-public class View extends ViewPart implements ISelectionChangedListener {
-	public static final String ID = "com.uwusoft.timesheet.view";
+public class TasksView extends ViewPart implements ISelectionChangedListener {
+	public static final String ID = "com.uwusoft.timesheet.tasksview";
 
 	private StorageService storageService;
 	private PropertiesUtil props = new PropertiesUtil("Timesheet");
