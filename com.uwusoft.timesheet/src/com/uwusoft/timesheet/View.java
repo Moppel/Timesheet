@@ -108,6 +108,24 @@ public class View extends ViewPart implements ISelectionChangedListener {
 		      public void widgetDefaultSelected(SelectionEvent event) {
 		      }
 		});
+		Button breakButton = new Button(parent, SWT.PUSH);
+		breakButton.setText("Break");
+		breakButton.addSelectionListener(new SelectionListener() {
+
+		      public void widgetSelected(SelectionEvent event) {
+	                Date now = new Date();
+	                storageService.storeTimeEntry(now, props.getProperty("task.last"));
+	                try {
+						props.storeProperty("task.last", StorageService.BREAK);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+		      }
+
+		      public void widgetDefaultSelected(SelectionEvent event) {
+		      }
+		});
 	}
 
 	/**
