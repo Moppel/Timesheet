@@ -71,7 +71,7 @@ public class GoogleStorageService implements StorageService {
 			timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(dateTime));
 			if (defaultTotal == null)
 				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(dateTime));
-			if (CHECK_IN.equals(task))
+			if (CHECK_IN.equals(task) || BREAK.equals(task))
 				timeEntry.getCustomElements().setValueLocal(TASK, task);
 			else {
 				if (defaultTotal != null)
@@ -81,13 +81,11 @@ public class GoogleStorageService implements StorageService {
 			service.insert(listFeedUrl, timeEntry);
 
 			reloadWorksheets();
-			if (taskLink != null)
-				createUpdateCellEntry(defaultWorksheet,
-						defaultWorksheet.getRowCount(), 7, "=" + taskLink); // todo column 7 for task
-			if (defaultTotal == null && !task.equals(CHECK_IN))
-				createUpdateCellEntry(defaultWorksheet,
-						defaultWorksheet.getRowCount(), 3,
-						"=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
+			if (taskLink != null) {
+				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), 7, "=" + taskLink); // todo column 7 for task
+				if (defaultTotal == null)
+					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), 3, "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
