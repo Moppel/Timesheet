@@ -38,7 +38,7 @@ public class GoogleStorageService implements StorageService {
         this.spreadsheetKey = "";
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        service.setUserCredentials("user", "password");
+        service.setUserCredentials("", "");
         factory = FeedURLFactory.getDefault();
         listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
         reloadWorksheets();
@@ -67,19 +67,15 @@ public class GoogleStorageService implements StorageService {
 			reloadWorksheets();
 			ListEntry timeEntry = new ListEntry();
 			String taskLink = null;
-			timeEntry.getCustomElements().setValueLocal(WEEK,
-					Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
-			timeEntry.getCustomElements().setValueLocal(DATE,
-					new SimpleDateFormat(dateFormat).format(dateTime));
+			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+			timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(dateTime));
 			if (defaultTotal == null)
-				timeEntry.getCustomElements().setValueLocal(TIME,
-						new SimpleDateFormat(timeFormat).format(dateTime));
+				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(dateTime));
 			if (CHECK_IN.equals(task))
 				timeEntry.getCustomElements().setValueLocal(TASK, task);
 			else {
 				if (defaultTotal != null)
-					timeEntry.getCustomElements().setValueLocal(TOTAL,
-							defaultTotal);
+					timeEntry.getCustomElements().setValueLocal(TOTAL, defaultTotal);
 				taskLink = taskLinkMap.get(task);
 			}
 			service.insert(listFeedUrl, timeEntry);
@@ -105,7 +101,7 @@ public class GoogleStorageService implements StorageService {
         try {
             reloadWorksheets();
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-            List<ListEntry> listEntries = feed.getEntries();
+            List<ListEntry> listEntries = feed.getEntries();			
             int rowsOfDay = 0;
             for (int i = defaultWorksheet.getRowCount() - 3; i > 0; i--, rowsOfDay++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
@@ -119,7 +115,7 @@ public class GoogleStorageService implements StorageService {
         }
     }
 
-    public void storeLastWeekTotal() {
+    public void storeLastWeekTotal(String weeklyWorkingHours) {
         try {
             reloadWorksheets();
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
@@ -128,8 +124,15 @@ public class GoogleStorageService implements StorageService {
             for (int i = defaultWorksheet.getRowCount() - 3; i > 0; i--, rowsOfWeek++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
                 if (elements.getValue(WEEKLY_TOTAL) != null) break; // end of last week
-            }
-            createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 5, "=SUM(R[0]C[-1]:R[-" + rowsOfWeek + "]C[-1])"); // todo column WT=5
+                if (i==1) return;
+            }            
+            ListEntry timeEntry = new ListEntry();
+			timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");
+			service.insert(listFeedUrl, timeEntry);
+			reloadWorksheets();
+			
+			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 5, "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])"); // todo column WT=5
+			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 8, "=R[0]C[-3]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]"); // todo column Overtime=8
         } catch (IOException e) {
             e.printStackTrace();  //Todo
         } catch (ServiceException e) {
@@ -182,8 +185,6 @@ public class GoogleStorageService implements StorageService {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
-        Date lastDate = null;
     }
 
     private void loadTasks() {

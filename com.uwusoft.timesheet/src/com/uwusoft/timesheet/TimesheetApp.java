@@ -80,7 +80,7 @@ public class TimesheetApp implements IApplication, ISafeRunnable {
 
 			props.storeProperty("system.start", startTime);
 
-			storageService = new ExtensionUtil<StorageService>(StorageService.SERVICE_ID).getService(StorageService.PROPERTY);
+			storageService = new ExtensionUtil<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
 			if (storageService == null) return;
 
 			Calendar calDay = Calendar.getInstance();
@@ -108,7 +108,7 @@ public class TimesheetApp implements IApplication, ISafeRunnable {
 			int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
 			if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
 				if (startWeek != shutdownWeek)
-					storageService.storeLastWeekTotal(); // store Week and Overtime
+					storageService.storeLastWeekTotal(props.getProperty("weekly.workinghours")); // store Week and Overtime
 				storageService.storeTimeEntry(startDate, StorageService.CHECK_IN);
 				props.storeProperty("task.last", props.getProperty("task.default"));
 			}

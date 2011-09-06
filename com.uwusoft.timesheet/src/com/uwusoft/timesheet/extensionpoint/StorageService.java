@@ -24,6 +24,7 @@ public interface StorageService {
     public static final String WEEKLY_TOTAL = "WT";
     public static final String WEEK = "Week";
     public static final String TASK = "Task";
+    public static final String OVERTIME = "Overtime";
     public static final String CHECK_IN = "Check in";
     public static final String SUBMIT_STATUS = "SubmitStatus";
 
@@ -54,7 +55,7 @@ public interface StorageService {
 
     void storeLastDailyTotal();
 
-    void storeLastWeekTotal();
+    void storeLastWeekTotal(String weeklyWorkingHours);
     
     void submitEntries();
 }
