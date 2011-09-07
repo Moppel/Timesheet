@@ -3,7 +3,7 @@ package com.uwusoft.timesheet.extensionpoint.model;
 
 import java.util.*;
 
-import com.uwusoft.timesheet.extensionpoint.SubmitService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.TaskSubmitEntry;
 
 /**
@@ -22,7 +22,7 @@ public class DailySubmitEntry {
         entries = new HashMap<String, TaskSubmitEntry>();
     }
 
-    public void addSubmitEntry(String task, double total, SubmitService service) {
+    public void addSubmitEntry(String task, double total, SubmissionService service) {
         TaskSubmitEntry available = entries.get(task);
         if (available == null) entries.put(task, new TaskSubmitEntry(task, total, service));
         else available.addTotal(total);

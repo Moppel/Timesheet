@@ -23,7 +23,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.ExtensionUtil;
+import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class TasksView extends ViewPart implements ISelectionChangedListener {
@@ -78,12 +78,11 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 	 * it.
 	 */
 	public void createPartControl(Composite parent) {
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL
-				| SWT.V_SCROLL);
+		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		
-		storageService = new ExtensionUtil<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
+		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
 		if (storageService == null) return;
 		
 		// Provide the input to the ContentProvider

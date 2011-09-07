@@ -4,7 +4,7 @@ package com.uwusoft.timesheet.extensionpoint.model;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 
-import com.uwusoft.timesheet.extensionpoint.SubmitService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
 /**
  * todo: add class doc
@@ -13,7 +13,7 @@ import com.uwusoft.timesheet.extensionpoint.SubmitService;
  * @version $Revision: $, $Date: Aug 18, 2011
  * @since Aug 18, 2011
  */
-public class SubmitServiceImpl implements SubmitService {
+public class SubmitServiceImpl implements SubmissionService {
 
     public void submit(Date date, String task, Double total) {
         //Todo implement

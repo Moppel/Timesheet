@@ -16,7 +16,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.ExtensionUtil;
+import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 /**
@@ -80,7 +80,7 @@ public class TimesheetApp implements IApplication, ISafeRunnable {
 
 			props.storeProperty("system.start", startTime);
 
-			storageService = new ExtensionUtil<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
+			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
 			if (storageService == null) return;
 
 			Calendar calDay = Calendar.getInstance();

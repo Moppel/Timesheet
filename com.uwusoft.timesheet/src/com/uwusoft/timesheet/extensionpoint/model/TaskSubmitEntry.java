@@ -3,7 +3,7 @@ package com.uwusoft.timesheet.extensionpoint.model;
 
 import java.util.Date;
 
-import com.uwusoft.timesheet.extensionpoint.SubmitService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
 /**
  * contains all information about a task to be submitted to a special time management system
@@ -15,9 +15,9 @@ import com.uwusoft.timesheet.extensionpoint.SubmitService;
 public class TaskSubmitEntry {
     private String name;
     private double total;
-    private SubmitService service;
+    private SubmissionService service;
 
-    public TaskSubmitEntry(String name, double total, SubmitService service) {
+    public TaskSubmitEntry(String name, double total, SubmissionService service) {
         this.name = name;
         this.total = total;
         this.service = service;

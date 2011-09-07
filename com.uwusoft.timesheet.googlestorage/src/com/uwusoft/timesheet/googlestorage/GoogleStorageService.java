@@ -5,7 +5,10 @@ import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.spreadsheet.*;
 import com.google.gdata.util.ServiceException;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionServiceImpl;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
+import com.uwusoft.timesheet.util.ExtensionManager;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -158,7 +161,10 @@ public class GoogleStorageService implements StorageService {
 	        }
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
-	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) break;
+	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) {
+	            	entry.submitEntries();
+	            	break;
+	            }
 
 	            if (elements.getValue(DATE) == null) continue;
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
@@ -170,8 +176,9 @@ public class GoogleStorageService implements StorageService {
 
 	            String task = elements.getValue(TASK);
 	            if (task == null || CHECK_IN.equals(task) || taskLinkMap.get(task) == null) continue;
-	            String system = taskLinkMap.get(task).split("!")[0]; // todo get submit service for task
-	            //entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)), new SubmitServiceImpl());
+	            String system = taskLinkMap.get(task).split("!")[0]; // TODO get submission service for task	             
+	            entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
+	            		new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system));
 	        }
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -199,7 +206,7 @@ public class GoogleStorageService implements StorageService {
 					ListEntry entry = entries.get(i);
 					String value = entry.getCustomElements().getValue(TASK);
 					if (value != null) {
-						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // todo hardcoded: task is in the first column
+						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // todo hardcoded: task must be in the first column
 						tasks.get(title).add(value);
 					}
 				}

@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -19,6 +20,10 @@ import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+
+import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -31,8 +36,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		super(configurer);
 	}
 
-	public ActionBarAdvisor createActionBarAdvisor(
-			IActionBarConfigurer configurer) {
+	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer) {
 		return new ApplicationActionBarAdvisor(configurer);
 	}
 
@@ -83,6 +87,17 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			public void handleEvent(Event event) {
 				Menu menu = new Menu(window.getShell(), SWT.POP_UP);
 
+				MenuItem submit = new MenuItem(menu, SWT.NONE);
+				submit.setText("Submit");
+				submit.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						new ExtensionManager<StorageService>(
+								StorageService.SERVICE_ID).getService(
+								new PropertiesUtil("Timesheet")
+										.getProperty(StorageService.PROPERTY))
+								.submitEntries();
+					}
+				});
 				// Creates a new menu item that terminates the program
 				// when selected
 				MenuItem exit = new MenuItem(menu, SWT.NONE);
@@ -90,8 +105,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				exit.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						// Lets call our command
-						IHandlerService handlerService = (IHandlerService) window
-								.getService(IHandlerService.class);
+						IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 						try {
 							handlerService.executeCommand(COMMAND_ID, null);
 						} catch (Exception ex) {
@@ -111,6 +125,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		TrayItem trayItem = new TrayItem(tray, SWT.NONE);
 		trayImage = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();
 		trayItem.setImage(trayImage);
+		/*final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
+		tip.setText("Timesheet");
+		tip.setVisible(true);*/
 		trayItem.setToolTipText("Timesheet");
 		return trayItem;
 

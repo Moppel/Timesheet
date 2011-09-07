@@ -111,7 +111,7 @@ public class TimeSheet implements ActionListener {
             int startDay = calDay.get(Calendar.DAY_OF_YEAR);
             int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
             if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebootet
-                if (startWeek != shutdownWeek) storageService.storeLastWeekTotal(); //  store Week and Overtime
+                if (startWeek != shutdownWeek) storageService.storeLastWeekTotal("30"); //  store Week and Overtime
                 storageService.storeTimeEntry(startDate, StorageService.CHECK_IN);
                 storeProperty("task.last", transferProps.getProperty("task.default"));
             }

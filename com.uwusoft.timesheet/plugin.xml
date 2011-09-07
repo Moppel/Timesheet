@@ -2,6 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension-point id="com.uwusoft.timesheet.storageservice" name="StorageService" schema="schema/com.uwusoft.timesheet.storageservice.exsd"/>
+   <extension-point id="com.uwusoft.timesheet.submissionservice" name="SubmissionService" schema="schema/com.uwusoft.timesheet.submissionservice.exsd"/>
 
    <extension
          id="application"
