@@ -1,5 +1,12 @@
 package com.uwusoft.timesheet;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Date;
+
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
@@ -18,6 +25,7 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -81,7 +89,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		});
 	}
 
-	// We hook up on menu entry which allows to close the application
 	private void hookPopupMenu() {
 		trayItem.addListener(SWT.MenuDetect, new Listener() {
 			public void handleEvent(Event event) {
@@ -96,6 +103,35 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 								new PropertiesUtil("Timesheet")
 										.getProperty(StorageService.PROPERTY))
 								.submitEntries();
+					}
+				});
+				MenuItem changeTasks = new MenuItem(menu, SWT.NONE);
+				changeTasks.setText("Change Task");
+				changeTasks.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						StorageService storageService = new ExtensionManager<StorageService>(
+								StorageService.SERVICE_ID).getService(
+								new PropertiesUtil("Timesheet")
+										.getProperty(StorageService.PROPERTY));
+						ListDialog listDialog = new ListDialog(window.getShell());
+						listDialog.setTitle("Tasks");
+						listDialog.setMessage("Select next task");
+						listDialog.setContentProvider(ArrayContentProvider.getInstance());
+						listDialog.setLabelProvider(new LabelProvider());
+						listDialog.setInput(storageService.getTasks().get("Primavera")); // TODO
+						if (listDialog.open() == Dialog.OK) {
+						    String selectedTask = Arrays.toString(listDialog.getResult());
+							if (selectedTask == null) return;
+			                Date now = new Date();
+			                PropertiesUtil props = new PropertiesUtil("Timesheet");
+			                storageService.storeTimeEntry(now, props.getProperty("task.last"));
+			                try {
+								props.storeProperty("task.last", selectedTask);
+							} catch (IOException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+						}						
 					}
 				});
 				// Creates a new menu item that terminates the program

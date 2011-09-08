@@ -1,8 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.io.IOException;
-import java.util.Date;
-
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -13,10 +10,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -88,43 +82,6 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 		// Provide the input to the ContentProvider
 		viewer.setInput(storageService.getTasks().get("Primavera")); // TODO
 		viewer.addSelectionChangedListener(this);
-		
-		Button setButton = new Button(parent, SWT.PUSH);
-		setButton.setText("Set");
-		setButton.addSelectionListener(new SelectionListener() {
-
-		      public void widgetSelected(SelectionEvent event) {
-	                Date now = new Date();
-	                storageService.storeTimeEntry(now, props.getProperty("task.last"));
-	                try {
-						props.storeProperty("task.last", selectedTask);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-		      }
-
-		      public void widgetDefaultSelected(SelectionEvent event) {
-		      }
-		});
-		Button breakButton = new Button(parent, SWT.PUSH);
-		breakButton.setText("Break");
-		breakButton.addSelectionListener(new SelectionListener() {
-
-		      public void widgetSelected(SelectionEvent event) {
-	                Date now = new Date();
-	                storageService.storeTimeEntry(now, props.getProperty("task.last"));
-	                try {
-						props.storeProperty("task.last", StorageService.BREAK);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-		      }
-
-		      public void widgetDefaultSelected(SelectionEvent event) {
-		      }
-		});
 	}
 
 	/**
