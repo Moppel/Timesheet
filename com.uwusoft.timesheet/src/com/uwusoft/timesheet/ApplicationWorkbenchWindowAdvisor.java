@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -32,6 +33,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
+import com.uwusoft.timesheet.util.TimeDialog;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -94,17 +96,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			public void handleEvent(Event event) {
 				Menu menu = new Menu(window.getShell(), SWT.POP_UP);
 
-				MenuItem submit = new MenuItem(menu, SWT.NONE);
-				submit.setText("Submit");
-				submit.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						new ExtensionManager<StorageService>(
-								StorageService.SERVICE_ID).getService(
-								new PropertiesUtil("Timesheet")
-										.getProperty(StorageService.PROPERTY))
-								.submitEntries();
-					}
-				});
 				MenuItem changeTasks = new MenuItem(menu, SWT.NONE);
 				changeTasks.setText("Change Task");
 				changeTasks.addListener(SWT.Selection, new Listener() {
@@ -118,20 +109,35 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						listDialog.setMessage("Select next task");
 						listDialog.setContentProvider(ArrayContentProvider.getInstance());
 						listDialog.setLabelProvider(new LabelProvider());
+						listDialog.setWidthInChars(70);
 						listDialog.setInput(storageService.getTasks().get("Primavera")); // TODO
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
 							if (selectedTask == null) return;
 			                Date now = new Date();
-			                PropertiesUtil props = new PropertiesUtil("Timesheet");
-			                storageService.storeTimeEntry(now, props.getProperty("task.last"));
-			                try {
-								props.storeProperty("task.last", selectedTask);
-							} catch (IOException e1) {
-								// TODO Auto-generated catch block
-								e1.printStackTrace();
+							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, now);
+							if (timeDialog.open() == Dialog.OK) {
+								now = timeDialog.getTime();
+				                PropertiesUtil props = new PropertiesUtil("Timesheet");
+				                storageService.storeTimeEntry(now, props.getProperty("task.last"));
+				                try {
+									props.storeProperty("task.last", selectedTask);
+								} catch (IOException e1) {
+									e1.printStackTrace(); // TODO
+								}
 							}
 						}						
+					}
+				});
+				MenuItem submit = new MenuItem(menu, SWT.NONE);
+				submit.setText("Submit");
+				submit.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						new ExtensionManager<StorageService>(
+								StorageService.SERVICE_ID).getService(
+								new PropertiesUtil("Timesheet")
+										.getProperty(StorageService.PROPERTY))
+								.submitEntries();
 					}
 				});
 				// Creates a new menu item that terminates the program
