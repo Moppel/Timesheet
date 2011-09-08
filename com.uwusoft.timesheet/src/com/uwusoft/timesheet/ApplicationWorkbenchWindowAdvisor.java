@@ -113,7 +113,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						listDialog.setInput(storageService.getTasks().get("Primavera")); // TODO
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
-							if (selectedTask == null) return;
+						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+							if (selectedTask == "") return;
 			                Date now = new Date();
 							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, now);
 							if (timeDialog.open() == Dialog.OK) {

@@ -37,7 +37,7 @@ public class TimeDialog extends Dialog {
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(2, false));
         Label label = new Label(composite, SWT.NONE);
-        label.setText("Next task: ");
+        label.setText("Next task");
         label = new Label(composite, SWT.NONE);
         label.setText(task);
 
@@ -66,7 +66,7 @@ public class TimeDialog extends Dialog {
 
     @Override
     protected Point getInitialSize() {
-        return new Point(300, 200);
+        return new Point(300, 120);
     }
 
     @Override
