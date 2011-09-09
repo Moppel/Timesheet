@@ -1,11 +1,11 @@
 package com.uwusoft.timesheet;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
@@ -18,7 +18,6 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -33,7 +32,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
-import com.uwusoft.timesheet.util.TimeDialog;
+import com.uwusoft.timesheet.dialog.TimeDialog;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -102,7 +101,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					public void handleEvent(Event event) {
 						StorageService storageService = new ExtensionManager<StorageService>(
 								StorageService.SERVICE_ID).getService(
-								new PropertiesUtil("Timesheet")
+								new PropertiesUtil(TimesheetApp.class, "Timesheet")
 										.getProperty(StorageService.PROPERTY));
 						ListDialog listDialog = new ListDialog(window.getShell());
 						listDialog.setTitle("Tasks");
@@ -114,12 +113,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
 						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
-							if (selectedTask == "") return;
+							if (selectedTask.equals("")) return;
 			                Date now = new Date();
 							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, now);
 							if (timeDialog.open() == Dialog.OK) {
 								now = timeDialog.getTime();
-				                PropertiesUtil props = new PropertiesUtil("Timesheet");
+				                PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
 				                storageService.storeTimeEntry(now, props.getProperty("task.last"));
 				                try {
 									props.storeProperty("task.last", selectedTask);
@@ -136,7 +135,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					public void handleEvent(Event event) {
 						new ExtensionManager<StorageService>(
 								StorageService.SERVICE_ID).getService(
-								new PropertiesUtil("Timesheet")
+								new PropertiesUtil(TimesheetApp.class, "Timesheet")
 										.getProperty(StorageService.PROPERTY))
 								.submitEntries();
 					}
@@ -156,18 +155,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						}
 					}
 				});
-				// We need to make the menu visible
 				menu.setVisible(true);
 			}
 		});
 	}
 
-	// This methods create the tray item and return a reference
 	private TrayItem initTaskItem(IWorkbenchWindow window) {
 		final Tray tray = window.getShell().getDisplay().getSystemTray();
 		TrayItem trayItem = new TrayItem(tray, SWT.NONE);
-		trayImage = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();
-		trayItem.setImage(trayImage);
+		ImageDescriptor descriptor = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png");
+		if (descriptor != null) {
+			trayImage = descriptor.createImage();
+			trayItem.setImage(trayImage);
+		}
 		/*final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
 		tip.setText("Timesheet");
 		tip.setVisible(true);*/

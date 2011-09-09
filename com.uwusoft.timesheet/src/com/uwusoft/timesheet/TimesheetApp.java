@@ -75,7 +75,7 @@ public class TimesheetApp implements IApplication, ISafeRunnable {
 			RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 			String startTime = formatter.format(mx.getStartTime());
 
-			PropertiesUtil props = new PropertiesUtil("Timesheet");
+			PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
 			String shutdownTime = formatter.format(formatter.parse(props.getProperty("system.shutdown")));
 
 			props.storeProperty("system.start", startTime);

@@ -17,7 +17,7 @@ public class PropertiesUtil {
     /**
 	 * @param name
 	 */
-	public PropertiesUtil(String name) {
+	public PropertiesUtil(Class<?> clas, String name) {
 		fileName = name + ".properties";
 		comment = name + " Properties";
 
@@ -30,7 +30,7 @@ public class PropertiesUtil {
 		try {
 			if (!props.exists()) {
 				userDir.mkdir();
-				transferProps.load(this.getClass().getResourceAsStream(fileName));
+				transferProps.load(clas.getResourceAsStream(fileName));
 				transferProps.store(new FileOutputStream(props), comment);
 			} else
 				transferProps.load(new FileInputStream(props));

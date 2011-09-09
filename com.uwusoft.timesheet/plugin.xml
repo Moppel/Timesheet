@@ -16,17 +16,17 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            name="Perspective"
             class="com.uwusoft.timesheet.Perspective"
-            id="com.uwusoft.timesheet.perspective">
+            id="com.uwusoft.timesheet.perspective"
+            name="Perspective">
       </perspective>
    </extension>
    <extension
          point="org.eclipse.ui.views">
       <view
-            name="TasksView"
             class="com.uwusoft.timesheet.TasksView"
-            id="com.uwusoft.timesheet.tasksview">
+            id="com.uwusoft.timesheet.tasksview"
+            name="TasksView">
       </view>
    </extension>
    <extension
@@ -54,6 +54,22 @@
             </command>
          </menu>
       </menuContribution>
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="com.uwusoft.timesheet.application"
+            name="Timesheet">
+         <property
+               name="appName"
+               value="Timesheet">
+         </property>
+         <property
+               name="windowImages"
+               value="icons/clock.png">
+         </property>
+      </product>
    </extension>
 
 </plugin>

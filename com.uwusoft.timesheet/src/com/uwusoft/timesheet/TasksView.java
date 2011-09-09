@@ -1,5 +1,8 @@
 package com.uwusoft.timesheet;
 
+import java.io.IOException;
+import java.util.Date;
+
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
@@ -10,7 +13,10 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
@@ -24,7 +30,7 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
 
 	private StorageService storageService;
-	private PropertiesUtil props = new PropertiesUtil("Timesheet");
+	private PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
 	private TableViewer viewer;
 	private static String selectedTask = "";
 	
@@ -72,7 +78,8 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 	 * it.
 	 */
 	public void createPartControl(Composite parent) {
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL
+				| SWT.V_SCROLL);
 		viewer.setContentProvider(new ArrayContentProvider());
 		viewer.setLabelProvider(new ViewLabelProvider());
 		
