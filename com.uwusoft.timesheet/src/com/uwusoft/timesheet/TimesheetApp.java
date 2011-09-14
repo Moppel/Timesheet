@@ -3,6 +3,7 @@ package com.uwusoft.timesheet;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -16,7 +17,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
-import com.uwusoft.timesheet.dialog.CheckoutCheckinDialog;
+import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
@@ -61,19 +62,25 @@ public class TimesheetApp implements IApplication {
 				calWeek.setTime(shutdownDate);
 				shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
 				if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
-					CheckoutCheckinDialog checkoutCheckinDialog = new CheckoutCheckinDialog(new Shell(display), shutdownDate, startDate);
-					if (checkoutCheckinDialog.open() == Dialog.OK) {
-						StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
-						if (storageService == null) return IApplication.EXIT_OK;
-						storageService.storeTimeEntry(checkoutCheckinDialog.getCheckoutTime(), props.getProperty("task.last"));
+					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+							.getService(props.getProperty(StorageService.PROPERTY));
+					if (storageService == null) return IApplication.EXIT_OK;
+					TimeDialog timeDialog = new TimeDialog(new Shell(display), "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
+							props.getProperty("task.last"), shutdownDate);
+					if (timeDialog.open() == Dialog.OK) {
+						storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
 						storageService.storeLastDailyTotal();
 						if (props.getProperty("task.daily") != null)
 							storageService.storeTimeEntry(
-									checkoutCheckinDialog.getCheckoutTime(), props.getProperty("task.daily"), props.getProperty("task.daily.total"));
-						// automatic check in
+									timeDialog.getTime(), props.getProperty("task.daily"), props.getProperty("task.daily.total"));
+					}
+					// automatic check in
+					timeDialog = new TimeDialog(new Shell(display), "Check in at " + DateFormat.getDateInstance().format(startDate),
+							StorageService.CHECK_IN, startDate);
+					if (timeDialog.open() == Dialog.OK) {
 						if (startWeek != shutdownWeek)
 							storageService.storeLastWeekTotal(props.getProperty("weekly.workinghours")); // store Week and Overtime
-						storageService.storeTimeEntry(checkoutCheckinDialog.getCheckinTime(), StorageService.CHECK_IN);
+						storageService.storeTimeEntry(timeDialog.getTime(), StorageService.CHECK_IN);
 						props.storeProperty("task.last", props.getProperty("task.default"));
 					}
 				}
