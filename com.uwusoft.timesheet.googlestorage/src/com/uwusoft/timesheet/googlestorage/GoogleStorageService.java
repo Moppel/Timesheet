@@ -39,10 +39,11 @@ public class GoogleStorageService implements StorageService {
     private Map<String, List<String>> tasks;
 
     public GoogleStorageService() throws IOException, ServiceException {
-        this.spreadsheetKey = "0AmXECtmef2_bdGxGbm5fSERmRENxMzlMV3hXUTFEaFE";
+        this.spreadsheetKey = "";
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        service.setUserCredentials("Uta.Wunderlich@sii.com", "gunnar0351");
+        
+        service.setUserCredentials("", "");
         factory = FeedURLFactory.getDefault();
         listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
         headingIndex = new LinkedHashMap<String, Integer>();
@@ -82,7 +83,7 @@ public class GoogleStorageService implements StorageService {
 	            String task = elements.getValue(TASK);
 	            if (task == null) break;
 	            taskEntries.add(0, new TaskEntry(new SimpleDateFormat(timeFormat).format(
-	            		new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME))), task, new Long(i)));
+	            		new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME))), task, new Long(i + 2)));
 	            if (CHECK_IN.equals(task)) break;
 	        }
 		} catch (IOException e) {
@@ -180,7 +181,15 @@ public class GoogleStorageService implements StorageService {
         }        
     }
 
-    public void submitEntries() {
+	public void updateTaskEntry(Date time, Long id) {
+		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
+	}
+
+	public void updateTaskEntry(String task, Long id) {
+		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task);
+	}
+
+	public void submitEntries() {
         try {
 			reloadWorksheets();
 	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);

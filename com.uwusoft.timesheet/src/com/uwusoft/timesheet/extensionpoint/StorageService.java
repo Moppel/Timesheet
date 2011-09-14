@@ -62,6 +62,20 @@ public interface StorageService {
      * @throws ServiceException
      */
     void storeTimeEntry(Date dateTime, String task, String defaultTotal);
+    
+    /**
+     * 
+     * @param time the time of the task entry
+     * @param id the id of the task entry
+     */
+    void updateTaskEntry(Date time, Long id);
+    
+    /**
+     * 
+     * @param task
+     * @param id
+     */
+    void updateTaskEntry(String task, Long id);
 
     void storeLastDailyTotal();
 

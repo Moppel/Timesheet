@@ -22,11 +22,19 @@ public class TaskEntry {
 		return time;
 	}
 
+	public void setTime(String time) {
+		this.time = time;
+	}
+
 	/**
 	 * @return the task
 	 */
 	public String getTask() {
 		return task;
+	}
+
+	public void setTask(String task) {
+		this.task = task;
 	}
 
 	/**

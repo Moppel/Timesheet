@@ -136,7 +136,14 @@ public class TasksView extends ViewPart {
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		        //((TaskEntry) element).setTime(String.valueOf(value));
+		    	TaskEntry entry = (TaskEntry) element;
+		    	entry.setTime(String.valueOf(value));
+		        try {
+					storageService.updateTaskEntry(new SimpleDateFormat("HH:mm").parse(entry.getTime()), entry.getId());
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		        viewer.refresh(element);
 		    }
 		});
@@ -167,7 +174,9 @@ public class TasksView extends ViewPart {
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		        //((TaskEntry) element).setTask(String.valueOf(value));
+		    	TaskEntry entry = (TaskEntry) element;
+		    	entry.setTask(String.valueOf(value));
+		        storageService.updateTaskEntry(entry.getTask(), entry.getId());
 		        viewer.refresh(element);
 		    }
 		});
