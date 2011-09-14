@@ -44,7 +44,7 @@ public class TimeDialog extends Dialog {
         composite.setLayout(new GridLayout(1, false));
         
         GridData gridData = new GridData();
-        gridData.horizontalAlignment = SWT.CENTER;
+        gridData.horizontalAlignment = GridData.CENTER;
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
@@ -63,6 +63,8 @@ public class TimeDialog extends Dialog {
 
         DateTime timeEntry = new DateTime(composite, SWT.TIME | SWT.SHORT);
         timeEntry.setLayoutData(gridData);
+        timeEntry.setHours(hours);
+        timeEntry.setMinutes(minutes);
         timeEntry.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				hours = ((DateTime) e.getSource()).getHours();
@@ -76,7 +78,7 @@ public class TimeDialog extends Dialog {
 
     @Override
     protected Point getInitialSize() {
-        return new Point(180, 120);
+        return new Point(220, 120);
     }
 
     @Override
