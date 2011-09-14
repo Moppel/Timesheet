@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Properties;
 
+import com.uwusoft.timesheet.Activator;
+
 public class PropertiesUtil {
 
     private String fileName;

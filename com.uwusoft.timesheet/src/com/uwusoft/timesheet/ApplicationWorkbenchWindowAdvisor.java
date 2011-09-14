@@ -1,8 +1,15 @@
 package com.uwusoft.timesheet;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -32,6 +39,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
+import com.uwusoft.timesheet.dialog.CheckoutCheckinDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -60,6 +68,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		super.postWindowOpen();
 		window = getWindowConfigurer().getWindow();
 		trayItem = initTaskItem(window);
+		window.getShell().setMinimized(true);
 		// Some OS might not support tray items
 		if (trayItem != null) {
 			minimizeBehavior();
@@ -100,26 +109,24 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				changeTasks.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						StorageService storageService = new ExtensionManager<StorageService>(
-								StorageService.SERVICE_ID).getService(
-								new PropertiesUtil(TimesheetApp.class, "Timesheet")
-										.getProperty(StorageService.PROPERTY));
+								StorageService.SERVICE_ID).getService(new PropertiesUtil(TimesheetApp.class, "Timesheet").getProperty(StorageService.PROPERTY));
 						ListDialog listDialog = new ListDialog(window.getShell());
 						listDialog.setTitle("Tasks");
 						listDialog.setMessage("Select next task");
 						listDialog.setContentProvider(ArrayContentProvider.getInstance());
 						listDialog.setLabelProvider(new LabelProvider());
 						listDialog.setWidthInChars(70);
-						listDialog.setInput(storageService.getTasks().get("Primavera")); // TODO
+						List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
+						PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
+						tasks.remove(props.getProperty("task.last"));
+						listDialog.setInput(tasks);
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
 						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 							if (selectedTask.equals("")) return;
-			                Date now = new Date();
-							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, now);
+							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
-								now = timeDialog.getTime();
-				                PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
-				                storageService.storeTimeEntry(now, props.getProperty("task.last"));
+				                storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
 				                try {
 									props.storeProperty("task.last", selectedTask);
 								} catch (IOException e1) {

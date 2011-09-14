@@ -1,28 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="Timesheet" id="com.uwusoft.timesheet.product" application="com.uwusoft.timesheet.application" version="0.0.1" useFeatures="false" includeLaunchers="true">
-
+<product name="Timesheet" id="com.uwusoft.timesheet.product" application="com.uwusoft.timesheet.application" version="1.0.0" useFeatures="false" includeLaunchers="true">
 
    <configIni use="default">
    </configIni>
 
    <launcherArgs>
-      <programArgs>-consoleLog</programArgs>
       <vmArgs>-Dosgi.requiredJavaVersion=1.5 -Xms40m -Xmx512m</vmArgs>
       <vmArgsMac>-XstartOnFirstThread -Dorg.eclipse.swt.internal.carbon.smallFonts</vmArgsMac>
    </launcherArgs>
 
    <windowImages i16="/com.uwusoft.timesheet/icons/clock.png"/>
 
-
-   <launcher>
+   <launcher name="Timesheet">
       <solaris/>
       <win useIco="false">
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>

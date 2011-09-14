@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.List;
 import java.util.Date;
+import java.util.Set;
+
+import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 
 
 /**
@@ -34,6 +37,12 @@ public interface StorageService {
      */
     Map<String, List<String>> getTasks();
 
+    /**
+     * @param date
+     * @return a list of {@link TaskEntry}'s for the date
+     */
+    List<TaskEntry> getTaskEntries(Date date);
+    
     /**
      * store task
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task

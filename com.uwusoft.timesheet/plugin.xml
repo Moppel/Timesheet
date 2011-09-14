@@ -26,7 +26,7 @@
       <view
             class="com.uwusoft.timesheet.TasksView"
             id="com.uwusoft.timesheet.tasksview"
-            name="TasksView">
+            name="Today&apos;s Tasks">
       </view>
    </extension>
    <extension
@@ -35,7 +35,7 @@
             targetID="*">
          <view
                standalone="true"
-               minimized="false"
+               minimized="true"
                relative="org.eclipse.ui.editorss"
                relationship="left"
                id="com.uwusoft.timesheet.tasksview">
@@ -70,6 +70,14 @@
                value="icons/clock.png">
          </property>
       </product>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="com.uwusoft.timesheet.TimesheetPreferencePage"
+            id="com.uwusoft.timesheet.TimesheetPreferencePage"
+            name="TimesheetPreferencePage">
+      </page>
    </extension>
 
 </plugin>

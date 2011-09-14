@@ -1,40 +1,51 @@
 package com.uwusoft.timesheet;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.DialogCellEditor;
+import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
-public class TasksView extends ViewPart implements ISelectionChangedListener {
+public class TasksView extends ViewPart {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
 
 	private StorageService storageService;
 	private PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
 	private TableViewer viewer;
-	private static String selectedTask = "";
 	
-
 	/**
 	 * The content provider class is responsible for providing objects to the
 	 * view. It can wrap existing objects in adapters or simply return objects
@@ -80,15 +91,106 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 	public void createPartControl(Composite parent) {
 		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL
 				| SWT.V_SCROLL);
+		createColumns(parent, viewer);
+		final Table table = viewer.getTable();
+		table.setHeaderVisible(true);
+		table.setLinesVisible(true);
+
 		viewer.setContentProvider(new ArrayContentProvider());
-		viewer.setLabelProvider(new ViewLabelProvider());
-		
+
 		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
 		if (storageService == null) return;
 		
-		// Provide the input to the ContentProvider
-		viewer.setInput(storageService.getTasks().get("Primavera")); // TODO
-		viewer.addSelectionChangedListener(this);
+		viewer.setInput(storageService.getTaskEntries(new Date()));
+		// Make the selection available to other views
+		getSite().setSelectionProvider(viewer);
+
+		// Layout the viewer
+		GridData gridData = new GridData();
+		gridData.verticalAlignment = GridData.FILL;
+		gridData.horizontalSpan = 2;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.grabExcessVerticalSpace = true;
+		gridData.horizontalAlignment = GridData.FILL;
+		viewer.getControl().setLayoutData(gridData);
+	}
+
+	private void createColumns(final Composite parent, final TableViewer viewer) {
+		String[] titles = { "Time", "Task" };
+		int[] bounds = { 70, 300 };
+
+		// First column is for the time
+		TableViewerColumn col = createTableViewerColumn(titles[0], bounds[0], 0);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return true;
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return new TimeDialogCellEditor(viewer.getTable(), (TaskEntry) element);
+		    }
+
+		    protected Object getValue(Object element) {
+		        return ((TaskEntry) element).getTime();
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		        //((TaskEntry) element).setTime(String.valueOf(value));
+		        viewer.refresh(element);
+		    }
+		});
+		col.setLabelProvider(new ColumnLabelProvider() {
+			public String getText(Object element) {
+				TaskEntry task = (TaskEntry) element;
+				return task.getTime();
+			}
+			public Image getImage(Object obj) {
+				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
+			}
+		});
+
+		// Second column is for the task
+		col = createTableViewerColumn(titles[1], bounds[1], 1);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return !StorageService.CHECK_IN.equals(((TaskEntry) element).getTask());
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return new TaskListDialogCellEditor(viewer.getTable(), (TaskEntry) element);
+		    }
+
+		    protected Object getValue(Object element) {
+		        return ((TaskEntry) element).getTask();
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		        //((TaskEntry) element).setTask(String.valueOf(value));
+		        viewer.refresh(element);
+		    }
+		});
+		col.setLabelProvider(new ColumnLabelProvider() {
+			public String getText(Object element) {
+				TaskEntry task = (TaskEntry) element;
+				return task.getTask();
+			}
+			public Image getImage(Object obj) {
+				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+			}
+		});
+	}
+	
+	private TableViewerColumn createTableViewerColumn(String title, int bound, final int colNumber) {
+		final TableViewerColumn viewerColumn = new TableViewerColumn(viewer, SWT.NONE);
+		final TableColumn column = viewerColumn.getColumn();
+		column.setText(title);
+		column.setWidth(bound);
+		column.setResizable(true);
+		column.setMoveable(true);
+		return viewerColumn;
+
 	}
 
 	/**
@@ -97,11 +199,65 @@ public class TasksView extends ViewPart implements ISelectionChangedListener {
 	public void setFocus() {
 		viewer.getControl().setFocus();
 	}
+	
+	class TimeDialogCellEditor extends DialogCellEditor {
 
-	@Override
-	public void selectionChanged(SelectionChangedEvent event) {
-		if (event.getSelection() instanceof IStructuredSelection) {
-			selectedTask = (String) ((IStructuredSelection) event.getSelection()).getFirstElement();
+		private TaskEntry entry;
+		
+		/**
+		 * @param parent
+		 */
+		public TimeDialogCellEditor(Composite parent, TaskEntry entry) {
+			super(parent);
+			this.entry = entry;
 		}
+
+		@Override
+		protected Object openDialogBox(Control cellEditorWindow) {
+			try {
+				TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getShell(), entry.getTask(), new SimpleDateFormat("HH:mm").parse(entry.getTime()));
+				if (timeDialog.open() == Dialog.OK) {
+	                //storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
+					return new SimpleDateFormat("HH:mm").format(timeDialog.getTime());
+				}
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			return null;
+		}		
+	}
+
+	class TaskListDialogCellEditor extends DialogCellEditor {
+
+		private TaskEntry entry;
+		
+		/**
+		 * @param parent
+		 */
+		public TaskListDialogCellEditor(Composite parent, TaskEntry entry) {
+			super(parent);
+			this.entry = entry;
+		}
+
+		@Override
+		protected Object openDialogBox(Control cellEditorWindow) {
+			ListDialog listDialog = new ListDialog(cellEditorWindow.getShell());
+			listDialog.setTitle("Tasks");
+			listDialog.setMessage("Select task");
+			listDialog.setContentProvider(ArrayContentProvider.getInstance());
+			listDialog.setLabelProvider(new ViewLabelProvider());
+			listDialog.setWidthInChars(70);
+			List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
+			tasks.remove(entry.getTask());
+			listDialog.setInput(tasks);
+			if (listDialog.open() == Dialog.OK) {
+			    String selectedTask = Arrays.toString(listDialog.getResult());
+			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+				if (selectedTask.equals("")) return null;
+				return selectedTask;
+			}
+			return null;
+		}		
 	}
 }

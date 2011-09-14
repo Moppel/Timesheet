@@ -18,11 +18,16 @@ import org.eclipse.swt.widgets.Shell;
 
 public class TimeDialog extends Dialog {
 
-	private String task;
+	private String title, task;
     private int day, month, year, hours, minutes;
 	
 	public TimeDialog(Shell parentShell, String task, Date time) {
+		this(parentShell, "Time", task, time);
+	}
+    
+    public TimeDialog(Shell parentShell, String title, String task, Date time) {
 		super(parentShell);
+		this.title = title;
 		this.task = task;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(time);
@@ -77,7 +82,7 @@ public class TimeDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Time");
+        newShell.setText(title);
     }
     
     public Date getTime() {

@@ -6,8 +6,8 @@ import com.google.gdata.data.spreadsheet.*;
 import com.google.gdata.util.ServiceException;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionServiceImpl;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
+import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 import java.io.IOException;
@@ -34,16 +34,24 @@ public class GoogleStorageService implements StorageService {
     private URL listFeedUrl;
     private List<WorksheetEntry> worksheets;
     private WorksheetEntry defaultWorksheet;
+	private final Map<String, Integer> headingIndex;
     private Map<String,String> taskLinkMap;
     private Map<String, List<String>> tasks;
 
     public GoogleStorageService() throws IOException, ServiceException {
-        this.spreadsheetKey = "";
+        this.spreadsheetKey = "0AmXECtmef2_bdGxGbm5fSERmRENxMzlMV3hXUTFEaFE";
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        service.setUserCredentials("", "");
+        service.setUserCredentials("Uta.Wunderlich@sii.com", "gunnar0351");
         factory = FeedURLFactory.getDefault();
         listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
+        headingIndex = new LinkedHashMap<String, Integer>();
+        CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
+		for (CellEntry entry : cellFeed.getEntries()) {
+			if (entry.getCell().getRow() == 1)
+				headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
+			else break;
+		}
         reloadWorksheets();
         loadTasks();
     }
@@ -59,6 +67,37 @@ public class GoogleStorageService implements StorageService {
         return tasks;
     }
 
+    public List<TaskEntry> getTaskEntries(Date date) {
+    	List <TaskEntry> taskEntries = new ArrayList<TaskEntry>();
+		try {
+			reloadWorksheets();
+	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+	        List<ListEntry> listEntries = feed.getEntries();
+	        for (int i = defaultWorksheet.getRowCount() - 2; i > 0; i--) {
+	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
+	            if (elements.getValue(DATE) == null) continue;
+	            if (!new SimpleDateFormat(dateFormat).format(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)))
+	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;
+	            
+	            String task = elements.getValue(TASK);
+	            if (task == null) break;
+	            taskEntries.add(0, new TaskEntry(new SimpleDateFormat(timeFormat).format(
+	            		new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME))), task, new Long(i)));
+	            if (CHECK_IN.equals(task)) break;
+	        }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return taskEntries;
+    }
+    
     public void storeTimeEntry(Date dateTime, String task) {
         storeTimeEntry(dateTime, task, null);
     }
@@ -70,7 +109,7 @@ public class GoogleStorageService implements StorageService {
 			reloadWorksheets();
 			ListEntry timeEntry = new ListEntry();
 			String taskLink = null;
-			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
 			timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(dateTime));
 			if (defaultTotal == null)
 				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(dateTime));
@@ -85,9 +124,9 @@ public class GoogleStorageService implements StorageService {
 
 			reloadWorksheets();
 			if (taskLink != null) {
-				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), 7, "=" + taskLink); // todo column 7 for task
+				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TASK), "=" + taskLink);
 				if (defaultTotal == null)
-					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), 3, "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
+					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -108,7 +147,7 @@ public class GoogleStorageService implements StorageService {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
                 if (CHECK_IN.equals(elements.getValue(TASK))) break; // begin of day
             }
-            createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 4, "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])"); // todo column DT=4
+            createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(DAILY_TOTAL), "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])");
         } catch (IOException e) {
             e.printStackTrace();  //Todo
         } catch (ServiceException e) {
@@ -132,8 +171,8 @@ public class GoogleStorageService implements StorageService {
 			service.insert(listFeedUrl, timeEntry);
 			reloadWorksheets();
 			
-			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 5, "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])"); // todo column WT=5
-			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), 8, "=R[0]C[-3]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]"); // todo column Overtime=8
+			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
+			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C[-3]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
             e.printStackTrace();  //Todo
         } catch (ServiceException e) {
