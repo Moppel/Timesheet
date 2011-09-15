@@ -99,11 +99,11 @@ public class GoogleStorageService implements StorageService {
 		return taskEntries;
     }
     
-    public void storeTimeEntry(Date dateTime, String task) {
-        storeTimeEntry(dateTime, task, null);
+    public void createTaskEntry(Date dateTime, String task) {
+        createTaskEntry(dateTime, task, null);
     }
 
-    public void storeTimeEntry(Date dateTime, String task, String defaultTotal) {
+    public void createTaskEntry(Date dateTime, String task, String defaultTotal) {
         Calendar cal = new GregorianCalendar();
         cal.setTime(dateTime);
         try {

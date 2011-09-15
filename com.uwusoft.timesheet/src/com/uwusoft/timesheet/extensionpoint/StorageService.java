@@ -51,7 +51,7 @@ public interface StorageService {
      * @throws IOException
      * @throws ServiceException
      */
-    void storeTimeEntry(Date dateTime, String task);
+    void createTaskEntry(Date dateTime, String task);
 
     /**
      * store default daily task with default total
@@ -61,7 +61,7 @@ public interface StorageService {
      * @throws IOException
      * @throws ServiceException
      */
-    void storeTimeEntry(Date dateTime, String task, String defaultTotal);
+    void createTaskEntry(Date dateTime, String task, String defaultTotal);
     
     /**
      * 

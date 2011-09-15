@@ -68,10 +68,10 @@ public class TimesheetApp implements IApplication {
 					TimeDialog timeDialog = new TimeDialog(new Shell(display), "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
 							props.getProperty("task.last"), shutdownDate);
 					if (timeDialog.open() == Dialog.OK) {
-						storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
+						storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
 						storageService.storeLastDailyTotal();
 						if (props.getProperty("task.daily") != null)
-							storageService.storeTimeEntry(
+							storageService.createTaskEntry(
 									timeDialog.getTime(), props.getProperty("task.daily"), props.getProperty("task.daily.total"));
 					}
 					// automatic check in
@@ -80,7 +80,7 @@ public class TimesheetApp implements IApplication {
 					if (timeDialog.open() == Dialog.OK) {
 						if (startWeek != shutdownWeek)
 							storageService.storeLastWeekTotal(props.getProperty("weekly.workinghours")); // store Week and Overtime
-						storageService.storeTimeEntry(timeDialog.getTime(), StorageService.CHECK_IN);
+						storageService.createTaskEntry(timeDialog.getTime(), StorageService.CHECK_IN);
 						props.storeProperty("task.last", props.getProperty("task.default"));
 					}
 				}

@@ -119,7 +119,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							if (selectedTask.equals("")) return;
 							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
-				                storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
+				                storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
 				                try {
 									props.storeProperty("task.last", selectedTask);
 								} catch (IOException e1) {
