@@ -1,10 +1,11 @@
 package com.uwusoft.timesheet.extensionpoint;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.List;
 import java.util.Date;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
+
+import org.osgi.framework.ServiceException;
 
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 

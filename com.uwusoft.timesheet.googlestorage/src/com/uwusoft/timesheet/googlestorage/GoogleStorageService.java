@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
@@ -57,7 +56,6 @@ public class GoogleStorageService implements StorageService {
     private static WorksheetEntry defaultWorksheet;
     private static Map<String,String> taskLinkMap;
     private static Map<String, List<String>> tasks;
-    private static Display display;
     private static String message;
     
     static {
@@ -65,7 +63,6 @@ public class GoogleStorageService implements StorageService {
         spreadsheetKey = props.getProperty("spreadsheet.key");
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        display = PlatformUI.createDisplay();
         try {
         	while (!authenticate(props.getProperty("user.name")));
 			factory = FeedURLFactory.getDefault();
@@ -92,7 +89,7 @@ public class GoogleStorageService implements StorageService {
     
     private static boolean authenticate(String user) {
         try {
-			LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, user);
+			LoginDialog loginDialog = new LoginDialog(PlatformUI.createDisplay(), "Google Log in", message, user);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
 	        	return true;
