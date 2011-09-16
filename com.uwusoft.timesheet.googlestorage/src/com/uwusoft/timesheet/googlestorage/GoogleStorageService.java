@@ -58,6 +58,7 @@ public class GoogleStorageService implements StorageService {
     private static Map<String,String> taskLinkMap;
     private static Map<String, List<String>> tasks;
     private static Display display;
+    private static String message;
     
     static {
     	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "google");
@@ -91,13 +92,13 @@ public class GoogleStorageService implements StorageService {
     
     private static boolean authenticate(String user) {
         try {
-			LoginDialog loginDialog = new LoginDialog(display, user);
+			LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, user);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
 	        	return true;
 			}
 		} catch (AuthenticationException e) {
-			e.printStackTrace(); // TODO
+			message = e.getMessage();
 			return false;
 		}
 		System.exit(1);
