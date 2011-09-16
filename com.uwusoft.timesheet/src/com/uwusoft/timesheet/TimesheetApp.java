@@ -13,7 +13,6 @@ import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
@@ -65,7 +64,7 @@ public class TimesheetApp implements IApplication {
 					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 							.getService(props.getProperty(StorageService.PROPERTY));
 					if (storageService == null) return IApplication.EXIT_OK;
-					TimeDialog timeDialog = new TimeDialog(new Shell(display), "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
+					TimeDialog timeDialog = new TimeDialog(display, "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
 							props.getProperty("task.last"), shutdownDate);
 					if (timeDialog.open() == Dialog.OK) {
 						storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
@@ -75,7 +74,7 @@ public class TimesheetApp implements IApplication {
 									timeDialog.getTime(), props.getProperty("task.daily"), props.getProperty("task.daily.total"));
 					}
 					// automatic check in
-					timeDialog = new TimeDialog(new Shell(display), "Check in at " + DateFormat.getDateInstance().format(startDate),
+					timeDialog = new TimeDialog(display, "Check in at " + DateFormat.getDateInstance().format(startDate),
 							StorageService.CHECK_IN, startDate);
 					if (timeDialog.open() == Dialog.OK) {
 						if (startWeek != shutdownWeek)
@@ -89,8 +88,17 @@ public class TimesheetApp implements IApplication {
 			if (returnCode == PlatformUI.RETURN_RESTART) {
 				return IApplication.EXIT_RESTART;
 			}
-	        ShutdownHook shutdownHook = new ShutdownHook();
-	        Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+	            public void run() {
+	    			PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
+	                try {
+	    				props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
+	    			} catch (IOException e) {
+	    				helpAndTerminate(e.getMessage());
+	    			}
+	            }	        	
+	        });
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -120,16 +128,5 @@ public class TimesheetApp implements IApplication {
         System.out.println(message);
     	// displayError(message);
         System.exit(1);
-    }
-
-    class ShutdownHook extends Thread {
-        public void run() {
-			PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
-            try {
-				props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
-			} catch (IOException e) {
-				helpAndTerminate(e.getMessage());
-			}
-        }
     }
 }

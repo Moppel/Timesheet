@@ -1,21 +1,41 @@
 package com.uwusoft.timesheet.googlestorage;
 
-import com.google.gdata.client.spreadsheet.FeedURLFactory;
-import com.google.gdata.client.spreadsheet.SpreadsheetService;
-import com.google.gdata.data.spreadsheet.*;
-import com.google.gdata.util.ServiceException;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
-import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
-import com.uwusoft.timesheet.util.ExtensionManager;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
+
+import com.google.gdata.client.spreadsheet.FeedURLFactory;
+import com.google.gdata.client.spreadsheet.SpreadsheetService;
+import com.google.gdata.data.spreadsheet.CellEntry;
+import com.google.gdata.data.spreadsheet.CellFeed;
+import com.google.gdata.data.spreadsheet.CustomElementCollection;
+import com.google.gdata.data.spreadsheet.ListEntry;
+import com.google.gdata.data.spreadsheet.ListFeed;
+import com.google.gdata.data.spreadsheet.WorksheetEntry;
+import com.google.gdata.data.spreadsheet.WorksheetFeed;
+import com.google.gdata.util.AuthenticationException;
+import com.google.gdata.util.ServiceException;
+import com.uwusoft.timesheet.dialog.LoginDialog;
+import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
+import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
+import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.PropertiesUtil;
 
 /**
  * storage service for Google Docs spreadsheet
@@ -28,31 +48,63 @@ public class GoogleStorageService implements StorageService {
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
-    private String spreadsheetKey;
-    private SpreadsheetService service;
-    private FeedURLFactory factory;
-    private URL listFeedUrl;
-    private List<WorksheetEntry> worksheets;
-    private WorksheetEntry defaultWorksheet;
-	private final Map<String, Integer> headingIndex;
-    private Map<String,String> taskLinkMap;
-    private Map<String, List<String>> tasks;
-
-    public GoogleStorageService() throws IOException, ServiceException {
-        this.spreadsheetKey = "";
+    private static String spreadsheetKey;
+    private static SpreadsheetService service;
+    private static FeedURLFactory factory;
+    private static URL listFeedUrl;
+	private static Map<String, Integer> headingIndex;
+    private static List<WorksheetEntry> worksheets;
+    private static WorksheetEntry defaultWorksheet;
+    private static Map<String,String> taskLinkMap;
+    private static Map<String, List<String>> tasks;
+    private static Display display;
+    
+    static {
+    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "google");
+        spreadsheetKey = props.getProperty("spreadsheet.key");
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        
-        service.setUserCredentials("", "");
-        factory = FeedURLFactory.getDefault();
-        listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
-        headingIndex = new LinkedHashMap<String, Integer>();
-        CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
-		for (CellEntry entry : cellFeed.getEntries()) {
-			if (entry.getCell().getRow() == 1)
-				headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
-			else break;
+        display = PlatformUI.createDisplay();
+        try {
+        	while (!authenticate(props.getProperty("user.name")));
+			factory = FeedURLFactory.getDefault();
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
+			headingIndex = new LinkedHashMap<String, Integer>();
+			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
+			for (CellEntry entry : cellFeed.getEntries()) {
+				if (entry.getCell().getRow() == 1)
+					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
+				else
+					break;
+			}
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+    }
+    
+    private static boolean authenticate(String user) {
+        try {
+			LoginDialog loginDialog = new LoginDialog(display, user);
+			if (loginDialog.open() == Dialog.OK) {
+	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+	        	return true;
+			}
+		} catch (AuthenticationException e) {
+			e.printStackTrace(); // TODO
+			return false;
+		}
+		System.exit(1);
+		return false; 
+   }
+
+    public GoogleStorageService() throws IOException, ServiceException {        
         reloadWorksheets();
         loadTasks();
     }

@@ -13,6 +13,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
@@ -21,12 +22,12 @@ public class TimeDialog extends Dialog {
 	private String title, task;
     private int day, month, year, hours, minutes;
 	
-	public TimeDialog(Shell parentShell, String task, Date time) {
-		this(parentShell, "Time", task, time);
+	public TimeDialog(Display display, String task, Date time) {
+		this(display, "Time", task, time);
 	}
     
-    public TimeDialog(Shell parentShell, String title, String task, Date time) {
-		super(parentShell);
+    public TimeDialog(Display display, String title, String task, Date time) {
+		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
 		this.title = title;
 		this.task = task;
 		Calendar calendar = Calendar.getInstance();
@@ -44,7 +45,7 @@ public class TimeDialog extends Dialog {
         composite.setLayout(new GridLayout(1, false));
         
         GridData gridData = new GridData();
-        gridData.horizontalAlignment = GridData.CENTER;
+        gridData.horizontalAlignment = SWT.CENTER;
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
@@ -73,6 +74,7 @@ public class TimeDialog extends Dialog {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
+        timeEntry.setFocus();
         return composite;
     }
 

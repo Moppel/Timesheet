@@ -22,6 +22,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -61,7 +62,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		super.postWindowOpen();
 		window = getWindowConfigurer().getWindow();
 		trayItem = initTaskItem(window);
-		window.getShell().setMinimized(true);
 		// Some OS might not support tray items
 		if (trayItem != null) {
 			minimizeBehavior();
@@ -117,7 +117,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
 						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 							if (selectedTask.equals("")) return;
-							TimeDialog timeDialog = new TimeDialog(window.getShell(), selectedTask, new Date());
+							TimeDialog timeDialog = new TimeDialog(PlatformUI.createDisplay(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
 				                storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
 				                try {

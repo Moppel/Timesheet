@@ -224,7 +224,7 @@ public class TasksView extends ViewPart {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			try {
-				TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getShell(), entry.getTask(), new SimpleDateFormat("HH:mm").parse(entry.getTime()));
+				TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(), entry.getTask(), new SimpleDateFormat("HH:mm").parse(entry.getTime()));
 				if (timeDialog.open() == Dialog.OK) {
 	                //storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
 					return new SimpleDateFormat("HH:mm").format(timeDialog.getTime());
