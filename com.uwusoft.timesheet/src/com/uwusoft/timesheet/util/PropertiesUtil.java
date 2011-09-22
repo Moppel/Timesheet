@@ -2,6 +2,7 @@ package com.uwusoft.timesheet.util;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,8 +36,7 @@ public class PropertiesUtil {
 			} else
 				transferProps.load(new FileInputStream(props));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError("Configuration file", e.getLocalizedMessage());
 		}
 	}
 
@@ -44,10 +44,17 @@ public class PropertiesUtil {
 		return transferProps.getProperty(key);
 	}
     
-	public void storeProperty(String key, String value) throws IOException {
-        OutputStream out = new FileOutputStream(props);
-        transferProps.setProperty(key, value);
-        transferProps.store(out, comment);
-        out.close();
+	public void storeProperty(String key, String value) {
+        OutputStream out;
+		try {
+			out = new FileOutputStream(props);
+	        transferProps.setProperty(key, value);
+	        transferProps.store(out, comment);
+	        out.close();
+		} catch (FileNotFoundException e) {
+			MessageBox.setError("Configuration file not found", e.getLocalizedMessage());
+		} catch (IOException e) {
+			MessageBox.setError("Configuration file", e.getLocalizedMessage());
+		}
     }
 }

@@ -1,5 +1,7 @@
 package com.uwusoft.timesheet;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -35,10 +37,13 @@ import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
-public class TasksView extends ViewPart {
+public class TasksView extends ViewPart implements PropertyChangeListener {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
+	
+	private static final String title="Task's View";
 
 	private StorageService storageService;
 	private PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
@@ -99,6 +104,7 @@ public class TasksView extends ViewPart {
 		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
 		if (storageService == null) return;
 		
+		storageService.addPropertyChangeListener(this);
 		viewer.setInput(storageService.getTaskEntries(new Date()));
 		// Make the selection available to other views
 		getSite().setSelectionProvider(viewer);
@@ -139,8 +145,7 @@ public class TasksView extends ViewPart {
 		        try {
 					storageService.updateTaskEntry(new SimpleDateFormat("HH:mm").parse(entry.getTime()), entry.getId());
 				} catch (ParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					MessageBox.setError(title, e.getLocalizedMessage());
 				}
 		        viewer.refresh(element);
 		    }
@@ -224,12 +229,10 @@ public class TasksView extends ViewPart {
 			try {
 				TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(), entry.getTask(), new SimpleDateFormat("HH:mm").parse(entry.getTime()));
 				if (timeDialog.open() == Dialog.OK) {
-	                //storageService.storeTimeEntry(timeDialog.getTime(), props.getProperty("task.last"));
 					return new SimpleDateFormat("HH:mm").format(timeDialog.getTime());
 				}
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MessageBox.setError(title, e.getLocalizedMessage());
 			}
 			return null;
 		}		
@@ -266,5 +269,11 @@ public class TasksView extends ViewPart {
 			}
 			return null;
 		}		
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent e) {
+		viewer.setInput(storageService.getTaskEntries(new Date()));
+		viewer.refresh();
 	}
 }
