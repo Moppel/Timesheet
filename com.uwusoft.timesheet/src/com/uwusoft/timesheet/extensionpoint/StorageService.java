@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.extensionpoint;
 
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +39,10 @@ public interface StorageService {
      */
     Map<String, List<String>> getTasks();
 
+    void addPropertyChangeListener(PropertyChangeListener listener);
+    
+    void removePropertyChangeListener(PropertyChangeListener listener);
+    
     /**
      * @param date
      * @return a list of {@link TaskEntry}'s for the date
