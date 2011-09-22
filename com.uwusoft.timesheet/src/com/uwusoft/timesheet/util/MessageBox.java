@@ -20,8 +20,7 @@ public class MessageBox {
 		if (tip != null) return tip;
 		try {
 			workbench = PlatformUI.getWorkbench();
-			shell = workbench.getDisplay().getActiveShell();
-			if (shell == null) shell = new Shell(workbench.getDisplay(), SWT.NO_TRIM | SWT.ON_TOP);
+			shell = new Shell(workbench.getDisplay(), SWT.NO_TRIM | SWT.ON_TOP);
 			if (workbench.getDisplay().getSystemTray().getItemCount() > 0) {
 				ToolTip tip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_INFORMATION);
 				workbench.getDisplay().getSystemTray().getItem(0).setToolTip(tip);
