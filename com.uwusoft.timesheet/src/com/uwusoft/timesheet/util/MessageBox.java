@@ -9,17 +9,17 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
 public class MessageBox {
-	private static IWorkbench workbench;
-	private static ToolTip tip;
+	private static ToolTip toolTip;
 	private static Shell shell;
+
 	static {
-		tip = getSystemTrayToolTip();
+		toolTip = getSystemTrayToolTip();
 	}
 
 	private static ToolTip getSystemTrayToolTip() {
-		if (tip != null) return tip;
+		if (toolTip != null) return toolTip;
 		try {
-			workbench = PlatformUI.getWorkbench();
+			IWorkbench workbench = PlatformUI.getWorkbench();
 			shell = new Shell(workbench.getDisplay(), SWT.NO_TRIM | SWT.ON_TOP);
 			if (workbench.getDisplay().getSystemTray().getItemCount() > 0) {
 				ToolTip tip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_INFORMATION);
@@ -28,32 +28,31 @@ public class MessageBox {
 			}
 			return null;
 		} catch (IllegalStateException e) {
+			shell = new Shell(Display.getDefault(), SWT.NO_TRIM | SWT.ON_TOP);
 			return null;
 		}
 	}
 
 	public static void setMessage(String title, String message) {
-		if ((tip = getSystemTrayToolTip()) == null) {
-			Display display = PlatformUI.createDisplay();
-			MessageDialog.openInformation(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP), title, message);
+		if ((toolTip = getSystemTrayToolTip()) == null) {
+			MessageDialog.openInformation(shell, title, message);
 		}
 		else {
-			tip.setText(title); 
-			tip.setMessage(message); 
-			tip.setVisible(true); 
+			toolTip.setText(title); 
+			toolTip.setMessage(message); 
+			toolTip.setVisible(true); 
 		}
 	}
 	
 	public static void setError(String title, String message) {
-		if ((tip = getSystemTrayToolTip()) == null) {
-			Display display = PlatformUI.createDisplay();
-			MessageDialog.openError(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP), title, message);
+		if ((toolTip = getSystemTrayToolTip()) == null) {
+			MessageDialog.openError(shell, title, message);
 		}
 		else {
-			tip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_ERROR);
-			tip.setText(title); 
-			tip.setMessage(message); 
-			tip.setVisible(true); 
+			toolTip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_ERROR);
+			toolTip.setText(title); 
+			toolTip.setMessage(message); 
+			toolTip.setVisible(true); 
 		}
 	}
 }
