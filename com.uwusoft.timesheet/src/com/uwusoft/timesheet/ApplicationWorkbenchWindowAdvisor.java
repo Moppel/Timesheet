@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -117,24 +116,46 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							TimeDialog timeDialog = new TimeDialog(getWindowConfigurer().getWindow().getShell().getDisplay(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
 				                storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
-				                try {
-									props.storeProperty("task.last", selectedTask);
-								} catch (IOException e1) {
-									e1.printStackTrace(); // TODO
-								}
+								props.storeProperty("task.last", selectedTask);
 							}
 						}						
 					}
 				});
+				MenuItem checkout = new MenuItem(menu, SWT.NONE);
+				checkout.setText("Check out and exit");
+				checkout.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
+						TimeDialog timeDialog = new TimeDialog(window.getShell().getDisplay(), "Check out",
+								props.getProperty("task.last"), new Date());
+						if (timeDialog.open() == Dialog.OK) {
+							StorageService storageService = new ExtensionManager<StorageService>(
+									StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
+							storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
+							storageService.storeLastDailyTotal();
+							if (props.getProperty("task.daily") != null)
+								storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.daily"),
+										props.getProperty("task.daily.total"));
+							props.storeProperty("task.last", null);
+			            	props.storeProperty("system.shutdown", TimesheetApp.formatter.format(timeDialog.getTime()));
+
+							IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
+							try {
+								handlerService.executeCommand(COMMAND_ID, null);
+							} catch (Exception ex) {
+								throw new RuntimeException(COMMAND_ID);
+							}
+						}
+					}
+				});
+
 				MenuItem submit = new MenuItem(menu, SWT.NONE);
 				submit.setText("Submit");
 				submit.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						new ExtensionManager<StorageService>(
-								StorageService.SERVICE_ID).getService(
-								new PropertiesUtil(TimesheetApp.class, "Timesheet")
-										.getProperty(StorageService.PROPERTY))
-								.submitEntries();
+								StorageService.SERVICE_ID).getService(new PropertiesUtil(TimesheetApp.class, "Timesheet")
+										.getProperty(StorageService.PROPERTY)).submitEntries();
 					}
 				});
 				// Creates a new menu item that terminates the program
@@ -143,7 +164,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				exit.setText("Exit");
 				exit.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
-						// Lets call our command
 						IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 						try {
 							handlerService.executeCommand(COMMAND_ID, null);
@@ -165,9 +185,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			trayImage = descriptor.createImage();
 			trayItem.setImage(trayImage);
 		}
-		/*final ToolTip tip = new ToolTip(window.getShell(), SWT.BALLOON | SWT.ICON_INFORMATION);
-		tip.setText("Timesheet");
-		tip.setVisible(true);*/
 		trayItem.setToolTipText("Timesheet");
 		return trayItem;
 

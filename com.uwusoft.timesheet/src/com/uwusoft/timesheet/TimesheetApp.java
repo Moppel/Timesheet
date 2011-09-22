@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.text.DateFormat;
@@ -19,6 +18,7 @@ import org.eclipse.ui.PlatformUI;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 /**
@@ -26,13 +26,30 @@ import com.uwusoft.timesheet.util.PropertiesUtil;
  */
 public class TimesheetApp implements IApplication {
 
-    private SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+    public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
 		Display display = PlatformUI.createDisplay();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+		    public void run() {
+				final PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
+            	props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
+				if (!PlatformUI.isWorkbenchRunning()) return;
+		    	final IWorkbench workbench = PlatformUI.getWorkbench();
+		    	final Display display = workbench.getDisplay();
+		    	display.syncExec(new Runnable() {
+					public void run() {
+						if (!display.isDisposed()) {
+			            	props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
+							workbench.close();
+						}
+					}
+		    	});
+		    }
+		});
 		try {
 			RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 			String startTime = formatter.format(mx.getStartTime());
@@ -42,27 +59,27 @@ public class TimesheetApp implements IApplication {
 			if (shutdownTime == null) shutdownTime = startTime;
 			else shutdownTime = formatter.format(formatter.parse(shutdownTime));
 
-			props.storeProperty("system.start", startTime);
-
 			Calendar calDay = Calendar.getInstance();
 			Calendar calWeek = new GregorianCalendar();
 			int shutdownDay = 0;
 			int shutdownWeek = 0;
+			
 			Date startDate = formatter.parse(startTime);
 			calDay.setTime(startDate);
 			calWeek.setTime(startDate);
 			int startDay = calDay.get(Calendar.DAY_OF_YEAR);
 			int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-			// automatic check out
-			if (props.getProperty("task.last") != null) { // last task will be set to null if a manual check out has occurred
-				Date shutdownDate = formatter.parse(shutdownTime);
-				calDay.setTime(shutdownDate);
-				shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
+
+			Date shutdownDate = formatter.parse(shutdownTime);
+			calDay.setTime(shutdownDate);
+			shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
+			if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
+				StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+						.getService(props.getProperty(StorageService.PROPERTY));
 				calWeek.setTime(shutdownDate);
 				shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-				if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
-					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-							.getService(props.getProperty(StorageService.PROPERTY));
+				if (props.getProperty("task.last") != null) { // last task will be set to null if a manual check out has occurred
+					// automatic check out
 					if (storageService == null) return IApplication.EXIT_OK;
 					TimeDialog timeDialog = new TimeDialog(display, "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
 							props.getProperty("task.last"), shutdownDate);
@@ -73,35 +90,24 @@ public class TimesheetApp implements IApplication {
 							storageService.createTaskEntry(
 									timeDialog.getTime(), props.getProperty("task.daily"), props.getProperty("task.daily.total"));
 					}
-					// automatic check in
-					timeDialog = new TimeDialog(display, "Check in at " + DateFormat.getDateInstance().format(startDate),
-							StorageService.CHECK_IN, startDate);
-					if (timeDialog.open() == Dialog.OK) {
-						if (startWeek != shutdownWeek)
-							storageService.storeLastWeekTotal(props.getProperty("weekly.workinghours")); // store Week and Overtime
-						storageService.createTaskEntry(timeDialog.getTime(), StorageService.CHECK_IN);
-						props.storeProperty("task.last", props.getProperty("task.default"));
-					}
+				}
+				// automatic check in
+				TimeDialog timeDialog = new TimeDialog(display, "Check in at "
+						+ DateFormat.getDateInstance().format(startDate),
+						StorageService.CHECK_IN, startDate);
+				if (timeDialog.open() == Dialog.OK) {
+					if (startWeek != shutdownWeek)
+						storageService.storeLastWeekTotal(props.getProperty("weekly.workinghours")); // store Week and Overtime
+					storageService.createTaskEntry(timeDialog.getTime(), StorageService.CHECK_IN);
+					props.storeProperty("task.last", props.getProperty("task.default"));
 				}
 			}
 			int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
 			if (returnCode == PlatformUI.RETURN_RESTART) {
 				return IApplication.EXIT_RESTART;
 			}
-
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-	            public void run() {
-	    			PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
-	                try {
-	    				props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
-	    			} catch (IOException e) {
-	    				helpAndTerminate(e.getMessage());
-	    			}
-	            }	        	
-	        });
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	        MessageBox.setMessage("Timesheet notification", e.getLocalizedMessage());
 		} finally {
 			display.dispose();
 		}
@@ -123,10 +129,4 @@ public class TimesheetApp implements IApplication {
 			}
 		});
 	}
-
-    private void helpAndTerminate(String message) {
-        System.out.println(message);
-    	// displayError(message);
-        System.exit(1);
-    }
 }
