@@ -1,5 +1,7 @@
 package com.uwusoft.timesheet.googlestorage;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
@@ -34,6 +37,7 @@ import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 /**
@@ -57,14 +61,14 @@ public class GoogleStorageService implements StorageService {
     private static Map<String,String> taskLinkMap;
     private static Map<String, List<String>> tasks;
     private static String message;
+    private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
+    private static String title = "Google Storage Service";
     
     static {
-    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "google");
-        spreadsheetKey = props.getProperty("spreadsheet.key");
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
         try {
-        	while (!authenticate(props.getProperty("user.name")));
+        	while (!authenticate());
 			factory = FeedURLFactory.getDefault();
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
 			headingIndex = new LinkedHashMap<String, Integer>();
@@ -76,43 +80,68 @@ public class GoogleStorageService implements StorageService {
 					break;
 			}
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     }
     
-    private static boolean authenticate(String user) {
+    private static boolean authenticate() {
         try {
-			LoginDialog loginDialog = new LoginDialog(PlatformUI.createDisplay(), "Google Log in", message, user);
+	    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "google");
+	    	Display display;
+	    	try {
+	    		display = PlatformUI.getWorkbench().getDisplay();
+			} catch (IllegalStateException e) {
+				display = PlatformUI.createDisplay();
+			}
+	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, props.getProperty("user.name"));
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+	        	props.storeProperty("user.name", loginDialog.getUser());
+	            spreadsheetKey = props.getProperty("spreadsheet.key");
 	        	return true;
 			}
 		} catch (AuthenticationException e) {
-			message = e.getMessage();
+			message = e.getLocalizedMessage();
 			return false;
 		}
-		System.exit(1);
+		System.exit(1); // TODO
 		return false; 
    }
 
-    public GoogleStorageService() throws IOException, ServiceException {        
+    public GoogleStorageService() {
         reloadWorksheets();
         loadTasks();
     }
 
-    private void reloadWorksheets() throws IOException, ServiceException {
-        WorksheetFeed feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
-        worksheets = feed.getEntries();
-        defaultWorksheet = worksheets.get(0);
-        worksheets.remove(defaultWorksheet); // only task sheets remaining
+    private void reloadWorksheets() {
+        WorksheetFeed feed;
+		try {
+			feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
+	        worksheets = feed.getEntries();
+	        defaultWorksheet = worksheets.get(0);
+	        worksheets.remove(defaultWorksheet); // only task sheets remaining
+		} catch (MalformedURLException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
     }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) 
+    { 
+    	listeners.add(listener); 
+    } 
+   
+    public void removePropertyChangeListener(PropertyChangeListener listener) 
+    { 
+    	listeners.remove(listener); 
+    } 
 
     public Map<String, List<String>> getTasks() {
         return tasks;
@@ -137,14 +166,11 @@ public class GoogleStorageService implements StorageService {
 	            if (CHECK_IN.equals(task)) break;
 	        }
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
 		return taskEntries;
     }
@@ -179,12 +205,12 @@ public class GoogleStorageService implements StorageService {
 				if (defaultTotal == null)
 					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
+			for (PropertyChangeListener listener : listeners)
+				listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     }
 
@@ -200,9 +226,9 @@ public class GoogleStorageService implements StorageService {
             }
             createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(DAILY_TOTAL), "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])");
         } catch (IOException e) {
-            e.printStackTrace();  //Todo
+			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
-            e.printStackTrace();  //Todo
+			MessageBox.setError(title, e.getLocalizedMessage());
         }
     }
 
@@ -253,9 +279,15 @@ public class GoogleStorageService implements StorageService {
 	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) break;
 
 	            if (elements.getValue(DATE) == null) continue;
-	            lastDate = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)); // search for last date and break
-	            entry = new DailySubmitEntry(lastDate);
-	            break;
+	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
+	            if (!date.equals(lastDate)) { // another day
+	            	if (lastDate == null) 
+	            		lastDate = date;
+	            	else {
+	    	            entry = new DailySubmitEntry(lastDate); // search for the day before and break
+	    	            break;
+	            	}
+	            }
 	        }
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
@@ -279,14 +311,11 @@ public class GoogleStorageService implements StorageService {
 	            		new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system));
 	        }
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     }
 
@@ -304,35 +333,29 @@ public class GoogleStorageService implements StorageService {
 					ListEntry entry = entries.get(i);
 					String value = entry.getCustomElements().getValue(TASK);
 					if (value != null) {
-						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // todo hardcoded: task must be in the first column
+						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // TODO hardcoded: task must be in the first column
 						tasks.get(title).add(value);
 					}
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MessageBox.setError(title, e.getLocalizedMessage());
 			} catch (ServiceException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				MessageBox.setError(title, e.getLocalizedMessage());
 			}
         }
     }
 
     private void createUpdateCellEntry(WorksheetEntry worksheet, int row, int col, String value) {
-        CellEntry entry;
 		try {
-			entry = service.getEntry(new URL(worksheet.getCellFeedUrl().toString() + "/" + "R" + row + "C" + col), CellEntry.class);
+			CellEntry entry = service.getEntry(new URL(worksheet.getCellFeedUrl().toString() + "/" + "R" + row + "C" + col), CellEntry.class);
 	        entry.changeInputValueLocal(value);
 	        entry.update();
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     }
 }
