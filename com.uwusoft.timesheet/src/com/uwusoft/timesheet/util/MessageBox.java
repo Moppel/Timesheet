@@ -12,10 +12,6 @@ public class MessageBox {
 	private static ToolTip toolTip;
 	private static Shell shell;
 
-	static {
-		toolTip = getSystemTrayToolTip();
-	}
-
 	private static ToolTip getSystemTrayToolTip() {
 		if (toolTip != null) return toolTip;
 		try {
