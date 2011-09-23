@@ -160,7 +160,7 @@ public class GoogleStorageService implements StorageService {
 	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;
 	            
 	            String task = elements.getValue(TASK);
-	            if (task == null) break;
+	            if (task == null || elements.getValue(TIME) == null) break;
 	            taskEntries.add(0, new TaskEntry(new SimpleDateFormat(timeFormat).format(
 	            		new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME))), task, new Long(i + 2)));
 	            if (CHECK_IN.equals(task)) break;

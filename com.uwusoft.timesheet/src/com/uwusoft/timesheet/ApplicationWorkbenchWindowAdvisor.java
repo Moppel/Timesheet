@@ -32,6 +32,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -59,9 +60,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	public void postWindowOpen() {
 		super.postWindowOpen();
 		window = getWindowConfigurer().getWindow();
+		//MessageBox.setMessage("Timesheet", "Welcome");
 		trayItem = initTaskItem(window);
 		// Some OS might not support tray items
 		if (trayItem != null) {
+			//MessageBox.setMessage("Timesheet", "Welcome");
 			minimizeBehavior();
 			hookPopupMenu();
 		}
@@ -136,7 +139,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							if (props.getProperty("task.daily") != null)
 								storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.daily"),
 										props.getProperty("task.daily.total"));
-							props.storeProperty("task.last", null);
+							props.removeProperty("task.last");
 			            	props.storeProperty("system.shutdown", TimesheetApp.formatter.format(timeDialog.getTime()));
 
 							IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);

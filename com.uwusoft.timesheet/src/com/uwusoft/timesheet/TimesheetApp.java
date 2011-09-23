@@ -81,7 +81,7 @@ public class TimesheetApp implements IApplication {
 				if (props.getProperty("task.last") != null) { // last task will be set to null if a manual check out has occurred
 					// automatic check out
 					if (storageService == null) return IApplication.EXIT_OK;
-					TimeDialog timeDialog = new TimeDialog(display, "Check out at " + DateFormat.getDateInstance().format(shutdownDate),
+					TimeDialog timeDialog = new TimeDialog(display, "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 							props.getProperty("task.last"), shutdownDate);
 					if (timeDialog.open() == Dialog.OK) {
 						storageService.createTaskEntry(timeDialog.getTime(), props.getProperty("task.last"));
@@ -92,8 +92,7 @@ public class TimesheetApp implements IApplication {
 					}
 				}
 				// automatic check in
-				TimeDialog timeDialog = new TimeDialog(display, "Check in at "
-						+ DateFormat.getDateInstance().format(startDate),
+				TimeDialog timeDialog = new TimeDialog(display, "Check in at "	+ DateFormat.getDateInstance(DateFormat.SHORT).format(startDate),
 						StorageService.CHECK_IN, startDate);
 				if (timeDialog.open() == Dialog.OK) {
 					if (startWeek != shutdownWeek)

@@ -57,4 +57,18 @@ public class PropertiesUtil {
 			MessageBox.setError("Configuration file", e.getLocalizedMessage());
 		}
     }
+	
+	public void removeProperty(String key) {
+        OutputStream out;
+		try {
+			out = new FileOutputStream(props);
+	        transferProps.remove(key);
+	        transferProps.store(out, comment);
+	        out.close();
+		} catch (FileNotFoundException e) {
+			MessageBox.setError("Configuration file not found", e.getLocalizedMessage());
+		} catch (IOException e) {
+			MessageBox.setError("Configuration file", e.getLocalizedMessage());
+		}
+	}
 }
