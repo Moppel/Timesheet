@@ -278,15 +278,10 @@ public class GoogleStorageService implements StorageService {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
 	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) break;
 
-	            if (elements.getValue(DATE) == null) continue;
-	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
-	            if (!date.equals(lastDate)) { // another day
-	            	if (lastDate == null) 
-	            		lastDate = date;
-	            	else {
-	    	            entry = new DailySubmitEntry(lastDate); // search for the day before and break
-	    	            break;
-	            	}
+				if (elements.getValue(TIME) == null || elements.getValue(DAILY_TOTAL) != null) { // search for last complete day and break
+					lastDate = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
+					entry = new DailySubmitEntry(lastDate);
+					break;
 	            }
 	        }
 	        for (; i > 0; i--) {
