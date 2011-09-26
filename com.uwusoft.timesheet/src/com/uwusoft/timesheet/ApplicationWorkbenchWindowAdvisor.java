@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
@@ -32,7 +33,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -125,7 +125,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					}
 				});
 				MenuItem checkout = new MenuItem(menu, SWT.NONE);
-				checkout.setText("Check out and exit");
+				checkout.setText("Check out");
 				checkout.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
@@ -141,13 +141,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 										props.getProperty("task.daily.total"));
 							props.removeProperty("task.last");
 			            	props.storeProperty("system.shutdown", TimesheetApp.formatter.format(timeDialog.getTime()));
-
-							IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
-							try {
-								handlerService.executeCommand(COMMAND_ID, null);
-							} catch (Exception ex) {
-								throw new RuntimeException(COMMAND_ID);
-							}
 						}
 					}
 				});
@@ -161,6 +154,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 										.getProperty(StorageService.PROPERTY)).submitEntries();
 					}
 				});
+				MenuItem prefs = new MenuItem(menu, SWT.NONE);
+				prefs.setText("Settings");
+				prefs.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						ActionFactory.PREFERENCES.create(window).run();						
+					}
+				});
+				
 				// Creates a new menu item that terminates the program
 				// when selected
 				MenuItem exit = new MenuItem(menu, SWT.NONE);
