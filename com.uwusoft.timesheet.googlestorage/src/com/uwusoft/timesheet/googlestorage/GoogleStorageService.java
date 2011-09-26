@@ -18,7 +18,6 @@ import java.util.Map;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
@@ -90,17 +89,21 @@ public class GoogleStorageService implements StorageService {
     
     private static boolean authenticate() {
         try {
-	    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "google");
-	    	Display display;
-	    	try {
-	    		display = PlatformUI.getWorkbench().getDisplay();
-			} catch (IllegalStateException e) {
-				display = PlatformUI.createDisplay();
-			}
-	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, props.getProperty("user.name"));
+	    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "Google");
+	    	String userName = props.getProperty("user.name");
+	    	String password = props.getProperty("user.password");
+	    	/*if (userName != null && password != null) {
+	        	service.setUserCredentials(userName, password);
+	            spreadsheetKey = props.getProperty("spreadsheet.key");
+	        	return true;
+	    	}*/
+	    	
+	    	Display display = Display.getDefault();
+	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
 	        	props.storeProperty("user.name", loginDialog.getUser());
+	        	//props.storeProperty("user.password", loginDialog.getPassword());
 	            spreadsheetKey = props.getProperty("spreadsheet.key");
 	        	return true;
 			}
@@ -108,7 +111,8 @@ public class GoogleStorageService implements StorageService {
 			message = e.getLocalizedMessage();
 			return false;
 		}
-		System.exit(1); // TODO
+        Display.getDefault().dispose();
+		System.exit(1);
 		return false; 
    }
 
