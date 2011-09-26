@@ -16,12 +16,13 @@ public class LoginDialog extends Dialog {
 	private Text txtUserName, txtPassword;
 	private Display display;
 
-	public LoginDialog(Display display, String title, String message, String user) {
+	public LoginDialog(Display display, String title, String message, String user, String password) {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
 		this.display = display;
 		this.title = title;
 		this.message = message;
 		this.user = user;
+		this.password = password;
 	}
 
 	@Override
@@ -42,11 +43,12 @@ public class LoginDialog extends Dialog {
 		Label label = new Label(composite, SWT.NONE);
         label.setText("User: ");
         txtUserName = new Text(composite, SWT.NONE);
-        txtUserName.setText(user);
+        if (user != null) txtUserName.setText(user);
         label = new Label(composite, SWT.NONE);
         label.setText("Password: ");
         txtPassword = new Text(composite, SWT.NONE);
         txtPassword.setEchoChar('*');
+        if (password != null) txtPassword.setText(password);
         //getButton(OK).setText("Login");
 		return composite;
 	}
