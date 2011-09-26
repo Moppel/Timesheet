@@ -46,13 +46,11 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu">
-         <menu
-               label="File">
-            <command
-                  commandId="org.eclipse.ui.file.exit"
-                  label="Exit">
-            </command>
-         </menu>
+         <command
+               commandId="org.eclipse.ui.window.preferences"
+               label="Show Preferences"
+               style="push">
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -76,7 +74,7 @@
       <page
             class="com.uwusoft.timesheet.TimesheetPreferencePage"
             id="com.uwusoft.timesheet.TimesheetPreferencePage"
-            name="TimesheetPreferencePage">
+            name="Timesheet Preferences">
       </page>
    </extension>
 

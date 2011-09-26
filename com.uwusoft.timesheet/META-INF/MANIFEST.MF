@@ -6,10 +6,12 @@ Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: com.uwusoft.timesheet.Activator
 Bundle-Vendor: UWUSOFT
 Require-Bundle: org.eclipse.ui,
- org.eclipse.core.runtime
+ org.eclipse.core.runtime,
+ org.eclipse.equinox.security;bundle-version="1.1.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: com.uwusoft.timesheet.dialog,
+Export-Package: com.uwusoft.timesheet,
+ com.uwusoft.timesheet.dialog,
  com.uwusoft.timesheet.extensionpoint,
  com.uwusoft.timesheet.extensionpoint.model,
  com.uwusoft.timesheet.util
