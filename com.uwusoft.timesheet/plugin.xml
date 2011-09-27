@@ -72,8 +72,8 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            class="com.uwusoft.timesheet.TimesheetPreferencePage"
-            id="com.uwusoft.timesheet.TimesheetPreferencePage"
+            class="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
+            id="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
             name="Timesheet Preferences">
       </page>
    </extension>

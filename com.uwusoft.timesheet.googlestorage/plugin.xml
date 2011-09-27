@@ -10,7 +10,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="com.uwusoft.timesheet.TimesheetPreferencePage"
+            category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
             class="com.uwusoft.timesheet.googlestorage.GooglePreferencePage"
             id="com.uwusoft.timesheet.googlestorage.GooglePreferencePage"
             name="Google Spreadsheet Preferences">
