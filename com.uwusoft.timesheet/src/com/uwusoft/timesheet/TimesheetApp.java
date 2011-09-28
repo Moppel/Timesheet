@@ -33,35 +33,35 @@ public class TimesheetApp implements IApplication {
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
     public static final String LAST_TASK = "task.last";
+    private static final String SYSTEM_SHUTDOWN = "system.shutdown";
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
 		Display display = PlatformUI.createDisplay();
-		/*Runtime.getRuntime().addShutdownHook(new Thread() {
+		final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    public void run() {
-				final PropertiesUtil props = new PropertiesUtil(this.getClass(), "Timesheet");
-            	props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
+				preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
 				if (!PlatformUI.isWorkbenchRunning()) return;
 		    	final IWorkbench workbench = PlatformUI.getWorkbench();
 		    	final Display display = workbench.getDisplay();
 		    	display.syncExec(new Runnable() {
 					public void run() {
 						if (!display.isDisposed()) {
-			            	props.storeProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
+							preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
 							workbench.close();
 						}
 					}
 		    	});
 		    }
-		});*/
+		});
 		try {
 			RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 			String startTime = formatter.format(mx.getStartTime());
 
-			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-			String shutdownTime = preferenceStore.getString("system.shutdown");
+			String shutdownTime = preferenceStore.getString(SYSTEM_SHUTDOWN);
 			if (shutdownTime == "") shutdownTime = startTime;
 			else shutdownTime = formatter.format(formatter.parse(shutdownTime));
 
