@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -38,7 +39,6 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
-import com.uwusoft.timesheet.util.PropertiesUtil;
 
 public class TasksView extends ViewPart implements PropertyChangeListener {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
@@ -46,7 +46,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	private static final String title="Task's View";
 
 	private StorageService storageService;
-	private PropertiesUtil props = new PropertiesUtil(TimesheetApp.class, "Timesheet");
+	IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 	private TableViewer viewer;
 	
 	/**
@@ -101,7 +101,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		viewer.setContentProvider(new ArrayContentProvider());
 
-		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(props.getProperty(StorageService.PROPERTY));
+		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		if (storageService == null) return;
 		
 		storageService.addPropertyChangeListener(this);
