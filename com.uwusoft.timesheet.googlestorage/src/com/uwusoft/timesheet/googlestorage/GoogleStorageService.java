@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
@@ -30,6 +31,7 @@ import com.google.gdata.data.spreadsheet.WorksheetEntry;
 import com.google.gdata.data.spreadsheet.WorksheetFeed;
 import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
+import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -37,7 +39,7 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
-import com.uwusoft.timesheet.util.PropertiesUtil;
+import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
 /**
  * storage service for Google Docs spreadsheet
@@ -47,6 +49,10 @@ import com.uwusoft.timesheet.util.PropertiesUtil;
  * @since Aug 15, 2011
  */
 public class GoogleStorageService implements StorageService {
+
+    public static final String USERNAME="user.name";
+    public static final String PASSWORD="user.password";
+    public static final String SPREADSHEET_KEY="spreadsheet.key";
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
@@ -89,22 +95,26 @@ public class GoogleStorageService implements StorageService {
     
     private static boolean authenticate() {
         try {
-	    	PropertiesUtil props = new PropertiesUtil(GoogleStorageService.class, "Google");
-	    	String userName = props.getProperty("user.name");
-	    	String password = props.getProperty("user.password");
-	    	/*if (userName != null && password != null) {
+			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+			SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
+	    	String userName = preferenceStore.getString(USERNAME);
+	    	String password = secureProps.getProperty(PASSWORD);
+	    	if (userName != "" && password != null) {
 	        	service.setUserCredentials(userName, password);
-	            spreadsheetKey = props.getProperty("spreadsheet.key");
+	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
-	    	}*/
+	    	}
 	    	
 	    	Display display = Display.getDefault();
 	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
-	        	props.storeProperty("user.name", loginDialog.getUser());
-	        	//props.storeProperty("user.password", loginDialog.getPassword());
-	            spreadsheetKey = props.getProperty("spreadsheet.key");
+	        	preferenceStore.setValue(USERNAME, loginDialog.getUser());
+	        	if (loginDialog.isStorePassword())
+	        		secureProps.storeProperty(PASSWORD, loginDialog.getPassword());
+	        	else
+	        		secureProps.removeProperty(PASSWORD);
+	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
 			}
 		} catch (AuthenticationException e) {

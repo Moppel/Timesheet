@@ -4,6 +4,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -14,6 +15,8 @@ import org.eclipse.swt.widgets.Text;
 public class LoginDialog extends Dialog {
 	private String title, message, user, password;
 	private Text txtUserName, txtPassword;
+	private Button checkbox;
+	private boolean storePassword;
 	private Display display;
 
 	public LoginDialog(Display display, String title, String message, String user, String password) {
@@ -42,13 +45,24 @@ public class LoginDialog extends Dialog {
         
 		Label label = new Label(composite, SWT.NONE);
         label.setText("User: ");
+    	GridData gridData = new GridData();
+    	gridData.widthHint = 150;
+    	gridData.horizontalAlignment = SWT.FILL;
         txtUserName = new Text(composite, SWT.NONE);
+        txtUserName.setLayoutData(gridData);
         if (user != null) txtUserName.setText(user);
         label = new Label(composite, SWT.NONE);
         label.setText("Password: ");
         txtPassword = new Text(composite, SWT.NONE);
+        txtPassword.setLayoutData(gridData);
         txtPassword.setEchoChar('*');
         if (password != null) txtPassword.setText(password);
+		gridData = new GridData();
+		gridData.horizontalAlignment = SWT.CENTER;
+		gridData.horizontalSpan = 2;
+        checkbox = new Button(parent, SWT.CHECK);
+        checkbox.setText("Save password encrypted in your user home?");
+        checkbox.setLayoutData(gridData);
         //getButton(OK).setText("Login");
 		return composite;
 	}
@@ -63,6 +77,7 @@ public class LoginDialog extends Dialog {
 	protected void okPressed() {
 		user = txtUserName.getText();
 		password = txtPassword.getText();
+		storePassword = checkbox.getSelection();
 		super.okPressed();
 	}
 
@@ -73,4 +88,11 @@ public class LoginDialog extends Dialog {
 	public String getPassword() {
 		return password;
 	}
+
+	/**
+	 * @return the storePassword
+	 */
+	public boolean isStorePassword() {
+		return storePassword;
+	}	
 }

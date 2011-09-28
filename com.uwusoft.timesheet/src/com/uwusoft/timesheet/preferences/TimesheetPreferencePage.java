@@ -12,15 +12,13 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
 public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		implements IWorkbenchPreferencePage {
 	
-	/**
-	 * 
-	 */
 	public TimesheetPreferencePage() {
 		super(GRID);
 	}
@@ -33,37 +31,37 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new StringFieldEditor("weekly.workinghours", "Weekly working hours:",
+		addField(new StringFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor("task.default", "Default task:",
+		addField(new StringFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor("task.daily", "Daily task:",
+		addField(new StringFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor("task.daily.total", "Daily task total:",
+		addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:",
 				getFieldEditorParent()));
-		addField(new ComboFieldEditor("storage.system", "Storage System:", getSystemArray(StorageService.SERVICE_ID, "storage"),
+		addField(new ComboFieldEditor(StorageService.PROPERTY, "Storage System:", getSystemArray(StorageService.SERVICE_ID, "storage"),
 				getFieldEditorParent()));
-		addField(new ComboFieldEditor("submission.system", "Submission System:", getSystemArray(SubmissionService.SERVICE_ID, "submission"),
+		addField(new ComboFieldEditor(SubmissionService.PROPERTY, "Submission System:", getSystemArray(SubmissionService.SERVICE_ID, "submission"),
 				getFieldEditorParent())); // TODO add custom list editor
 	}
 
 	private String[][] getSystemArray(String serviceId, String serviceName) {
-		Map<String, String> storageSystems = new HashMap<String, String>(); 
+		Map<String, String> systems = new HashMap<String, String>(); 
 		for (IConfigurationElement e : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
 			String contributorName = e.getContributor().getName();
-			storageSystems.put(Character.toUpperCase(contributorName.toCharArray()[contributorName.lastIndexOf('.') + 1])
+			systems.put(Character.toUpperCase(contributorName.toCharArray()[contributorName.lastIndexOf('.') + 1])
 					+ contributorName.substring(contributorName.lastIndexOf('.') + 2, contributorName.indexOf(serviceName)),
 					contributorName);
 		}
-		String[][] storageSystemArray = new String[storageSystems.size()][2];
+		String[][] systemArray = new String[systems.size()][2];
 
-		String[] keys = storageSystems.keySet().toArray(new String[0]);
-		String[] values = storageSystems.values().toArray(new String[0]);
+		String[] keys = systems.keySet().toArray(new String[0]);
+		String[] values = systems.values().toArray(new String[0]);
 
-		for (int row = 0; row < storageSystemArray.length; row++) {
-			storageSystemArray[row][0] = keys[row];
-			storageSystemArray[row][1] = values[row];
+		for (int row = 0; row < systemArray.length; row++) {
+			systemArray[row][0] = keys[row];
+			systemArray[row][1] = values[row];
 		}
-		return storageSystemArray;
+		return systemArray;
 	}
 }

@@ -22,9 +22,9 @@ public class GooglePreferencePage extends FieldEditorPreferencePage implements
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new StringFieldEditor("user.name", "User name:",
+		addField(new StringFieldEditor(GoogleStorageService.USERNAME, "User name:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor("spreadsheet.key", "Spreadsheet key:",
+		addField(new StringFieldEditor(GoogleStorageService.SPREADSHEET_KEY, "Spreadsheet key:",
 				getFieldEditorParent()));
 	}
 }

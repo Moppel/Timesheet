@@ -12,6 +12,7 @@ import java.util.Date;
  */
 public interface SubmissionService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.submissionservice";
+	public static final String PROPERTY = "submission.system";
 
     void submit(Date date, String task, Double total);
 }
