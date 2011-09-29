@@ -43,7 +43,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private final static String COMMAND_ID = "org.eclipse.ui.file.exit";
 	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 
-
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
 		super(configurer);
 	}
@@ -59,38 +58,25 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		configurer.setShowStatusLine(false);
 		configurer.setTitle("Timesheet");
 	}
+	
 	public void postWindowOpen() {
 		super.postWindowOpen();
 		window = getWindowConfigurer().getWindow();
-		//MessageBox.setMessage("Timesheet", "Welcome");
-		trayItem = initTaskItem(window);
+		window.getShell().addShellListener(new ShellAdapter() {
+			public void shellIconified(ShellEvent e) { // If the window is minimized hide the window
+				preWindowShellClose();
+			}
+		});
+		trayItem = initTaskItem();
 		// Some OS might not support tray items
 		if (trayItem != null) {
-			//MessageBox.setMessage("Timesheet", "Welcome");
-			minimizeBehavior();
 			hookPopupMenu();
 		}
 	}
 
-	// Add a listener to the shell	
-	private void minimizeBehavior() {
-		window.getShell().addShellListener(new ShellAdapter() {
-			// If the window is minimized hide the window
-			public void shellIconified(ShellEvent e) {
-				window.getShell().setVisible(false);
-			}
-		});
-		// If user double-clicks on the tray icons the application will be
-		// visible again
-		trayItem.addListener(SWT.DefaultSelection, new Listener() {
-			public void handleEvent(Event event) {
-				Shell shell = window.getShell();
-				if (!shell.isVisible()) {
-					window.getShell().setMinimized(false);
-					shell.setVisible(true);
-				}
-			}
-		});
+	public boolean preWindowShellClose() {
+		window.getShell().setVisible(false);
+		return false; // if window close button pressed only minimize to system tray (don't exit the program)
 	}
 
 	private void hookPopupMenu() {
@@ -181,17 +167,26 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		});
 	}
 
-	private TrayItem initTaskItem(IWorkbenchWindow window) {
+	private TrayItem initTaskItem() {
 		final Tray tray = window.getShell().getDisplay().getSystemTray();
-		TrayItem trayItem = new TrayItem(tray, SWT.NONE);
+		final TrayItem trayItem = new TrayItem(tray, SWT.NONE);
 		ImageDescriptor descriptor = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png");
 		if (descriptor != null) {
 			trayImage = descriptor.createImage();
 			trayItem.setImage(trayImage);
 		}
 		trayItem.setToolTipText("Timesheet");
+		trayItem.addListener(SWT.Selection, new Listener() {
+			public void handleEvent(Event event) {
+				Shell shell = window.getShell();
+				shell.setVisible(true);
+				shell.setActive();
+				shell.setFocus();
+				shell.setMinimized(false);
+				//trayItem.dispose();
+			}
+		});
 		return trayItem;
-
 	}
 
 	// We need to clean-up after ourself
