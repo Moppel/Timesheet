@@ -101,8 +101,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		viewer.setContentProvider(new ArrayContentProvider());
 
-		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		if (storageService == null) return;
+		try {
+			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		} catch (ClassCastException e) {
+			return;
+		}
 		
 		storageService.addPropertyChangeListener(this);
 		viewer.setInput(storageService.getTaskEntries(new Date()));
