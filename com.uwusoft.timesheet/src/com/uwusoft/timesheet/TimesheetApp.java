@@ -47,14 +47,16 @@ public class TimesheetApp implements IApplication {
 				if (!PlatformUI.isWorkbenchRunning()) return;
 		    	final IWorkbench workbench = PlatformUI.getWorkbench();
 		    	final Display display = workbench.getDisplay();
-		    	display.syncExec(new Runnable() {
-					public void run() {
-						if (!display.isDisposed()) {
-							preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
-							workbench.close();
+		    	if (!display.isDisposed()) {
+					display.syncExec(new Runnable() {
+						public void run() {
+							if (!display.isDisposed()) {
+								preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
+								workbench.close();
+							}
 						}
-					}
-		    	});
+					});
+		    	}
 		    }
 		});
 		try {
