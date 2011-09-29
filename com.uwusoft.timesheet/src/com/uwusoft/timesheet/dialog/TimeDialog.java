@@ -66,6 +66,7 @@ public class TimeDialog extends Dialog {
         timeEntry.setLayoutData(gridData);
         timeEntry.setHours(hours);
         timeEntry.setMinutes(minutes);
+        timeEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
         timeEntry.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				hours = ((DateTime) e.getSource()).getHours();
