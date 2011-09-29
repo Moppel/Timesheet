@@ -67,6 +67,14 @@
                name="windowImages"
                value="icons/clock.png">
          </property>
+         <property
+               name="startupProgressRect"
+               value="5,275,445,15">
+         </property>
+         <property
+               name="preferenceCustomization"
+               value="plugin_customization.ini">
+         </property>
       </product>
    </extension>
    <extension
@@ -76,6 +84,12 @@
             id="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
             name="Timesheet Preferences">
       </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.uwusoft.timesheet.preferences.TimesheetPreferenceInitializer">
+      </initializer>
    </extension>
 
 </plugin>
