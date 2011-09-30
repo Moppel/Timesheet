@@ -46,6 +46,7 @@ public class TimeDialog extends Dialog {
         
         GridData gridData = new GridData();
         gridData.horizontalAlignment = SWT.CENTER;
+    	gridData.minimumWidth = 50;
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
