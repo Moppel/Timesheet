@@ -61,7 +61,7 @@ public class GoogleStorageService implements StorageService {
     private static FeedURLFactory factory;
     private static URL listFeedUrl;
 	private static Map<String, Integer> headingIndex;
-    private static List<WorksheetEntry> worksheets;
+    private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
     private static WorksheetEntry defaultWorksheet;
     private static Map<String,String> taskLinkMap;
     private static Map<String, List<String>> tasks;
@@ -72,25 +72,9 @@ public class GoogleStorageService implements StorageService {
     static {
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-        try {
-        	while (!authenticate());
-			factory = FeedURLFactory.getDefault();
-			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
-			headingIndex = new LinkedHashMap<String, Integer>();
-			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
-			for (CellEntry entry : cellFeed.getEntries()) {
-				if (entry.getCell().getRow() == 1)
-					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
-				else
-					break;
-			}
-		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
-		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
-		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
-		}
+       	while (!authenticate());
+		factory = FeedURLFactory.getDefault();
+		headingIndex = new LinkedHashMap<String, Integer>();
     }
     
     private static boolean authenticate() {
@@ -127,11 +111,37 @@ public class GoogleStorageService implements StorageService {
    }
 
     public GoogleStorageService() {
-        reloadWorksheets();
+        if (!reloadWorksheets()) return;
         loadTasks();
     }
+    
+    private boolean reloadSpreadsheetKey() {
+    	if (spreadsheetKey == "") {
+			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
+    	}
+    	if (spreadsheetKey == "") return false;
+		try {
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
+			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
+			for (CellEntry entry : cellFeed.getEntries()) {
+				if (entry.getCell().getRow() == 1)
+					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
+				else
+					break;
+			}
+		} catch (MalformedURLException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
+    	return true;
+    }
 
-    private void reloadWorksheets() {
+    private boolean reloadWorksheets() {
+    	if (!reloadSpreadsheetKey()) return false;
         WorksheetFeed feed;
 		try {
 			feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
@@ -145,6 +155,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
+		return true;
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) 
@@ -164,7 +175,7 @@ public class GoogleStorageService implements StorageService {
     public List<TaskEntry> getTaskEntries(Date date) {
     	List <TaskEntry> taskEntries = new ArrayList<TaskEntry>();
 		try {
-			reloadWorksheets();
+	        if (!reloadWorksheets()) return taskEntries;
 	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 	        List<ListEntry> listEntries = feed.getEntries();
 	        for (int i = defaultWorksheet.getRowCount() - 2; i > 0; i--) {
@@ -197,7 +208,7 @@ public class GoogleStorageService implements StorageService {
         Calendar cal = new GregorianCalendar();
         cal.setTime(dateTime);
         try {
-			reloadWorksheets();
+            if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
 			String taskLink = null;
 			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
@@ -213,7 +224,7 @@ public class GoogleStorageService implements StorageService {
 			}
 			service.insert(listFeedUrl, timeEntry);
 
-			reloadWorksheets();
+            if (!reloadWorksheets()) return;
 			if (taskLink != null) {
 				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TASK), "=" + taskLink);
 				if (defaultTotal == null)
@@ -230,7 +241,7 @@ public class GoogleStorageService implements StorageService {
 
     public void storeLastDailyTotal() {
         try {
-            reloadWorksheets();
+            if (!reloadWorksheets()) return;
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();			
             int rowsOfDay = 0;
@@ -248,7 +259,7 @@ public class GoogleStorageService implements StorageService {
 
     public void storeLastWeekTotal(String weeklyWorkingHours) {
         try {
-            reloadWorksheets();
+            if (!reloadWorksheets()) return;
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();
             int rowsOfWeek = 0;
@@ -260,14 +271,14 @@ public class GoogleStorageService implements StorageService {
             ListEntry timeEntry = new ListEntry();
 			timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");
 			service.insert(listFeedUrl, timeEntry);
-			reloadWorksheets();
+            if (!reloadWorksheets()) return;
 			
 			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
 			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C[-3]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
-            e.printStackTrace();  //Todo
+			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
-            e.printStackTrace();  //Todo
+			MessageBox.setError(title, e.getLocalizedMessage());
         }        
     }
 
@@ -281,7 +292,7 @@ public class GoogleStorageService implements StorageService {
 
 	public void submitEntries() {
         try {
-			reloadWorksheets();
+            if (!reloadWorksheets()) return;
 	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 	        List<ListEntry> listEntries = feed.getEntries();
 
@@ -315,7 +326,7 @@ public class GoogleStorageService implements StorageService {
 
 	            String task = elements.getValue(TASK);
 	            if (task == null || CHECK_IN.equals(task) || taskLinkMap.get(task) == null) continue;
-	            String system = taskLinkMap.get(task).split("!")[0]; // TODO get submission service for task	             
+	            String system = taskLinkMap.get(task).split("!")[0];	             
 	            entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
 	            		new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system));
 	        }
@@ -352,6 +363,8 @@ public class GoogleStorageService implements StorageService {
 				MessageBox.setError(title, e.getLocalizedMessage());
 			}
         }
+		for (PropertyChangeListener listener : listeners)
+			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
     }
 
     private void createUpdateCellEntry(WorksheetEntry worksheet, int row, int col, String value) {

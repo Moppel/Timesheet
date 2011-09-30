@@ -29,11 +29,14 @@ public class TimesheetApp implements IApplication {
     public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
     
     public static final String WORKING_HOURS = "weekly.workinghours";
+    public static final String HOLIDAY_TASK = "task.holiday";
+    public static final String VACATION_TASK = "task.vacation";
+    public static final String SICK_TASK = "task.sick";
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
     public static final String LAST_TASK = "task.last";
-    private static final String SYSTEM_SHUTDOWN = "system.shutdown";
+    public static final String SYSTEM_SHUTDOWN = "system.shutdown";
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
@@ -64,7 +67,9 @@ public class TimesheetApp implements IApplication {
 			String startTime = formatter.format(mx.getStartTime());
 
 			String shutdownTime = preferenceStore.getString(SYSTEM_SHUTDOWN);
-			if (shutdownTime == "") shutdownTime = startTime;
+			if (shutdownTime == "") {
+				shutdownTime = startTime;
+			}
 			else shutdownTime = formatter.format(formatter.parse(shutdownTime));
 
 			Calendar calDay = Calendar.getInstance();

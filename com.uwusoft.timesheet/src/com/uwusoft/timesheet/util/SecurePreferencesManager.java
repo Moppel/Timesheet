@@ -9,7 +9,7 @@ import org.eclipse.equinox.security.storage.StorageException;
 public class SecurePreferencesManager {
     private ISecurePreferences preferences;
     private ISecurePreferences node;
-    private static String title = "Preferences";
+    private static String title = "Secure Preferences";
 
     /**
 	 * @param name name of the {@link ISecurePreferences#node(String)}

@@ -9,6 +9,7 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
@@ -31,6 +32,7 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		setDescription("General Timesheet preferences");
+		getPreferenceStore().addPropertyChangeListener(this);
 	}
 
 	@Override
@@ -41,14 +43,20 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 				getFieldEditorParent())); // TODO add custom list editor
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:",
 				getFieldEditorParent()));
-		if (getTaskArray("Primavera").length > 0) {
+		addField(new ComboFieldEditor(TimesheetApp.HOLIDAY_TASK, "Statutory holiday task:", getTaskArray("Primavera"), // TODO
+				getFieldEditorParent()));
+		addField(new ComboFieldEditor(TimesheetApp.VACATION_TASK, "Vacation task:", getTaskArray("Primavera"), // TODO
+				getFieldEditorParent()));
+		addField(new ComboFieldEditor(TimesheetApp.SICK_TASK, "Sick task:", getTaskArray("Primavera"), // TODO
+				getFieldEditorParent()));
+		//if (getTaskArray("Primavera").length > 0) {
 			addField(new ComboFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getTaskArray("Primavera"), // TODO
 					getFieldEditorParent()));
 			addField(new ComboFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getTaskArray("Primavera"), // TODO
 					getFieldEditorParent()));
 			addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:",
 					getFieldEditorParent()));
-		}
+		//}
 	}
 
 	private String[][] getSystemArray(String serviceId, String serviceName) {
@@ -77,6 +85,7 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 					.getService(getPreferenceStore().getString(StorageService.PROPERTY));
 			List<String> tasksList = storageService.getTasks() == null ? new ArrayList<String>()
 					: storageService.getTasks().get(name);
+			if (tasksList == null) return new String[0][2];
 			String[][] tasksArray = new String[tasksList.size()][2];
 			String[] tasks = tasksList.toArray(new String[0]);
 			for (int row = 0; row < tasksArray.length; row++) {
@@ -87,5 +96,13 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		} catch (ClassCastException e) {
 			return new String[0][2];
 		}
+	}
+
+	/* (non-Javadoc)
+	 * @see org.eclipse.jface.preference.PreferencePage#doGetPreferenceStore()
+	 */
+	@Override
+	protected IPreferenceStore doGetPreferenceStore() {
+		return Activator.getDefault().getPreferenceStore();
 	}
 }

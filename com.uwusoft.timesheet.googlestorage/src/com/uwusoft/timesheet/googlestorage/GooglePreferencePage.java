@@ -18,6 +18,7 @@ public class GooglePreferencePage extends FieldEditorPreferencePage implements
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		setDescription("Google preferences");
+		getPreferenceStore().addPropertyChangeListener(this);
 	}
 
 	@Override

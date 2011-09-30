@@ -51,6 +51,11 @@
                label="Show Preferences"
                style="push">
          </command>
+         <command
+               commandId="org.eclipse.ui.help.aboutAction"
+               label="About"
+               style="push">
+         </command>
       </menuContribution>
    </extension>
    <extension
@@ -90,6 +95,33 @@
       <initializer
             class="com.uwusoft.timesheet.preferences.TimesheetPreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.intro">
+      <intro
+            class="org.eclipse.ui.intro.config.CustomizableIntroPart"
+            id="com.uwusoft.timesheet.intro">
+      </intro>
+      <introProductBinding
+            introId="com.uwusoft.timesheet.intro"
+            productId="com.uwusoft.timesheet.product">
+      </introProductBinding>
+   </extension>
+   <extension
+         point="org.eclipse.ui.intro.config">
+      <config
+            content="introContent.xml"
+            id="com.uwusoft.timesheet.introConfigId"
+            introId="com.uwusoft.timesheet.intro">
+         <presentation
+               home-page-id="root">
+            <implementation
+                  kind="swt"
+                  os="win32,linux,macosx"
+                  style="content/shared.css">
+            </implementation>
+         </presentation>
+      </config>
    </extension>
 
 </plugin>

@@ -97,7 +97,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						listDialog.setLabelProvider(new LabelProvider());
 						listDialog.setWidthInChars(70);
 						List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
-						tasks.remove(preferenceStore.getString("task.last"));
+						tasks.remove(preferenceStore.getString(TimesheetApp.LAST_TASK));
 						listDialog.setInput(tasks);
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
@@ -105,8 +105,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							if (selectedTask.equals("")) return;
 							TimeDialog timeDialog = new TimeDialog(getWindowConfigurer().getWindow().getShell().getDisplay(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
-				                storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString("task.last"));
-								preferenceStore.setValue("task.last", selectedTask);
+				                storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
+								preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask);
 							}
 						}						
 					}
@@ -116,20 +116,28 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				checkout.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						TimeDialog timeDialog = new TimeDialog(window.getShell().getDisplay(), "Check out",
-								preferenceStore.getString("task.last"), new Date());
+								preferenceStore.getString(TimesheetApp.LAST_TASK), new Date());
 						if (timeDialog.open() == Dialog.OK) {
 							StorageService storageService = new ExtensionManager<StorageService>(
 									StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-							storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString("task.last"));
+							storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
 							storageService.storeLastDailyTotal();
-							if (preferenceStore.getString("task.daily") != null)
-								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString("task.daily"),
-										preferenceStore.getString("task.daily.total"));
-							preferenceStore.setValue("task.last", "");
-			            	preferenceStore.setValue("system.shutdown", TimesheetApp.formatter.format(timeDialog.getTime()));
+							if (preferenceStore.getString(TimesheetApp.DAILY_TASK) != null)
+								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
+										preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
+							preferenceStore.setValue(TimesheetApp.LAST_TASK, "");
+			            	preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(timeDialog.getTime()));
 						}
 					}
 				});
+
+				/*MenuItem holiday = new MenuItem(menu, SWT.NONE);
+				holiday.setText("Set holiday");
+				holiday.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
+						
+					}
+				}*/
 
 				MenuItem submit = new MenuItem(menu, SWT.NONE);
 				submit.setText("Submit");
