@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
@@ -83,7 +84,7 @@ public class GoogleStorageService implements StorageService {
 			SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
 	    	String userName = preferenceStore.getString(USERNAME);
 	    	String password = secureProps.getProperty(PASSWORD);
-	    	if (userName != "" && password != null) {
+	    	if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
@@ -116,11 +117,11 @@ public class GoogleStorageService implements StorageService {
     }
     
     private boolean reloadSpreadsheetKey() {
-    	if (spreadsheetKey == "") {
+    	if (StringUtils.isEmpty(spreadsheetKey)) {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
             spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
     	}
-    	if (spreadsheetKey == "") return false;
+    	if (StringUtils.isEmpty(spreadsheetKey)) return false;
 		try {
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);

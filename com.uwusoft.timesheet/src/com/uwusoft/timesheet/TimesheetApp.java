@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.dialogs.Dialog;
@@ -67,7 +68,7 @@ public class TimesheetApp implements IApplication {
 			String startTime = formatter.format(mx.getStartTime());
 
 			String shutdownTime = preferenceStore.getString(SYSTEM_SHUTDOWN);
-			if (shutdownTime == "") {
+			if (StringUtils.isEmpty(shutdownTime)) {
 				shutdownTime = startTime;
 			}
 			else shutdownTime = formatter.format(formatter.parse(shutdownTime));
@@ -91,7 +92,7 @@ public class TimesheetApp implements IApplication {
 						.getService(preferenceStore.getString(StorageService.PROPERTY));
 				calWeek.setTime(shutdownDate);
 				shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-				if (preferenceStore.getString(LAST_TASK) != "") { // last task will be set to empty if a manual check out has occurred
+				if (!StringUtils.isEmpty(preferenceStore.getString(LAST_TASK))) { // last task will be set to empty if a manual check out has occurred
 					// automatic check out
 					if (storageService == null) return IApplication.EXIT_OK;
 					TimeDialog timeDialog = new TimeDialog(display, "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
@@ -99,7 +100,7 @@ public class TimesheetApp implements IApplication {
 					if (timeDialog.open() == Dialog.OK) {
 						storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(LAST_TASK));
 						storageService.storeLastDailyTotal();
-						if (preferenceStore.getString(DAILY_TASK) != "")
+						if (!StringUtils.isEmpty(preferenceStore.getString(DAILY_TASK)))
 							storageService.createTaskEntry(
 									timeDialog.getTime(), preferenceStore.getString(DAILY_TASK), preferenceStore.getString(DAILY_TASK_TOTAL));
 					}

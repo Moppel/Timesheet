@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -102,7 +103,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						if (listDialog.open() == Dialog.OK) {
 						    String selectedTask = Arrays.toString(listDialog.getResult());
 						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
-							if (selectedTask.equals("")) return;
+							if (StringUtils.isEmpty(selectedTask)) return;
 							TimeDialog timeDialog = new TimeDialog(getWindowConfigurer().getWindow().getShell().getDisplay(), selectedTask, new Date());
 							if (timeDialog.open() == Dialog.OK) {
 				                storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
@@ -125,19 +126,24 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							if (preferenceStore.getString(TimesheetApp.DAILY_TASK) != null)
 								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
 										preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
-							preferenceStore.setValue(TimesheetApp.LAST_TASK, "");
+							preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
 			            	preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(timeDialog.getTime()));
 						}
 					}
 				});
 
-				/*MenuItem holiday = new MenuItem(menu, SWT.NONE);
-				holiday.setText("Set holiday");
+				MenuItem wholeDayTask = new MenuItem(menu, SWT.CASCADE);
+				wholeDayTask.setText("Set whole day task");
+				Menu subMenu = new Menu(wholeDayTask);
+				wholeDayTask.setMenu(subMenu);
+				
+				MenuItem holiday = new MenuItem(subMenu, SWT.NONE);
+				holiday.setText("Holiday");
 				holiday.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
 						
 					}
-				}*/
+				});
 
 				MenuItem submit = new MenuItem(menu, SWT.NONE);
 				submit.setText("Submit");
@@ -162,6 +168,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				exit.setText("Exit");
 				exit.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
+						preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(System.currentTimeMillis()));
 						IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 						try {
 							handlerService.executeCommand(COMMAND_ID, null);

@@ -11,8 +11,23 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.intro
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: com.uwusoft.timesheet,
- com.uwusoft.timesheet.dialog,
+Export-Package: com.uwusoft.timesheet;
+  uses:="org.eclipse.core.runtime,
+   org.eclipse.jface.resource,
+   org.eclipse.ui.application,
+   org.eclipse.ui,
+   org.eclipse.ui.plugin,
+   org.eclipse.ui.part,
+   org.eclipse.jface.preference,
+   com.uwusoft.timesheet.extensionpoint.model,
+   org.eclipse.jface.viewers,
+   org.eclipse.swt.graphics,
+   org.eclipse.equinox.app,
+   org.osgi.framework,
+   org.eclipse.swt.widgets",
+ com.uwusoft.timesheet.dialog;uses:="org.eclipse.swt.graphics,org.eclipse.swt.widgets,org.eclipse.jface.dialogs",
  com.uwusoft.timesheet.extensionpoint,
- com.uwusoft.timesheet.extensionpoint.model,
+ com.uwusoft.timesheet.extensionpoint.model;uses:="com.uwusoft.timesheet.extensionpoint",
  com.uwusoft.timesheet.util
+Bundle-ClassPath: lib/commons-lang/commons-lang3-3.0.1.jar,
+ .
