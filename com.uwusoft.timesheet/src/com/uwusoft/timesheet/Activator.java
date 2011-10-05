@@ -1,15 +1,8 @@
 package com.uwusoft.timesheet;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-
-import com.uwusoft.timesheet.util.MessageBox;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -22,11 +15,6 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
-    /**
-     * Storage for preferences.
-     */
-    private PreferenceStore preferenceStore;
-
     /**
 	 * The constructor
 	 */
@@ -69,27 +57,5 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#getPreferenceStore()
-	 */
-	@Override
-	public IPreferenceStore getPreferenceStore() {
-        if (preferenceStore == null) {
-        	String dir = System.getProperty("user.home") + "/.eclipse/" + PLUGIN_ID;
-        	File prefs = new File(dir);
-        	if (!prefs.exists()) prefs.mkdirs();
-        	String path = dir + "/" + PLUGIN_ID.substring(PLUGIN_ID.lastIndexOf('.') + 1, PLUGIN_ID.length()) + ".prefs";
-        	prefs = new File(path);
-            try {
-            	if (!prefs.exists()) prefs.createNewFile();
-                preferenceStore = new PreferenceStore(path);
-				preferenceStore.load();
-			} catch (IOException e) {
-				MessageBox.setError("Activator", e.getLocalizedMessage());
-			}
-        }
-        return preferenceStore;
 	}
 }

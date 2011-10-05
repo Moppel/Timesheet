@@ -11,6 +11,6 @@ public class TimesheetPreferenceInitializer extends	AbstractPreferenceInitialize
 	@Override
 	public void initializeDefaultPreferences() {
 		IPreferenceStore store = Activator.getDefault().getPreferenceStore();
-		store.setDefault(TimesheetApp.WORKING_HOURS, "40");
+		store.setDefault(TimesheetApp.WORKING_HOURS, 40);
 	}
 }
