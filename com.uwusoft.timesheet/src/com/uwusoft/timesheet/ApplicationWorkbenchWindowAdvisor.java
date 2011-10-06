@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.text.DateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +7,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -25,20 +23,15 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
-import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -95,11 +88,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 trayMenu.add(new CommandContributionItem(
         				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
                 
-                Map <String, String> parameters = new HashMap<String, String>();
-                parameters.put("Timesheet.commands.shutdownTime", TimesheetApp.formatter.format(new Date()));
-                CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
-                p.parameters = parameters;         
-                trayMenu.add(new CommandContributionItem(p));
+                if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+                	Map <String, String> parameters = new HashMap<String, String>();
+                    parameters.put("Timesheet.commands.shutdownTime", TimesheetApp.formatter.format(new Date()));
+                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
+                    p.parameters = parameters;         
+                    trayMenu.add(new CommandContributionItem(p));
+                }
                 
                 trayMenu.add(new ContributionItem() {
                     @Override
@@ -119,29 +114,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 Menu menu = trayMenu.createContextMenu(window.getShell());
 			    actionBarAdvisor.fillTrayItem(trayMenu);
 			
-			    /*if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
-					MenuItem checkout = new MenuItem(menu, SWT.NONE);
-					checkout.setText("Check out");
-					checkout.addListener(SWT.Selection, new Listener() { // TODO extract check out command
-						public void handleEvent(Event event) {
-							TimeDialog timeDialog = new TimeDialog(window.getShell().getDisplay(), "Check out",
-									preferenceStore.getString(TimesheetApp.LAST_TASK), new Date());
-							if (timeDialog.open() == Dialog.OK) {
-								StorageService storageService = new ExtensionManager<StorageService>(
-										StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
-								storageService.storeLastDailyTotal();
-								if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
-									storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
-											preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
-								preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
-				            	preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(timeDialog.getTime()));
-							}
-						}
-					});
-				}
-
-				MenuItem wholeDayTask = new MenuItem(menu, SWT.CASCADE);
+				/*MenuItem wholeDayTask = new MenuItem(menu, SWT.CASCADE);
 				wholeDayTask.setText("Set whole day task");
 				Menu subMenu = new Menu(wholeDayTask);
 				wholeDayTask.setMenu(subMenu);
