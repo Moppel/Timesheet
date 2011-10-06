@@ -46,11 +46,26 @@
          point="org.eclipse.ui.menus">
       <menuContribution
             locationURI="menu:org.eclipse.ui.main.menu">
-         <command
-               commandId="org.eclipse.ui.window.preferences"
-               label="Show Preferences"
-               style="push">
-         </command>
+         <menu
+               label="Main">
+            <command
+                  commandId="Timesheet.changeTask"
+                  style="push">
+            </command>
+            <command
+                  commandId="Timesheet.checkout"
+                  style="push">
+            </command>
+            <command
+                  commandId="org.eclipse.ui.window.preferences"
+                  label="Preferences"
+                  style="push">
+            </command>
+            <command
+                  commandId="org.eclipse.ui.file.exit"
+                  style="push">
+            </command>
+         </menu>
          <command
                commandId="org.eclipse.ui.help.aboutAction"
                label="About"
@@ -103,6 +118,24 @@
       <initializer
             class="com.uwusoft.timesheet.preferences.TimesheetPreferenceInitializer">
       </initializer>
+   </extension>
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.ChangeTaskHandler"
+            id="Timesheet.changeTask"
+            name="Change Task">
+      </command>
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.CheckoutHandler"
+            id="Timesheet.checkout"
+            name="Check out">
+         <commandParameter
+               id="Timesheet.commands.shutdownTime"
+               name="Time"
+               optional="true">
+         </commandParameter>
+      </command>
    </extension>
 
 </plugin>

@@ -38,13 +38,13 @@ public class TimesheetApp implements IApplication {
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
     public static final String LAST_TASK = "task.last";
     public static final String SYSTEM_SHUTDOWN = "system.shutdown";
+    private final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
 		Display display = PlatformUI.createDisplay();
-		final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    public void run() {
 				preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
@@ -131,6 +131,7 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#stop()
 	 */
 	public void stop() {
+		preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
 		if (!PlatformUI.isWorkbenchRunning())
 			return;
 		final IWorkbench workbench = PlatformUI.getWorkbench();

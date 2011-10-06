@@ -1,16 +1,19 @@
 package com.uwusoft.timesheet;
 
-import java.util.Arrays;
+import java.text.DateFormat;
 import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
@@ -22,16 +25,19 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
+import org.eclipse.ui.IWorkbenchCommandConstants;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.handlers.IHandlerService;
+import org.eclipse.ui.menus.CommandContributionItem;
+import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -41,7 +47,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private IWorkbenchWindow window;
 	private TrayItem trayItem;
 	private Image trayImage;
-	private final static String COMMAND_ID = "org.eclipse.ui.file.exit";
+	private ApplicationActionBarAdvisor actionBarAdvisor;
 	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
@@ -49,7 +55,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	}
 
 	public ActionBarAdvisor createActionBarAdvisor(IActionBarConfigurer configurer) {
-		return new ApplicationActionBarAdvisor(configurer);
+		actionBarAdvisor = new ApplicationActionBarAdvisor(configurer);
+		return actionBarAdvisor;
 	}
 
 	public void preWindowOpen() {
@@ -71,6 +78,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		trayItem = initTaskItem();
 		// Some OS might not support tray items
 		if (trayItem != null) {
+			window.getShell().setVisible(false);
 			hookPopupMenu();
 		}
 	}
@@ -79,58 +87,59 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		window.getShell().setVisible(false);
 		return false; // if window close button pressed only minimize to system tray (don't exit the program)
 	}
-
+	
 	private void hookPopupMenu() {
 		trayItem.addListener(SWT.MenuDetect, new Listener() {
 			public void handleEvent(Event event) {
-				Menu menu = new Menu(window.getShell(), SWT.POP_UP);
-
-				MenuItem changeTasks = new MenuItem(menu, SWT.NONE);
-				changeTasks.setText("Change Task");
-				changeTasks.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						StorageService storageService = new ExtensionManager<StorageService>(
-								StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-						ListDialog listDialog = new ListDialog(window.getShell());
-						listDialog.setTitle("Tasks");
-						listDialog.setMessage("Select next task");
-						listDialog.setContentProvider(ArrayContentProvider.getInstance());
-						listDialog.setLabelProvider(new LabelProvider());
-						listDialog.setWidthInChars(70);
-						List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
-						tasks.remove(preferenceStore.getString(TimesheetApp.LAST_TASK));
-						listDialog.setInput(tasks);
-						if (listDialog.open() == Dialog.OK) {
-						    String selectedTask = Arrays.toString(listDialog.getResult());
-						    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
-							if (StringUtils.isEmpty(selectedTask)) return;
-							TimeDialog timeDialog = new TimeDialog(getWindowConfigurer().getWindow().getShell().getDisplay(), selectedTask, new Date());
+				MenuManager trayMenu = new MenuManager();
+                trayMenu.add(new CommandContributionItem(
+        				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
+                
+                Map <String, String> parameters = new HashMap<String, String>();
+                parameters.put("Timesheet.commands.shutdownTime", TimesheetApp.formatter.format(new Date()));
+                CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
+                p.parameters = parameters;         
+                trayMenu.add(new CommandContributionItem(p));
+                
+                trayMenu.add(new ContributionItem() {
+                    @Override
+                    public void fill(final Menu menu, final int index) {
+                        MenuItem submit = new MenuItem(menu, SWT.PUSH);
+                        submit.setText("Submit");
+                        submit.addSelectionListener(new SelectionAdapter() {
+                            @Override
+                            public void widgetSelected(final SelectionEvent e) {
+        						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
+										.getString(StorageService.PROPERTY)).submitEntries();
+                            }
+                        });
+                    }
+                });
+			    
+                Menu menu = trayMenu.createContextMenu(window.getShell());
+			    actionBarAdvisor.fillTrayItem(trayMenu);
+			
+			    /*if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+					MenuItem checkout = new MenuItem(menu, SWT.NONE);
+					checkout.setText("Check out");
+					checkout.addListener(SWT.Selection, new Listener() { // TODO extract check out command
+						public void handleEvent(Event event) {
+							TimeDialog timeDialog = new TimeDialog(window.getShell().getDisplay(), "Check out",
+									preferenceStore.getString(TimesheetApp.LAST_TASK), new Date());
 							if (timeDialog.open() == Dialog.OK) {
-				                storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
-								preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask);
+								StorageService storageService = new ExtensionManager<StorageService>(
+										StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
+								storageService.storeLastDailyTotal();
+								if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
+									storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
+											preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
+								preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
+				            	preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(timeDialog.getTime()));
 							}
-						}						
-					}
-				});
-				MenuItem checkout = new MenuItem(menu, SWT.NONE);
-				checkout.setText("Check out");
-				checkout.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						TimeDialog timeDialog = new TimeDialog(window.getShell().getDisplay(), "Check out",
-								preferenceStore.getString(TimesheetApp.LAST_TASK), new Date());
-						if (timeDialog.open() == Dialog.OK) {
-							StorageService storageService = new ExtensionManager<StorageService>(
-									StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-							storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
-							storageService.storeLastDailyTotal();
-							if (preferenceStore.getString(TimesheetApp.DAILY_TASK) != null)
-								storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
-										preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
-							preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
-			            	preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(timeDialog.getTime()));
 						}
-					}
-				});
+					});
+				}
 
 				MenuItem wholeDayTask = new MenuItem(menu, SWT.CASCADE);
 				wholeDayTask.setText("Set whole day task");
@@ -141,43 +150,30 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				holiday.setText("Holiday");
 				holiday.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
+						DateDialog dateDialog = new DateDialog(window.getShell().getDisplay(), "Holiday",
+								preferenceStore.getString("task.holiday"), new Date());
+						if (dateDialog.open() == Dialog.OK) {
+							
+						}						
+					}
+				});
+
+				MenuItem vacation = new MenuItem(subMenu, SWT.NONE);
+				vacation.setText("Vacation");
+				vacation.addListener(SWT.Selection, new Listener() {
+					public void handleEvent(Event event) {
 						
 					}
 				});
 
-				MenuItem submit = new MenuItem(menu, SWT.NONE);
-				submit.setText("Submit");
-				submit.addListener(SWT.Selection, new Listener() {
+				MenuItem sick = new MenuItem(subMenu, SWT.NONE);
+				sick.setText("Sick Leave");
+				sick.addListener(SWT.Selection, new Listener() {
 					public void handleEvent(Event event) {
-						new ExtensionManager<StorageService>(
-								StorageService.SERVICE_ID).getService(preferenceStore
-										.getString(StorageService.PROPERTY)).submitEntries();
+						
 					}
-				});
-				MenuItem prefs = new MenuItem(menu, SWT.NONE);
-				prefs.setText("Settings");
-				prefs.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						ActionFactory.PREFERENCES.create(window).run();						
-					}
-				});
-				
-				// Creates a new menu item that terminates the program
-				// when selected
-				MenuItem exit = new MenuItem(menu, SWT.NONE);
-				exit.setText("Exit");
-				exit.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, TimesheetApp.formatter.format(System.currentTimeMillis()));
-						IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
-						try {
-							handlerService.executeCommand(COMMAND_ID, null);
-						} catch (Exception ex) {
-							throw new RuntimeException(COMMAND_ID);
-						}
-					}
-				});
-				menu.setVisible(true);
+				});*/
+			    menu.setVisible(true);
 			}
 		});
 	}
@@ -185,7 +181,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private TrayItem initTaskItem() {
 		final Tray tray = window.getShell().getDisplay().getSystemTray();
 		final TrayItem trayItem = new TrayItem(tray, SWT.NONE);
-		ImageDescriptor descriptor = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png");
+		ImageDescriptor descriptor = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/clock.png");
 		if (descriptor != null) {
 			trayImage = descriptor.createImage();
 			trayItem.setImage(trayImage);
