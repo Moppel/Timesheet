@@ -135,11 +135,6 @@
                name="shutdownTime"
                optional="true">
          </commandParameter>
-         <commandParameter
-               id="Timesheet.commands.storeWeekTotal"
-               name="storeWeekTotal"
-               optional="true">
-         </commandParameter>
       </command>
       <command
             defaultHandler="com.uwusoft.timesheet.commands.CheckinHandler"
@@ -148,6 +143,21 @@
          <commandParameter
                id="Timesheet.commands.startTime"
                name="startTime"
+               optional="true">
+         </commandParameter>
+         <commandParameter
+               id="Timesheet.commands.storeWeekTotal"
+               name="storeWeekTotal"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.WholeDayTaskHandler"
+            id="Timesheet.commands.wholeDayTask"
+            name="Whole day">
+         <commandParameter
+               id="Timesheet.commands.startDate"
+               name="startDate"
                optional="true">
          </commandParameter>
       </command>

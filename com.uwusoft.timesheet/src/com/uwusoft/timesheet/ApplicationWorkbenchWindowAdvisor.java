@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -93,9 +94,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				Calendar calWeek = new GregorianCalendar();
 				int shutdownDay = 0;
 				int shutdownWeek = 0;
-
-				Date startDate;
-				startDate = formatter.parse(TimesheetApp.startTime);
+				
+				Date startDate = formatter.parse(TimesheetApp.startTime);
 				calDay.setTime(startDate);
 				calWeek.setTime(startDate);
 				int startDay = calDay.get(Calendar.DAY_OF_YEAR);
@@ -116,7 +116,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 						try {
 							Map<String, String> parameters = new HashMap<String, String>();
 							parameters.put("Timesheet.commands.shutdownTime", shutdownTime);
-							parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 							handlerService.executeCommand(ParameterizedCommand.generateCommand(
 									commandService.getCommand("Timesheet.checkout"), parameters), null);
 						} catch (Exception ex) {
@@ -129,6 +128,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					try {
 						Map<String, String> parameters = new HashMap<String, String>();
 						parameters.put("Timesheet.commands.startTime", TimesheetApp.startTime);
+						parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 						handlerService.executeCommand(ParameterizedCommand.generateCommand(
 								commandService.getCommand("Timesheet.checkin"), parameters), null);
 					} catch (Exception ex) {
@@ -154,12 +154,40 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 trayMenu.add(new CommandContributionItem(
         				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
                 
-                if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+                if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+                	Map <String, String> parameters = new HashMap<String, String>();
+                    parameters.put("Timesheet.commands.startTime", TimesheetApp.formatter.format(new Date()));
+                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
+                    p.parameters = parameters;         
+                    trayMenu.add(new CommandContributionItem(p));
+                }
+                else {
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.shutdownTime", TimesheetApp.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
                     trayMenu.add(new CommandContributionItem(p));
+    				
+                    MenuManager wholeDayTask = new MenuManager("Set whole day task");
+
+                    parameters.clear();
+                    parameters.put("Timesheet.commands.startDate", TimesheetApp.formatter.format(new Date())); // TODO search next working day
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    p.label = "Holiday";
+                    p.parameters = parameters;         
+                    wholeDayTask.add(new CommandContributionItem(p));
+
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    p.label = "Vacation";
+                    p.parameters = parameters;         
+                    wholeDayTask.add(new CommandContributionItem(p));
+
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    p.label = "Sick Leave";
+                    p.parameters = parameters;         
+                    wholeDayTask.add(new CommandContributionItem(p));
+
+                    trayMenu.add(wholeDayTask);
                 }
                 
                 trayMenu.add(new ContributionItem() {
@@ -176,42 +204,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                         });
                     }
                 });
+                trayMenu.add(new Separator());
 			    
                 Menu menu = trayMenu.createContextMenu(window.getShell());
 			    actionBarAdvisor.fillTrayItem(trayMenu);
-			
-				/*MenuItem wholeDayTask = new MenuItem(menu, SWT.CASCADE);
-				wholeDayTask.setText("Set whole day task");
-				Menu subMenu = new Menu(wholeDayTask);
-				wholeDayTask.setMenu(subMenu);
-				
-				MenuItem holiday = new MenuItem(subMenu, SWT.NONE);
-				holiday.setText("Holiday");
-				holiday.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						DateDialog dateDialog = new DateDialog(window.getShell().getDisplay(), "Holiday",
-								preferenceStore.getString("task.holiday"), new Date());
-						if (dateDialog.open() == Dialog.OK) {
-							
-						}						
-					}
-				});
-
-				MenuItem vacation = new MenuItem(subMenu, SWT.NONE);
-				vacation.setText("Vacation");
-				vacation.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						
-					}
-				});
-
-				MenuItem sick = new MenuItem(subMenu, SWT.NONE);
-				sick.setText("Sick Leave");
-				sick.addListener(SWT.Selection, new Listener() {
-					public void handleEvent(Event event) {
-						
-					}
-				});*/
 			    menu.setVisible(true);
 			}
 		});
