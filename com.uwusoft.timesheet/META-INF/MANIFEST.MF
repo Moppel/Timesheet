@@ -31,4 +31,5 @@ Export-Package: com.uwusoft.timesheet;
  com.uwusoft.timesheet.util
 Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  .
-Import-Package: com.uwusoft.timesheet
+Import-Package: com.uwusoft.timesheet,
+ org.apache.commons.lang.time;version="2.4.0"

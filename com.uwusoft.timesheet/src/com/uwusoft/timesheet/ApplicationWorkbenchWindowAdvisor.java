@@ -1,7 +1,7 @@
 package com.uwusoft.timesheet;
 
+import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -41,6 +41,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -51,7 +52,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private Image trayImage;
 	private ApplicationActionBarAdvisor actionBarAdvisor;
 	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-    private static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
 		super(configurer);
@@ -88,20 +88,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				if (StringUtils.isEmpty(shutdownTime)) {
 					shutdownTime = TimesheetApp.startTime;
 				} else
-					shutdownTime = formatter.format(formatter.parse(shutdownTime));
+					shutdownTime = TimesheetApp.formatter.format(TimesheetApp.formatter.parse(shutdownTime));
 
 				Calendar calDay = Calendar.getInstance();
 				Calendar calWeek = new GregorianCalendar();
 				int shutdownDay = 0;
 				int shutdownWeek = 0;
 				
-				Date startDate = formatter.parse(TimesheetApp.startTime);
+				Date startDate = TimesheetApp.formatter.parse(TimesheetApp.startTime);
 				calDay.setTime(startDate);
 				calWeek.setTime(startDate);
 				int startDay = calDay.get(Calendar.DAY_OF_YEAR);
 				int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
 
-				Date shutdownDate = formatter.parse(shutdownTime);
+				Date shutdownDate = TimesheetApp.formatter.parse(shutdownTime);
 				calDay.setTime(shutdownDate);
 				shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
 
@@ -169,20 +169,21 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     trayMenu.add(new CommandContributionItem(p));
     				
                     MenuManager wholeDayTask = new MenuManager("Set whole day task");
-
+                    String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
+                    
                     parameters.clear();
-                    parameters.put("Timesheet.commands.startDate", TimesheetApp.formatter.format(new Date())); // TODO search next working day
-                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    parameters.put("Timesheet.commands.startDate", DateFormat.getDateInstance(DateFormat.SHORT).format(BusinessDayUtil.getNextBusinessDay(new Date())));
+                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Holiday";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));
 
-                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Vacation";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));
 
-                    p = new CommandContributionItemParameter(window, null, "Timesheet.commands.wholeDayTask", CommandContributionItem.STYLE_PUSH);
+                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Sick Leave";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));

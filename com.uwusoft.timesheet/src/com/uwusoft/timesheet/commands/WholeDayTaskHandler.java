@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.commands;
 
-import java.util.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -19,14 +20,17 @@ public class WholeDayTaskHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		String startDate = event.getParameter("Timesheet.commands.startDate");
 		DateDialog dateDialog;
 		try {
 			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),
-					preferenceStore.getString("task.holiday"), new Date());
+					preferenceStore.getString("task.holiday"), DateFormat.getDateInstance(DateFormat.SHORT).parse(startDate));
 			if (dateDialog.open() == Dialog.OK) {
 
 			}
 		} catch (NotDefinedException e) {
+			MessageBox.setError("Whole day task", e.getLocalizedMessage());
+		} catch (ParseException e) {
 			MessageBox.setError("Whole day task", e.getLocalizedMessage());
 		}
 		return null;
