@@ -1,10 +1,15 @@
 package com.uwusoft.timesheet;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -28,12 +33,15 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.commands.ICommandService;
+import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -42,6 +50,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private Image trayImage;
 	private ApplicationActionBarAdvisor actionBarAdvisor;
 	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+    private static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
 		super(configurer);
@@ -72,6 +81,63 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		// Some OS might not support tray items
 		if (trayItem != null) {
 			window.getShell().setVisible(false);
+
+			String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
+			try {
+				if (StringUtils.isEmpty(shutdownTime)) {
+					shutdownTime = TimesheetApp.startTime;
+				} else
+					shutdownTime = formatter.format(formatter.parse(shutdownTime));
+
+				Calendar calDay = Calendar.getInstance();
+				Calendar calWeek = new GregorianCalendar();
+				int shutdownDay = 0;
+				int shutdownWeek = 0;
+
+				Date startDate;
+				startDate = formatter.parse(TimesheetApp.startTime);
+				calDay.setTime(startDate);
+				calWeek.setTime(startDate);
+				int startDay = calDay.get(Calendar.DAY_OF_YEAR);
+				int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+
+				Date shutdownDate = formatter.parse(shutdownTime);
+				calDay.setTime(shutdownDate);
+				shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
+
+				IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
+				ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
+				
+				if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
+					calWeek.setTime(shutdownDate);
+					shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+					if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) { // last task will be set to empty if a manual check out has occurred
+						// automatic check out
+						try {
+							Map<String, String> parameters = new HashMap<String, String>();
+							parameters.put("Timesheet.commands.shutdownTime", shutdownTime);
+							parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+							handlerService.executeCommand(ParameterizedCommand.generateCommand(
+									commandService.getCommand("Timesheet.checkout"), parameters), null);
+						} catch (Exception ex) {
+							MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
+						}
+					}
+				}
+				if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+					// automatic check in
+					try {
+						Map<String, String> parameters = new HashMap<String, String>();
+						parameters.put("Timesheet.commands.startTime", TimesheetApp.startTime);
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(
+								commandService.getCommand("Timesheet.checkin"), parameters), null);
+					} catch (Exception ex) {
+						MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
+					}
+				}
+			} catch (ParseException e) {
+				MessageBox.setError("", e.getLocalizedMessage());
+			}
 			hookPopupMenu();
 		}
 	}

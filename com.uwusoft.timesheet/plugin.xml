@@ -132,7 +132,22 @@
             name="Check out">
          <commandParameter
                id="Timesheet.commands.shutdownTime"
-               name="Time"
+               name="shutdownTime"
+               optional="true">
+         </commandParameter>
+         <commandParameter
+               id="Timesheet.commands.storeWeekTotal"
+               name="storeWeekTotal"
+               optional="true">
+         </commandParameter>
+      </command>
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.CheckinHandler"
+            id="Timesheet.checkin"
+            name="Check in">
+         <commandParameter
+               id="Timesheet.commands.startTime"
+               name="startTime"
                optional="true">
          </commandParameter>
       </command>

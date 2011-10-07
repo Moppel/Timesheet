@@ -47,7 +47,7 @@ public class MessageBox {
 		else {
 			toolTip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_ERROR);
 			toolTip.setText(title); 
-			toolTip.setMessage(message); 
+			toolTip.setMessage(message == null ? "" : message); 
 			toolTip.setVisible(true); 
 		}
 	}

@@ -4,6 +4,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -24,7 +25,7 @@ public class CheckoutHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         String shutdownTime = event.getParameter("Timesheet.commands.shutdownTime");
-		//String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
+        if (shutdownTime == null) return null;
 		try {
 			Date shutdownDate = TimesheetApp.formatter.parse(shutdownTime);
 			StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
@@ -34,9 +35,12 @@ public class CheckoutHandler extends AbstractHandler {
 			if (timeDialog.open() == Dialog.OK) {
 				storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
 				storageService.storeLastDailyTotal();
-				if (preferenceStore.getString(TimesheetApp.DAILY_TASK) != "")
+				preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
+				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
 					storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
 							preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
+				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
+					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check out", e.getLocalizedMessage());
