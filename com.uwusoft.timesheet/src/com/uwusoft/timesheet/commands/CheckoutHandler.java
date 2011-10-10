@@ -27,7 +27,7 @@ public class CheckoutHandler extends AbstractHandler {
         String shutdownTime = event.getParameter("Timesheet.commands.shutdownTime");
         if (shutdownTime == null) return null;
 		try {
-			Date shutdownDate = TimesheetApp.formatter.parse(shutdownTime);
+			Date shutdownDate = StorageService.formatter.parse(shutdownTime);
 			StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 					.getService(preferenceStore.getString(StorageService.PROPERTY));
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),

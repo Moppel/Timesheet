@@ -2,6 +2,7 @@ package com.uwusoft.timesheet.extensionpoint;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ public interface StorageService {
     public static final String SUBMIT_STATUS = "SubmitStatus";
     public static final String CHECK_IN = "Check in";
     public static final String BREAK = "Break";
+	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
     /**
      * @return a list of tasks assigned to name of special time management system

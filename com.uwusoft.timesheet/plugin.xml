@@ -156,8 +156,8 @@
             id="Timesheet.commands.wholeDayTask"
             name="Whole day">
          <commandParameter
-               id="Timesheet.commands.startDate"
-               name="startDate"
+               id="Timesheet.commands.task"
+               name="task"
                optional="true">
          </commandParameter>
       </command>

@@ -46,6 +46,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 			if (timeDialog.open() == Dialog.OK) {
                 storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask);
+				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		}						
 		return null;

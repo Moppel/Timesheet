@@ -52,17 +52,6 @@ public class TimeDialog extends Dialog {
         label.setText(task);
         label.setLayoutData(gridData);
 
-        /*DateTime dateEntry = new DateTime(composite, SWT.DATE);
-        dateEntry.addSelectionListener(new SelectionListener() {			
-			public void widgetSelected(SelectionEvent e) {
-				day = ((DateTime) e.getSource()).getDay();
-				month = ((DateTime) e.getSource()).getMonth();
-				year = ((DateTime) e.getSource()).getYear();
-			}
-			public void widgetDefaultSelected(SelectionEvent e) {
-			}
-		});*/
-
         DateTime timeEntry = new DateTime(composite, SWT.TIME | SWT.SHORT);
         timeEntry.setLayoutData(gridData);
         timeEntry.setHours(hours);

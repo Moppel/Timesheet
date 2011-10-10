@@ -2,7 +2,7 @@ package com.uwusoft.timesheet;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -11,13 +11,13 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
+import com.uwusoft.timesheet.extensionpoint.StorageService;
+
 /**
  * This class controls all aspects of the application's execution
  */
 public class TimesheetApp implements IApplication {
 
-    public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-    
     public static final String WORKING_HOURS = "weekly.workinghours";
     public static final String HOLIDAY_TASK = "task.holiday";
     public static final String VACATION_TASK = "task.vacation";
@@ -28,19 +28,19 @@ public class TimesheetApp implements IApplication {
     public static final String LAST_TASK = "task.last";
     public static final String SYSTEM_SHUTDOWN = "system.shutdown";
     private final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-    public static String startTime;
+    public static Date startDate;
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
-		startTime = formatter.format(mx.getStartTime());
+		startDate = new Date(mx.getStartTime());
 
 		Display display = PlatformUI.createDisplay();
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 		    public void run() {
-				preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
+				preferenceStore.setValue(SYSTEM_SHUTDOWN, StorageService.formatter.format(System.currentTimeMillis()));
 				if (!PlatformUI.isWorkbenchRunning()) return;
 		    	final IWorkbench workbench = PlatformUI.getWorkbench();
 		    	final Display display = workbench.getDisplay();
@@ -48,7 +48,7 @@ public class TimesheetApp implements IApplication {
 					display.syncExec(new Runnable() {
 						public void run() {
 							if (!display.isDisposed()) {
-								preferenceStore.setValue(SYSTEM_SHUTDOWN, formatter.format(System.currentTimeMillis()));
+								preferenceStore.setValue(SYSTEM_SHUTDOWN, StorageService.formatter.format(System.currentTimeMillis()));
 								workbench.close();
 							}
 						}

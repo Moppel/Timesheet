@@ -11,6 +11,7 @@ import org.apache.commons.lang.time.DateUtils;
 public class BusinessDayUtil {
 
     //private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
+	private static boolean isAnotherWeek;
 
     /*
      * This method will calculate the next business day 
@@ -80,14 +81,25 @@ public class BusinessDayUtil {
         //Increment the Date object by a Day and clear out hour/min/sec information
         Date nextDay = DateUtils.truncate(addDays(startDate, 1), Calendar.DATE);
         //If tomorrow is a valid business day, return it
-        if (isBusinessDay(nextDay))
-                return nextDay;
+        if (isBusinessDay(nextDay)) {
+        	isAnotherWeek = false;
+        	return nextDay;
+        }
         //Else we recursively call our function until we find one. 
-        else
-                return getNextBusinessDay(nextDay);
+        else {
+        	isAnotherWeek = true;
+        	return getNextBusinessDay(nextDay);
+        }
     }
 
-    /*
+    /**
+	 * @return the isAnotherWeek
+	 */
+	public static boolean isAnotherWeek() {
+		return isAnotherWeek;
+	}
+
+	/*
      * Based on a year, this will compute the actual dates of 
      * 
      * Holidays Accounted For: 
@@ -152,8 +164,7 @@ public class BusinessDayUtil {
         return offlimitDates;
     }
 
-
-    /**
+	/**
      * This method will take in the various parameters and return a Date objet
      * that represents that value. 
      * 

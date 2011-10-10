@@ -26,12 +26,13 @@ public class CheckinHandler extends AbstractHandler {
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
 		try {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check in at "	+ startTime,
-					StorageService.CHECK_IN, TimesheetApp.formatter.parse(startTime));
+					StorageService.CHECK_IN, StorageService.formatter.parse(startTime));
 			if (timeDialog.open() == Dialog.OK) {
 				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				storageService.createTaskEntry(timeDialog.getTime(), StorageService.CHECK_IN);
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, preferenceStore.getString(TimesheetApp.DEFAULT_TASK));
+				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check in", e.getLocalizedMessage());

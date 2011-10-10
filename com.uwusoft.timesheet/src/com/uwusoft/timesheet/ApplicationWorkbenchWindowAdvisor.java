@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
@@ -41,7 +40,6 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -83,60 +81,54 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		if (trayItem != null) {
 			window.getShell().setVisible(false);
 
-			String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
+			Date shutdownDate = TimesheetApp.startDate;
 			try {
-				if (StringUtils.isEmpty(shutdownTime)) {
-					shutdownTime = TimesheetApp.startTime;
-				} else
-					shutdownTime = TimesheetApp.formatter.format(TimesheetApp.formatter.parse(shutdownTime));
-
-				Calendar calDay = Calendar.getInstance();
-				Calendar calWeek = new GregorianCalendar();
-				int shutdownDay = 0;
-				int shutdownWeek = 0;
-				
-				Date startDate = TimesheetApp.formatter.parse(TimesheetApp.startTime);
-				calDay.setTime(startDate);
-				calWeek.setTime(startDate);
-				int startDay = calDay.get(Calendar.DAY_OF_YEAR);
-				int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-
-				Date shutdownDate = TimesheetApp.formatter.parse(shutdownTime);
-				calDay.setTime(shutdownDate);
-				shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
-
-				IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
-				ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
-				
-				if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
-					calWeek.setTime(shutdownDate);
-					shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-					if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) { // last task will be set to empty if a manual check out has occurred
-						// automatic check out
-						try {
-							Map<String, String> parameters = new HashMap<String, String>();
-							parameters.put("Timesheet.commands.shutdownTime", shutdownTime);
-							handlerService.executeCommand(ParameterizedCommand.generateCommand(
-									commandService.getCommand("Timesheet.checkout"), parameters), null);
-						} catch (Exception ex) {
-							MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
-						}
-					}
-				}
-				if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
-					// automatic check in
-					try {
-						Map<String, String> parameters = new HashMap<String, String>();
-						parameters.put("Timesheet.commands.startTime", TimesheetApp.startTime);
-						parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
-						handlerService.executeCommand(ParameterizedCommand.generateCommand(
-								commandService.getCommand("Timesheet.checkin"), parameters), null);
-					} catch (Exception ex) {
-						MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
-					}
-				}
+				String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
+				if (!StringUtils.isEmpty(shutdownTime))
+					shutdownDate = StorageService.formatter.parse(shutdownTime);				
 			} catch (ParseException e) {
-				MessageBox.setError("", e.getLocalizedMessage());
+				MessageBox.setError("Shutdown date", e.getLocalizedMessage());
+			}
+			Calendar calDay = Calendar.getInstance();
+			Calendar calWeek = new GregorianCalendar();
+			int shutdownDay = 0;
+			int shutdownWeek = 0;
+			
+			calDay.setTime(TimesheetApp.startDate);
+			calWeek.setTime(TimesheetApp.startDate);
+			int startDay = calDay.get(Calendar.DAY_OF_YEAR);
+			int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+
+			calDay.setTime(shutdownDate);
+			calWeek.setTime(shutdownDate);
+			shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
+			shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+
+			IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
+			ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
+				
+			if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
+				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) { // last task will be set to empty if a manual check out has occurred						
+					try { // automatic check out
+						Map<String, String> parameters = new HashMap<String, String>();
+						parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(
+								commandService.getCommand("Timesheet.checkout"), parameters), null);
+					} catch (Exception ex) {
+						MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
+					}
+				}
+			}
+			if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {					
+				try { // automatic check in
+					Map<String, String> parameters = new HashMap<String, String>();
+					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(TimesheetApp.startDate));
+					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(
+							commandService.getCommand("Timesheet.checkin"), parameters), null);
+				} catch (Exception ex) {
+					MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
+				}
 			}
 			hookPopupMenu();
 		}
@@ -156,14 +148,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 
                 if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
                 	Map <String, String> parameters = new HashMap<String, String>();
-                    parameters.put("Timesheet.commands.startTime", TimesheetApp.formatter.format(new Date()));
+                    parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 else {
                 	Map <String, String> parameters = new HashMap<String, String>();
-                    parameters.put("Timesheet.commands.shutdownTime", TimesheetApp.formatter.format(new Date()));
+                    parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
                     trayMenu.add(new CommandContributionItem(p));
@@ -172,17 +164,19 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
                     
                     parameters.clear();
-                    parameters.put("Timesheet.commands.startDate", DateFormat.getDateInstance(DateFormat.SHORT).format(BusinessDayUtil.getNextBusinessDay(new Date())));
+                    parameters.put("Timesheet.commands.task", "task.holiday");
                     p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Holiday";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));
 
+                    parameters.put("Timesheet.commands.task", "task.vacation");
                     p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Vacation";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));
 
+                    parameters.put("Timesheet.commands.task", "task.sick");
                     p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Sick Leave";
                     p.parameters = parameters;         
