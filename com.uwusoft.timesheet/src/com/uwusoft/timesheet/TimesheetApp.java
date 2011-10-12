@@ -48,7 +48,7 @@ public class TimesheetApp implements IApplication {
 	public Object start(IApplicationContext context) {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		configOverrides.put("javax.persistence.jdbc.url", "jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
-		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		EntityManager em = factory.createEntityManager();
 		// Read the existing entries and write to console
 		Query q = em.createQuery("select t from Task t order by t.dateTime asc");
