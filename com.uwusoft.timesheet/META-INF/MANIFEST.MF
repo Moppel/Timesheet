@@ -28,8 +28,12 @@ Export-Package: com.uwusoft.timesheet;
  com.uwusoft.timesheet.dialog;uses:="org.eclipse.swt.graphics,org.eclipse.swt.widgets,org.eclipse.jface.dialogs",
  com.uwusoft.timesheet.extensionpoint,
  com.uwusoft.timesheet.extensionpoint.model;uses:="com.uwusoft.timesheet.extensionpoint",
+ com.uwusoft.timesheet.model,
  com.uwusoft.timesheet.util
 Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
+ lib/persistence/javax.persistence_1.0.0.jar,
+ lib/persistence/derby.jar,
+ lib/persistence/eclipselink.jar,
  .
 Import-Package: com.uwusoft.timesheet,
  org.apache.commons.lang.time;version="2.4.0"

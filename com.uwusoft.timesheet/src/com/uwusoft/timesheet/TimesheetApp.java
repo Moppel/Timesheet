@@ -2,7 +2,13 @@ package com.uwusoft.timesheet;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.util.Date;
+import java.sql.Date;
+import java.util.List;
+
+import javax.persistence.Query;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -12,13 +18,17 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Task;
 
 /**
  * This class controls all aspects of the application's execution
  */
 public class TimesheetApp implements IApplication {
+	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
+	private static EntityManagerFactory factory;
 
-    public static final String WORKING_HOURS = "weekly.workinghours";
+
+	public static final String WORKING_HOURS = "weekly.workinghours";
     public static final String HOLIDAY_TASK = "task.holiday";
     public static final String VACATION_TASK = "task.vacation";
     public static final String SICK_TASK = "task.sick";
@@ -34,6 +44,27 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
+		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+		EntityManager em = factory.createEntityManager();
+		// Read the existing entries and write to console
+		Query q = em.createQuery("select t from Task t order by t.dateTime asc");
+		List<Task> taskList = q.getResultList();
+		for (Task task : taskList) {
+			System.out.println(task);
+		}
+		System.out.println("Size: " + taskList.size());
+
+		// Create new todo
+		em.getTransaction().begin();
+		Task task = new Task();
+		task.setDateTime(new Date(System.currentTimeMillis()));
+		task.setTask("Nichts");
+		task.setWholeDay(false);
+		
+		em.persist(task);
+		em.getTransaction().commit();
+
+		em.close();
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		startDate = new Date(mx.getStartTime());
 
