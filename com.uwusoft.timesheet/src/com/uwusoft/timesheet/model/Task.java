@@ -15,7 +15,7 @@ public class Task {
 	private Long id;
 	private Timestamp dateTime;
 	private String task;
-	private boolean wholeDay;
+	private boolean wholeDay=false;
 
 	public Timestamp getDateTime() {
 		return dateTime;

@@ -50,19 +50,18 @@ public class TimesheetApp implements IApplication {
 		Query q = em.createQuery("select t from Task t order by t.dateTime asc");
 		@SuppressWarnings("unchecked")
 		List<Task> taskList = q.getResultList();
+		em.getTransaction().begin();
 		for (Task task : taskList) {
 			System.out.println(task);
-			/*em.remove(task);
-			em.getTransaction().commit();*/
+			//em.remove(task);
 		}
+		//em.getTransaction().commit();
 		System.out.println("Size: " + taskList.size());
 
 		// Create new task
-		em.getTransaction().begin();
 		Task task = new Task();
 		task.setDateTime(new Timestamp(System.currentTimeMillis()));
 		task.setTask("Nichts");
-		task.setWholeDay(false);
 		
 		em.persist(task);
 		em.getTransaction().commit();
