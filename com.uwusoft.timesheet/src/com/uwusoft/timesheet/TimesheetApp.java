@@ -4,7 +4,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Query;
 import javax.persistence.EntityManager;
@@ -44,6 +46,8 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
+		Map<String, Object> configOverrides = new HashMap<String, Object>();
+		configOverrides.put("javax.persistence.jdbc.url", "jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 		EntityManager em = factory.createEntityManager();
 		// Read the existing entries and write to console
