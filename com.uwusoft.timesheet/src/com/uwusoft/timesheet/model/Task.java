@@ -1,6 +1,6 @@
 package com.uwusoft.timesheet.model;
 
-import java.sql.Date;
+import java.sql.Timestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -9,21 +9,22 @@ import javax.persistence.Id;
 
 @Entity
 public class Task {
+	@SuppressWarnings("unused")
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private Date dateTime;
+	private Timestamp dateTime;
 	private String task;
 	private boolean wholeDay;
 
-	public Date getDateTime() {
+	public Timestamp getDateTime() {
 		return dateTime;
 	}
-	
-	public void setDateTime(Date dateTime) {
+
+	public void setDateTime(Timestamp dateTime) {
 		this.dateTime = dateTime;
 	}
-	
+
 	public String getTask() {
 		return task;
 	}

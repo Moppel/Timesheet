@@ -3,6 +3,7 @@ package com.uwusoft.timesheet;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.List;
 
 import javax.persistence.Query;
@@ -27,7 +28,6 @@ public class TimesheetApp implements IApplication {
 	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
 	private static EntityManagerFactory factory;
 
-
 	public static final String WORKING_HOURS = "weekly.workinghours";
     public static final String HOLIDAY_TASK = "task.holiday";
     public static final String VACATION_TASK = "task.vacation";
@@ -48,16 +48,19 @@ public class TimesheetApp implements IApplication {
 		EntityManager em = factory.createEntityManager();
 		// Read the existing entries and write to console
 		Query q = em.createQuery("select t from Task t order by t.dateTime asc");
+		@SuppressWarnings("unchecked")
 		List<Task> taskList = q.getResultList();
 		for (Task task : taskList) {
 			System.out.println(task);
+			/*em.remove(task);
+			em.getTransaction().commit();*/
 		}
 		System.out.println("Size: " + taskList.size());
 
-		// Create new todo
+		// Create new task
 		em.getTransaction().begin();
 		Task task = new Task();
-		task.setDateTime(new Date(System.currentTimeMillis()));
+		task.setDateTime(new Timestamp(System.currentTimeMillis()));
 		task.setTask("Nichts");
 		task.setWholeDay(false);
 		
@@ -65,6 +68,7 @@ public class TimesheetApp implements IApplication {
 		em.getTransaction().commit();
 
 		em.close();
+		
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		startDate = new Date(mx.getStartTime());
 
