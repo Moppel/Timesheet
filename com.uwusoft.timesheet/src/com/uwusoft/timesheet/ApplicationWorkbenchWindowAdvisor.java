@@ -143,10 +143,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		trayItem.addListener(SWT.MenuDetect, new Listener() {
 			public void handleEvent(Event event) {
 				MenuManager trayMenu = new MenuManager();
-                trayMenu.add(new CommandContributionItem(
-        				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
                 
-                if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+				if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
@@ -154,6 +152,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 else {
+                    trayMenu.add(new CommandContributionItem(
+            				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
+                    
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
