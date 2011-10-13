@@ -227,7 +227,7 @@ public class GoogleStorageService implements StorageService {
 			if (task.getTotal() == 0)
 				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
 			
-			if (CHECK_IN.equals(task) || BREAK.equals(task))
+			if (CHECK_IN.equals(task.getTask()) || BREAK.equals(task.getTask()))
 				timeEntry.getCustomElements().setValueLocal(TASK, task.getTask());
 			else {
 				if (task.getTotal() != 0) {
@@ -235,7 +235,7 @@ public class GoogleStorageService implements StorageService {
 					if (task.isWholeDay())
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
-				taskLink = taskLinkMap.get(task);
+				taskLink = taskLinkMap.get(task.getTask());
 			}
 			service.insert(listFeedUrl, timeEntry);
 
