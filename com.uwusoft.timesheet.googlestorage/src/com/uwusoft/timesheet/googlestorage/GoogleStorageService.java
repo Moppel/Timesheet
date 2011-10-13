@@ -38,6 +38,7 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
@@ -201,26 +202,39 @@ public class GoogleStorageService implements StorageService {
 		return taskEntries;
     }
     
-    public void createTaskEntry(Date dateTime, String task) {
-        createTaskEntry(dateTime, task, null);
+    public void createTaskEntry(Task task) {
+        createTaskEntry(null, task);
+    }
+    
+    public void createTaskEntry(Date dateTime, String task, String defaultTotal) {
+        createTaskEntry(null, new Task(dateTime, task, Float.parseFloat(defaultTotal)));
     }
 
-    public void createTaskEntry(Date dateTime, String task, String defaultTotal) {
+    public void createTaskEntry(Date date, Task task) {
         Calendar cal = new GregorianCalendar();
-        cal.setTime(dateTime);
+        cal.setTime(task.getDateTime());
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
 			String taskLink = null;
 			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
-			timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(dateTime));
-			if (defaultTotal == null)
-				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(dateTime));
+			
+			if (date == null)
+				timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(task.getDateTime()));
+			else
+				timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(date));				
+			
+			if (task.getTotal() == 0)
+				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
+			
 			if (CHECK_IN.equals(task) || BREAK.equals(task))
-				timeEntry.getCustomElements().setValueLocal(TASK, task);
+				timeEntry.getCustomElements().setValueLocal(TASK, task.getTask());
 			else {
-				if (defaultTotal != null)
-					timeEntry.getCustomElements().setValueLocal(TOTAL, defaultTotal);
+				if (task.getTotal() != 0) {
+					timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
+					if (task.isWholeDay())
+						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
+				}
 				taskLink = taskLinkMap.get(task);
 			}
 			service.insert(listFeedUrl, timeEntry);
@@ -228,7 +242,7 @@ public class GoogleStorageService implements StorageService {
             if (!reloadWorksheets()) return;
 			if (taskLink != null) {
 				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TASK), "=" + taskLink);
-				if (defaultTotal == null)
+				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
 			for (PropertyChangeListener listener : listeners)

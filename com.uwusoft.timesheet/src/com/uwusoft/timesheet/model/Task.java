@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.model;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -28,9 +29,8 @@ public class Task {
 	 * @param dateTime
 	 * @param task
 	 */
-	public Task(Timestamp dateTime, String task) {
-		super();
-		this.dateTime = dateTime;
+	public Task(Date dateTime, String task) {
+		this.dateTime = new Timestamp(dateTime.getTime());
 		this.task = task;
 	}
 
@@ -39,9 +39,8 @@ public class Task {
 	 * @param task
 	 * @param total
 	 */
-	public Task(Timestamp dateTime, String task, float total) {
-		this.dateTime = dateTime;
-		this.task = task;
+	public Task(Date dateTime, String task, float total) {
+		this(dateTime, task);
 		this.total = total;
 	}
 
@@ -51,10 +50,8 @@ public class Task {
 	 * @param total
 	 * @param wholeDay
 	 */
-	public Task(Timestamp dateTime, String task, float total, boolean wholeDay) {
-		this.dateTime = dateTime;
-		this.task = task;
-		this.total = total;
+	public Task(Date dateTime, String task, float total, boolean wholeDay) {
+		this(dateTime, task, total);
 		this.wholeDay = wholeDay;
 	}
 

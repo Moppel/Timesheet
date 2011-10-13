@@ -1,15 +1,13 @@
 package com.uwusoft.timesheet.extensionpoint;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.osgi.framework.ServiceException;
-
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
+import com.uwusoft.timesheet.model.Task;
 
 
 /**
@@ -54,23 +52,15 @@ public interface StorageService {
     /**
      * store task
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task
-     * @param dateTime end time of the task
-     * @param task task name
-     * @throws IOException
-     * @throws ServiceException
+     * @param task
      */
-    void createTaskEntry(Date dateTime, String task);
-
+    void createTaskEntry(Task task);
+   
     /**
-     * store default daily task with default total
-     * @param dateTime only the date of the default task
-     * @param task name of the default task
-     * @param defaultTotal total of the default task that shouldn't be calculated automatically
-     * @throws IOException
-     * @throws ServiceException
+     * store whole day task
      */
-    void createTaskEntry(Date dateTime, String task, String defaultTotal);
     
+    void createTaskEntry(Date date, Task task);
     /**
      * 
      * @param time the time of the task entry

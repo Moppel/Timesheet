@@ -17,6 +17,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -34,12 +35,12 @@ public class CheckoutHandler extends AbstractHandler {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 					preferenceStore.getString(TimesheetApp.LAST_TASK), shutdownDate);
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
+				storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
 				storageService.storeLastDailyTotal();
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
 				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
-					storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
-							preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
+					storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
+							Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
 				WholeDayTasks.getInstance().createTaskEntries();
 			}
 		} catch (ParseException e) {

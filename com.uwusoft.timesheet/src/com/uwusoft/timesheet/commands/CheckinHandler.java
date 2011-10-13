@@ -13,6 +13,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -30,7 +31,7 @@ public class CheckinHandler extends AbstractHandler {
 			if (timeDialog.open() == Dialog.OK) {
 				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
-				storageService.createTaskEntry(timeDialog.getTime(), StorageService.CHECK_IN);
+				storageService.createTaskEntry(new Task(timeDialog.getTime(), StorageService.CHECK_IN));
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, preferenceStore.getString(TimesheetApp.DEFAULT_TASK));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}

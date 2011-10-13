@@ -20,6 +20,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ChangeTaskHandler extends AbstractHandler {
@@ -44,7 +45,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 			if (StringUtils.isEmpty(selectedTask)) return null;
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), selectedTask, new Date());
 			if (timeDialog.open() == Dialog.OK) {
-                storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK));
+                storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask);
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
