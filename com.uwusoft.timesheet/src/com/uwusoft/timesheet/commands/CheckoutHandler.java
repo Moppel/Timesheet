@@ -16,6 +16,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -39,6 +40,7 @@ public class CheckoutHandler extends AbstractHandler {
 				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
 					storageService.createTaskEntry(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
 							preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL));
+				WholeDayTasks.getInstance().createTaskEntries();
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check out", e.getLocalizedMessage());

@@ -1,7 +1,5 @@
 package com.uwusoft.timesheet.commands;
 
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.util.Date;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -16,7 +14,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.BusinessDayUtil;
+import com.uwusoft.timesheet.extensionpoint.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class WholeDayTaskHandler extends AbstractHandler {
@@ -24,18 +22,19 @@ public class WholeDayTaskHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		String startDate = DateFormat.getDateInstance(DateFormat.SHORT).format(BusinessDayUtil.getNextBusinessDay(new Date()));
+		
+		WholeDayTasks wholeDayTasks = WholeDayTasks.getInstance();
+		Date startDate = wholeDayTasks.getNextBegin();
 		String task = event.getParameter("Timesheet.commands.task");
 		DateDialog dateDialog;
 		try {
 			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),
-					preferenceStore.getString(task), DateFormat.getDateInstance(DateFormat.SHORT).parse(startDate));
+					preferenceStore.getString(task), startDate);
 			if (dateDialog.open() == Dialog.OK) {
+				wholeDayTasks.addNextTask(dateDialog.getTime(), preferenceStore.getString(task));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(System.currentTimeMillis()));
 			}
 		} catch (NotDefinedException e) {
-			MessageBox.setError("Whole day task", e.getLocalizedMessage());
-		} catch (ParseException e) {
 			MessageBox.setError("Whole day task", e.getLocalizedMessage());
 		}
 		return null;

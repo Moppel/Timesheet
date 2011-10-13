@@ -15,34 +15,69 @@ public class Task {
 	private Long id;
 	private Timestamp dateTime;
 	private String task;
-	private boolean wholeDay=false;
+	private float total=0;
+	private boolean wholeDay=false;	
+	
+	/**
+	 * JPA requires a no-arg constructor
+	 */
+	protected Task() {
+	}	
+
+	/**
+	 * @param dateTime
+	 * @param task
+	 */
+	public Task(Timestamp dateTime, String task) {
+		super();
+		this.dateTime = dateTime;
+		this.task = task;
+	}
+
+	/**
+	 * @param dateTime
+	 * @param task
+	 * @param total
+	 */
+	public Task(Timestamp dateTime, String task, float total) {
+		this.dateTime = dateTime;
+		this.task = task;
+		this.total = total;
+	}
+
+	/**
+	 * @param dateTime
+	 * @param task
+	 * @param total
+	 * @param wholeDay
+	 */
+	public Task(Timestamp dateTime, String task, float total, boolean wholeDay) {
+		this.dateTime = dateTime;
+		this.task = task;
+		this.total = total;
+		this.wholeDay = wholeDay;
+	}
+
+
 
 	public Timestamp getDateTime() {
 		return dateTime;
-	}
-
-	public void setDateTime(Timestamp dateTime) {
-		this.dateTime = dateTime;
 	}
 
 	public String getTask() {
 		return task;
 	}
 	
-	public void setTask(String task) {
-		this.task = task;
+	public float getTotal() {
+		return total;
 	}
 
 	public boolean isWholeDay() {
 		return wholeDay;
 	}
 
-	public void setWholeDay(boolean wholeDay) {
-		this.wholeDay = wholeDay;
-	}
-	
 	@Override
 	public String toString() {
-		return "Task [Date=" + dateTime + ", task=" + task + "]";
+		return "Task [Date=" + dateTime + ", task=" + task + ", total=" + total + ", wholeDay=" + wholeDay + "]";
 	}
 }
