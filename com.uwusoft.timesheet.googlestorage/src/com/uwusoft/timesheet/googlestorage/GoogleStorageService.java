@@ -206,13 +206,9 @@ public class GoogleStorageService implements StorageService {
         createTaskEntry(null, task);
     }
     
-    public void createTaskEntry(Date dateTime, String task, String defaultTotal) {
-        createTaskEntry(null, new Task(dateTime, task, Float.parseFloat(defaultTotal)));
-    }
-
     public void createTaskEntry(Date date, Task task) {
         Calendar cal = new GregorianCalendar();
-        cal.setTime(task.getDateTime());
+        cal.setTime(date == null ? task.getDateTime() : date);
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();

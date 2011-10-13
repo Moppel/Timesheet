@@ -14,7 +14,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class WholeDayTaskHandler extends AbstractHandler {
