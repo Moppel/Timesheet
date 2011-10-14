@@ -61,6 +61,10 @@ public class Task {
 		return dateTime;
 	}
 
+	public void setDateTime(Timestamp dateTime) {
+		this.dateTime = dateTime;
+	}
+
 	public String getTask() {
 		return task;
 	}

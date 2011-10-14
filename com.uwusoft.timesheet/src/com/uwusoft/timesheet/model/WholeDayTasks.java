@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.model;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 
@@ -78,7 +79,8 @@ public class WholeDayTasks {
 			do {
 				if (BusinessDayUtil.isAnotherWeek())
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
-				storageService.createTaskEntry(begin, task);
+				task.setDateTime(new Timestamp(begin.getTime()));
+				storageService.createTaskEntry(task);
 				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
 					storageService.createTaskEntry(new Task(begin, preferenceStore.getString(TimesheetApp.DAILY_TASK),
 							Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));

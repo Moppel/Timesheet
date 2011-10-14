@@ -203,22 +203,16 @@ public class GoogleStorageService implements StorageService {
     }
     
     public void createTaskEntry(Task task) {
-        createTaskEntry(null, task);
-    }
-    
-    public void createTaskEntry(Date date, Task task) {
         Calendar cal = new GregorianCalendar();
-        cal.setTime(date == null ? task.getDateTime() : date);
+        cal.setTime(task.getDateTime());
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
 			String taskLink = null;
 			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
 			
-			if (date == null)
-				timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(task.getDateTime()));
-			else
-				timeEntry.getCustomElements().setValueLocal(DATE, new SimpleDateFormat(dateFormat).format(date));				
+			timeEntry.getCustomElements().setValueLocal(DATE,
+					new SimpleDateFormat(dateFormat).format(task.getDateTime()));
 			
 			if (task.getTotal() == 0)
 				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
@@ -238,6 +232,7 @@ public class GoogleStorageService implements StorageService {
             if (!reloadWorksheets()) return;
 			if (taskLink != null) {
 				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TASK), "=" + taskLink);
+				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
@@ -277,7 +272,7 @@ public class GoogleStorageService implements StorageService {
             for (int i = defaultWorksheet.getRowCount() - 3; i > 0; i--, rowsOfWeek++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
                 if (elements.getValue(WEEKLY_TOTAL) != null) break; // end of last week
-                if (i==1) return;
+                if (i==1) break;
             }            
             ListEntry timeEntry = new ListEntry();
 			timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");

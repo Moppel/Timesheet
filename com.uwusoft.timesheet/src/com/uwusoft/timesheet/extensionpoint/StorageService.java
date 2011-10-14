@@ -57,11 +57,6 @@ public interface StorageService {
     void createTaskEntry(Task task);
    
     /**
-     * store whole day task
-     */
-    
-    void createTaskEntry(Date date, Task task);
-    /**
      * 
      * @param time the time of the task entry
      * @param id the id of the task entry
