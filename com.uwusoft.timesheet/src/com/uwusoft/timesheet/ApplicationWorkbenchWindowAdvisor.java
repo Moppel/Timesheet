@@ -155,12 +155,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     trayMenu.add(new CommandContributionItem(
             				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
                     
-                	Map <String, String> parameters = new HashMap<String, String>();
+                    trayMenu.add(new CommandContributionItem(
+                    		new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH)));
+
+                    Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
                     trayMenu.add(new CommandContributionItem(p));
-    				
+
                     MenuManager wholeDayTask = new MenuManager("Set whole day task");
                     String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
                     

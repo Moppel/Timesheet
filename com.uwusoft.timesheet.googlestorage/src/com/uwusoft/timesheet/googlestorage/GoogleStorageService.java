@@ -122,8 +122,11 @@ public class GoogleStorageService implements StorageService {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
             spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
     	}
-    	if (StringUtils.isEmpty(spreadsheetKey)) return false;
 		try {
+	    	if (StringUtils.isEmpty(spreadsheetKey)) {
+	    		MessageBox.setMessage("Create spreadsheet", "Please manually create a spreadsheet and copy the spreadsheet key to the Google Spreadsheet Preferences!");
+	    		return false;
+	    	}
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
 			for (CellEntry entry : cellFeed.getEntries()) {

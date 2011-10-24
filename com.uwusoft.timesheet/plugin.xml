@@ -127,6 +127,11 @@
             name="Change Task">
       </command>
       <command
+            defaultHandler="com.uwusoft.timesheet.commands.SetBreakHandler"
+            id="Timesheet.setBreak"
+            name="Set Break">
+      </command>
+      <command
             defaultHandler="com.uwusoft.timesheet.commands.CheckoutHandler"
             id="Timesheet.checkout"
             name="Check out">
