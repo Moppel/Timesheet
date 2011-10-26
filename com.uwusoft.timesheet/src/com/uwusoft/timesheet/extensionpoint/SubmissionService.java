@@ -2,6 +2,7 @@
 package com.uwusoft.timesheet.extensionpoint;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * todo: add class doc
@@ -14,5 +15,7 @@ public interface SubmissionService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.submissionservice";
 	public static final String PROPERTY = "submission.system";
 
-    void submit(Date date, String task, Double total);
+    List<String> getAssignedTasks();
+	
+	void submit(Date date, String task, Double total);
 }

@@ -158,18 +158,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     trayMenu.add(new CommandContributionItem(
                     		new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH)));
 
-                    Map <String, String> parameters = new HashMap<String, String>();
-                    parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
-                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
-                    p.parameters = parameters;         
-                    trayMenu.add(new CommandContributionItem(p));
-
                     MenuManager wholeDayTask = new MenuManager("Set whole day task");
                     String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
                     
-                    parameters.clear();
+                    Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.task", "task.holiday");
-                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
+                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     p.label = "Holiday";
                     p.parameters = parameters;         
                     wholeDayTask.add(new CommandContributionItem(p));
@@ -187,8 +181,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     wholeDayTask.add(new CommandContributionItem(p));
 
                     trayMenu.add(wholeDayTask);
+
+                    parameters.clear();
+                    parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
+                    p.parameters = parameters;         
+                    trayMenu.add(new CommandContributionItem(p));
                 }
+                trayMenu.add(new Separator());
                 
+                trayMenu.add(new CommandContributionItem(
+        				new CommandContributionItemParameter(window, null, "Timesheet.importTasks", CommandContributionItem.STYLE_PUSH)));
+
                 trayMenu.add(new ContributionItem() {
                     @Override
                     public void fill(final Menu menu, final int index) {

@@ -166,6 +166,11 @@
                optional="true">
          </commandParameter>
       </command>
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.ImportTasksHandler"
+            id="Timesheet.importTasks"
+            name="Import Tasks">
+      </command>
    </extension>
 
 </plugin>

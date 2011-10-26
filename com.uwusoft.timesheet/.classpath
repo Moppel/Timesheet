@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="lib/persistence/derby.jar"/>
 	<classpathentry kind="lib" path="lib/persistence/eclipselink.jar"/>
 	<classpathentry kind="lib" path="lib/persistence/javax.persistence_1.0.0.jar"/>
+	<classpathentry kind="lib" path="/com.uwusoft.timesheet.googlestorage/lib/google/gdata-media-1.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

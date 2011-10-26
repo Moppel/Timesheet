@@ -23,6 +23,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
+import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.spreadsheet.CellEntry;
 import com.google.gdata.data.spreadsheet.CellFeed;
 import com.google.gdata.data.spreadsheet.CustomElementCollection;
@@ -66,7 +67,7 @@ public class GoogleStorageService implements StorageService {
     private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
     private static WorksheetEntry defaultWorksheet;
     private static Map<String,String> taskLinkMap;
-    private static Map<String, List<String>> tasks;
+    private static Map<String, List<String>> tasksMap;
     private static String message;
     private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
     private static String title = "Google Storage Service";
@@ -174,7 +175,7 @@ public class GoogleStorageService implements StorageService {
     } 
 
     public Map<String, List<String>> getTasks() {
-        return tasks;
+        return tasksMap;
     }
 
     public List<TaskEntry> getTaskEntries(Date date) {
@@ -299,6 +300,47 @@ public class GoogleStorageService implements StorageService {
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task);
 	}
 
+	public void importTasks(String submissionSystem, List<String> tasks) {
+		try {
+			URL worksheetListFeedUrl = null;
+			if (tasksMap.containsKey(submissionSystem)) {
+				tasks.removeAll(tasksMap.get(submissionSystem));
+		        for (WorksheetEntry worksheet : worksheets) {
+		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
+			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+		            	break;
+		            }
+		        }   
+			}
+			else {
+				WorksheetEntry newWorksheet = new WorksheetEntry();
+				newWorksheet.setTitle(new PlainTextConstruct(submissionSystem));
+				newWorksheet.setColCount(6);
+				newWorksheet.setRowCount(20);
+				service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
+				
+				reloadWorksheets();
+		        for (WorksheetEntry worksheet : worksheets) {
+		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
+			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+		            	break;
+		            }
+		        }   
+			}
+			for (String task : tasks) {
+	            ListEntry timeEntry = new ListEntry();
+				timeEntry.getCustomElements().setValueLocal(TASK, task);
+				service.insert(worksheetListFeedUrl, timeEntry);
+			}
+		} catch (MalformedURLException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
+	}
+	
 	public void submitEntries() {
         try {
             if (!reloadWorksheets()) return;
@@ -349,11 +391,11 @@ public class GoogleStorageService implements StorageService {
     }
 
     private void loadTasks() {
-        tasks = new HashMap<String, List<String>> ();
+        tasksMap = new HashMap<String, List<String>> ();
         taskLinkMap = new HashMap<String, String>();
         for (WorksheetEntry worksheet : worksheets) {
             String title = worksheet.getTitle().getPlainText();
-            tasks.put(title, new ArrayList<String>());
+            tasksMap.put(title, new ArrayList<String>());
             ListFeed feed;
 			try {
 				feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
@@ -363,7 +405,7 @@ public class GoogleStorageService implements StorageService {
 					String value = entry.getCustomElements().getValue(TASK);
 					if (value != null) {
 						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // TODO hardcoded: task must be in the first column
-						tasks.get(title).add(value);
+						tasksMap.get(title).add(value);
 					}
 				}
 			} catch (IOException e) {

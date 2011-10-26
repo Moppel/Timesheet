@@ -74,5 +74,7 @@ public interface StorageService {
 
     void storeLastWeekTotal(String weeklyWorkingHours);
     
+    void importTasks(String submissionSystem, List<String> tasks);
+    
     void submitEntries();
 }
