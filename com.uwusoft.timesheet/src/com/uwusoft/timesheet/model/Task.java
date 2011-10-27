@@ -55,8 +55,6 @@ public class Task {
 		this.wholeDay = wholeDay;
 	}
 
-
-
 	public Timestamp getDateTime() {
 		return dateTime;
 	}

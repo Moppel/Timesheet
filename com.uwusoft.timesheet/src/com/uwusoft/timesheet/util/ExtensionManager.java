@@ -28,7 +28,7 @@ public class ExtensionManager<T> {
 			for (IConfigurationElement e : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
 				if (e.getContributor().getName().equals(contributorName))
 					try {
-						services.get(serviceId).put(contributorName, (T) e.createExecutableExtension("class"));
+						services.get(serviceId).put(contributorName, e.createExecutableExtension("class"));
 					} catch (CoreException e1) {
 						MessageBox.setError(this.getClass().getSimpleName(), e1.getLocalizedMessage());
 					}
