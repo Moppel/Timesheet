@@ -25,7 +25,7 @@ public class TimeSheetShutdownService implements ActionListener {
     public TimeSheetShutdownService() {
         if (SystemTray.isSupported()) {
             SystemTray tray = SystemTray.getSystemTray();
-            Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("clock.png"));
+            Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("Services.png"));
 
             PopupMenu popup = new PopupMenu();
             MenuItem menuItem = new MenuItem("Exit");
