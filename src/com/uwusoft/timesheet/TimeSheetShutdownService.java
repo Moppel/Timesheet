@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.URL;
 
 /**
  * the timesheet shutdown service
@@ -24,8 +25,7 @@ public class TimeSheetShutdownService implements ActionListener {
     public TimeSheetShutdownService() {
         if (SystemTray.isSupported()) {
             SystemTray tray = SystemTray.getSystemTray();
-            Image image = Toolkit.getDefaultToolkit().getImage(TimeSheetShutdownService.class.getResource("clock.png") == null ?
-                    null : TimeSheetShutdownService.class.getResource("clock.png").getFile());
+            Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("clock.png"));
 
             PopupMenu popup = new PopupMenu();
             MenuItem menuItem = new MenuItem("Exit");
