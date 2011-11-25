@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -36,7 +37,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
 		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);
-		List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
+		List<String> tasks = new ArrayList<String>(storageService.getTasks().get("Primavera")); // TODO
 		tasks.remove(preferenceStore.getString(TimesheetApp.LAST_TASK));
 		listDialog.setInput(tasks);
 		if (listDialog.open() == Dialog.OK) {
