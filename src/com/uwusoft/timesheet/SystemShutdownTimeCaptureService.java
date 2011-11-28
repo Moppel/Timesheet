@@ -6,23 +6,22 @@ import java.util.Properties;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
 
 /**
- * the timesheet shutdown service
+ * the system shutdown time capture service
  *
  * @author Uta Wunderlich
  * @version $Revision: $, $Date: Aug 12, 2011
  * @since Aug 12, 2011
  */
-public class TimeSheetShutdownService implements ActionListener {
+public class SystemShutdownTimeCaptureService implements ActionListener {
     private static TrayIcon trayIcon;
     private static SimpleDateFormat formatter;
     private static File props;
     private static Properties transferProps;
-    private static String comment = "Timesheet Shutdown Service";
+    private static String comment = "System Shutdown Time Capture Service";
 
-    public TimeSheetShutdownService() {
+    public SystemShutdownTimeCaptureService() {
         if (SystemTray.isSupported()) {
             SystemTray tray = SystemTray.getSystemTray();
             Image image = Toolkit.getDefaultToolkit().getImage(getClass().getResource("Services.png"));
@@ -56,14 +55,16 @@ public class TimeSheetShutdownService implements ActionListener {
     }
 
     public static void main(String[] args) {
-        TimeSheetShutdownService timeSheet = new TimeSheetShutdownService();
+        SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
 
         formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
         transferProps = new Properties();
-        props = new File(System.getProperty("user.home")
-                + "/.eclipse/com.uwusoft.timesheet/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.uwusoft.timesheet.prefs");
-        timeSheet.addShutdownHook();
+        String prefsPath = "/.eclipse/com.uwusoft.timesheet/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.uwusoft.timesheet.prefs";
+        if (args.length > 0) prefsPath = args[0];
+        props = new File(System.getProperty("user.home") + prefsPath);
+        
+        systemTimeCapture.addShutdownHook();
     }
 
     private static void helpAndTerminate(String message) {
@@ -92,9 +93,7 @@ public class TimeSheetShutdownService implements ActionListener {
                 OutputStream out = new FileOutputStream(props);
                 transferProps.setProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
                 transferProps.store(out, comment);
-                out.close();
-            } catch (FileNotFoundException e) {
-                helpAndTerminate(e.getMessage());
+                out.close();           
             } catch (IOException e) {
                 helpAndTerminate(e.getMessage());
             }
