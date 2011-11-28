@@ -352,9 +352,9 @@ public class GoogleStorageService implements StorageService {
 	        int i = defaultWorksheet.getRowCount() - 2;
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
-	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) break;
+	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) break;
 
-				if (elements.getValue(TIME) == null || elements.getValue(DAILY_TOTAL) != null) { // search for last complete day and break
+				if (elements.getValue(TIME) == null && elements.getValue(WEEKLY_TOTAL) == null || elements.getValue(DAILY_TOTAL) != null) { // search for last complete day and break
 					lastDate = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 					entry = new DailySubmitEntry(lastDate);
 					break;
@@ -362,7 +362,7 @@ public class GoogleStorageService implements StorageService {
 	        }
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
-	            if ("Submitted".equals(elements.getValue(SUBMIT_STATUS))) {
+	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) {
 	            	entry.submitEntries();
 	            	break;
 	            }

@@ -29,7 +29,7 @@ public interface StorageService {
     public static final String WEEK = "Week";
     public static final String TASK = "Task";
     public static final String OVERTIME = "Overtime";
-    public static final String SUBMIT_STATUS = "SubmitStatus";
+    public static final String SUBMISSION_STATUS = "SubmissionStatus";
     public static final String CHECK_IN = "Check in";
     public static final String BREAK = "Break";
 	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
