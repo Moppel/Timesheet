@@ -41,7 +41,7 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
 	protected String changePressed() {
 		ListDialog listDialog = new TaskListDialog(getShell(), systems, oldValue);
 		listDialog.setTitle("Tasks");
-		listDialog.setMessage("Select next task");
+		listDialog.setMessage("Select task");
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
 		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);

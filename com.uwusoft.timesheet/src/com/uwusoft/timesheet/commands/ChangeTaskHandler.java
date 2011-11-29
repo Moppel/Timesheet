@@ -39,7 +39,8 @@ public class ChangeTaskHandler extends AbstractHandler {
             systems.add(system);
             count++;
         }
-		ListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), systems.toArray(new String[count]), preferenceStore.getString(TimesheetApp.LAST_TASK));
+		ListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), systems.toArray(new String[count]),
+				preferenceStore.getString(TimesheetApp.LAST_TASK));
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
