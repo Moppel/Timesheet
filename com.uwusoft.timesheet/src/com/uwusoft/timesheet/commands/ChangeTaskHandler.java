@@ -20,6 +20,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
+import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -31,15 +32,19 @@ public class ChangeTaskHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		ListDialog listDialog = new ListDialog(HandlerUtil.getActiveShell(event));
+        List<String> systems = new ArrayList<String>();
+        int count=0;
+        for (String system : storageService.getTasks().keySet()) {
+            if (storageService.getTasks().get(system).isEmpty()) continue;
+            systems.add(system);
+            count++;
+        }
+		ListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), systems.toArray(new String[count]));
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
 		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);
-		List<String> tasks = new ArrayList<String>(storageService.getTasks().get("Primavera")); // TODO
-		tasks.remove(preferenceStore.getString(TimesheetApp.LAST_TASK));
-		listDialog.setInput(tasks);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
