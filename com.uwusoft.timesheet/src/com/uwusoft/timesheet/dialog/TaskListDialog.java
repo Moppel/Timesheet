@@ -32,12 +32,14 @@ public class TaskListDialog extends ListDialog {
 
     private String[] categories;
     private Combo categoryCombo;
+    private String taskSelected;
 
-    public TaskListDialog(Shell shell, String[] categories) {
+    public TaskListDialog(Shell shell, String[] categories, String taskSelected) {
         super(shell);
         this.categories = categories;
+    	this.taskSelected = taskSelected;
     }
-
+    
     @Override
     protected Control createDialogArea(Composite composite) {
         Composite parent = (Composite) super.createDialogArea(composite);
@@ -66,7 +68,7 @@ public class TaskListDialog extends ListDialog {
 		StorageService storageService = new ExtensionManager<StorageService>(
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		List<String> tasks = new ArrayList<String>(storageService.getTasks().get(categoryCombo.getText()));
-        tasks.remove(preferenceStore.getString(TimesheetApp.LAST_TASK));
+		tasks.remove(taskSelected);
         getTableViewer().setInput(tasks);
 	}
 }
