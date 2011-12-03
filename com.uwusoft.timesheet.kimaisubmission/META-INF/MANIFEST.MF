@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Kimaisubmission
+Bundle-SymbolicName: com.uwusoft.timesheet.kimaisubmission;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: com.uwusoft.timesheet.kimaisubmission.Activator
+Bundle-Vendor: UWUSOFT
+Require-Bundle: org.eclipse.core.runtime,
+ com.uwusoft.timesheet
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
