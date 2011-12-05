@@ -323,11 +323,11 @@ public class GoogleStorageService implements StorageService {
 		        for (WorksheetEntry worksheet : worksheets) {
 		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
 			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+				        createUpdateCellEntry(worksheet, 1, 1, TASK);
 		            	break;
 		            }
-		        }   
+		        }
 			}
-			// TODO add column headers
 			for (String task : tasks) {
 	            ListEntry timeEntry = new ListEntry();
 				timeEntry.getCustomElements().setValueLocal(TASK, task);
