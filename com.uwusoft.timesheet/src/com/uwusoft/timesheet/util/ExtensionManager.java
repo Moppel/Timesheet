@@ -7,8 +7,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 
-import com.uwusoft.timesheet.extensionpoint.SubmissionServiceImpl;
-
 public class ExtensionManager<T> {
 
 	private String serviceId;
@@ -33,8 +31,6 @@ public class ExtensionManager<T> {
 						MessageBox.setError(this.getClass().getSimpleName(), e1.getLocalizedMessage());
 					}
 			}
-			if (services.get(serviceId).get(contributorName) == null)
-				services.get(serviceId).put(contributorName, new SubmissionServiceImpl()); // TODO submission service plug-in 
 		}
 		return (T) services.get(serviceId).get(contributorName);
 	}
