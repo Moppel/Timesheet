@@ -1,4 +1,3 @@
-/* Copyright (c) 2005 by net-linx; All rights reserved */
 package com.uwusoft.timesheet.dialog;
 
 import java.util.ArrayList;
@@ -29,13 +28,24 @@ import com.uwusoft.timesheet.util.ExtensionManager;
  */
 public class TaskListDialog extends ListDialog {
 
-    private String[] categories;
-    private Combo categoryCombo;
+    private StorageService storageService;
+	private String[] systems;
+    private Combo systemCombo;
     private String taskSelected;
 
-    public TaskListDialog(Shell shell, String[] categories, String taskSelected) {
+    public TaskListDialog(Shell shell, String taskSelected) {
         super(shell);
-        this.categories = categories;
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		storageService = new ExtensionManager<StorageService>(
+                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		List<String> systemsList = new ArrayList<String>();
+        int count=0;
+        for (String system : storageService.getTasks().keySet()) {
+            if (storageService.getTasks().get(system).isEmpty()) continue;
+            systemsList.add(system);
+            count++;
+        }
+        systems = systemsList.toArray(new String[count]);
     	this.taskSelected = taskSelected;
     }
     
@@ -43,18 +53,18 @@ public class TaskListDialog extends ListDialog {
     protected Control createDialogArea(Composite composite) {
         Composite parent = (Composite) super.createDialogArea(composite);
         
-        Composite categoryPanel = new Composite(parent, SWT.NONE);
-        categoryPanel.setLayout(new GridLayout(2, false));
+        Composite systemPanel = new Composite(parent, SWT.NONE);
+        systemPanel.setLayout(new GridLayout(2, false));
         
-        (new Label(categoryPanel, SWT.NULL)).setText("Submission System: ");
-        categoryCombo = new Combo(categoryPanel, SWT.READ_ONLY);
-        categoryCombo.setItems(categories);
+        (new Label(systemPanel, SWT.NULL)).setText("Submission System: ");
+        systemCombo = new Combo(systemPanel, SWT.READ_ONLY);
+        systemCombo.setItems(systems);
         
-        categoryCombo.select(0);
+        systemCombo.select(0);
         setTasks();
         
-        categoryCombo.setBounds(50, 50, 180, 65);
-        categoryCombo.addSelectionListener(new SelectionAdapter() {
+        systemCombo.setBounds(50, 50, 180, 65);
+        systemCombo.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
                 setTasks();
             }
@@ -63,11 +73,12 @@ public class TaskListDialog extends ListDialog {
     }
 
 	private void setTasks() {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		StorageService storageService = new ExtensionManager<StorageService>(
-                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		List<String> tasks = new ArrayList<String>(storageService.getTasks().get(categoryCombo.getText()));
+		List<String> tasks = new ArrayList<String>(storageService.getTasks().get(systemCombo.getText()));
 		tasks.remove(taskSelected);
         getTableViewer().setInput(tasks);
+	}
+	
+	public String getSystem() {
+		return systemCombo.getText();
 	}
 }
