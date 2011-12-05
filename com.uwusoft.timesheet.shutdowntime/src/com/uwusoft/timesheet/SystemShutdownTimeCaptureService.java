@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet;
 
 import java.io.*;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 import java.awt.*;
@@ -17,7 +18,7 @@ import java.awt.event.ActionListener;
 public class SystemShutdownTimeCaptureService implements ActionListener {
     private static TrayIcon trayIcon;
     private static SimpleDateFormat formatter;
-    private static File props;
+    private static File props, tmp;
     private static Properties transferProps;
     private static String comment = "System Shutdown Time Capture Service";
 
@@ -63,6 +64,29 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         String prefsPath = "/.eclipse/com.uwusoft.timesheet/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.uwusoft.timesheet.prefs";
         if (args.length > 0) prefsPath = args[0];
         props = new File(System.getProperty("user.home") + prefsPath);
+        tmp = new File(System.getProperty("user.home") + "/shutdownTime.tmp");
+		try {
+			if (tmp.exists()) {
+				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));				
+				String line = time.readLine();
+				time.close();
+				if (line != null) {
+					InputStream in = new FileInputStream(props);
+					transferProps.load(in);
+					in.close();
+
+					OutputStream out = new FileOutputStream(props);
+					transferProps.setProperty("system.shutdown", formatter.format(formatter.parse(line)));
+					transferProps.store(out, comment);
+					out.close();
+				}
+			} else
+				tmp.createNewFile();
+		} catch (IOException e) {
+			helpAndTerminate(e.getMessage());
+		} catch (ParseException e) {
+			helpAndTerminate(e.getMessage());
+		}
         
         systemTimeCapture.addShutdownHook();
     }
@@ -86,14 +110,9 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
 
         public void run() {
             try {
-                InputStream in = new FileInputStream(props);
-                transferProps.load(in);
-                in.close();
-
-                OutputStream out = new FileOutputStream(props);
-                transferProps.setProperty("system.shutdown", formatter.format(System.currentTimeMillis()));
-                transferProps.store(out, comment);
-                out.close();           
+                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tmp)));
+                out.write(formatter.format(System.currentTimeMillis()) + System.getProperty("line.separator"));
+                out.close();
             } catch (IOException e) {
                 helpAndTerminate(e.getMessage());
             }
