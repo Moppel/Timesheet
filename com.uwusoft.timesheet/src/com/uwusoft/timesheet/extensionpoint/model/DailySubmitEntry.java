@@ -1,4 +1,3 @@
-/* Copyright (c) 2005 by net-linx; All rights reserved */
 package com.uwusoft.timesheet.extensionpoint.model;
 
 import java.util.*;
