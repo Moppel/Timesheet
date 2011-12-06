@@ -84,7 +84,7 @@ public class GoogleStorageService implements StorageService {
 		for (String system : systems) {
 			if (!StringUtils.isEmpty(system))
 				submissionSystems.put(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf("submission")),
+						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
 						system);
 		}
     }

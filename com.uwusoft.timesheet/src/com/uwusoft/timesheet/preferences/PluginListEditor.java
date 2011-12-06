@@ -21,10 +21,12 @@ import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 public class PluginListEditor extends ListEditor {
 
 	private Map<String, String> systems;
+	private String serviceName;
 	
 	public PluginListEditor(String name, String labelText, String serviceId, String serviceName,
 			Composite parent) {
 		init(name, labelText);
+		this.serviceName = serviceName;
 		systems = new HashMap<String, String>();
 		for (IConfigurationElement e : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
 			String contributorName = e.getContributor().getName();
@@ -39,7 +41,7 @@ public class PluginListEditor extends ListEditor {
 	protected String createList(String[] items) {
         StringBuffer path = new StringBuffer("");//$NON-NLS-1$
         for (int i = 0; i < items.length; i++) {
-            path.append(items[i]);
+            path.append(systems.get(items[i]));
             path.append(SubmissionService.separator);
         }
         return path.toString();
@@ -53,7 +55,7 @@ public class PluginListEditor extends ListEditor {
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
 		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);
-		listDialog.setInput(systems.keySet());
+		listDialog.setInput(systems.keySet()); // TODO remove already selected systems
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedSystem = Arrays.toString(listDialog.getResult());
 		    selectedSystem = selectedSystem.substring(selectedSystem.indexOf("[") + 1, selectedSystem.indexOf("]"));
@@ -68,7 +70,9 @@ public class PluginListEditor extends ListEditor {
         StringTokenizer st = new StringTokenizer(stringList, SubmissionService.separator + "\n\r");//$NON-NLS-1$
         ArrayList<String> v = new ArrayList<String>();
         while (st.hasMoreElements()) {
-            v.add(st.nextToken());
+        	String system = st.nextToken();
+            v.add(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+					+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(serviceName)));
         }
         return (String[]) v.toArray(new String[v.size()]);
 	}

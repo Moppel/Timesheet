@@ -34,10 +34,10 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new ComboFieldEditor(StorageService.PROPERTY, "Storage System:", getSystemArray(StorageService.SERVICE_ID, "storage"),
-				getFieldEditorParent()));
-		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID, "submission",
-				getFieldEditorParent()));
+		addField(new ComboFieldEditor(StorageService.PROPERTY, "Storage System:", getSystemArray(StorageService.SERVICE_ID,
+				StorageService.SERVICE_NAME), getFieldEditorParent()));
+		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID,
+				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.HOLIDAY_TASK, "Statutory holiday task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.VACATION_TASK, "Vacation task:", getFieldEditorParent()));
