@@ -22,6 +22,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
+import com.google.gdata.client.spreadsheet.ListQuery;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.spreadsheet.CellEntry;
@@ -183,6 +184,72 @@ public class GoogleStorageService implements StorageService {
     	listeners.remove(listener); 
     } 
 
+    public List<String> getSystems() {
+    	List<String> systems = new ArrayList<String>();
+        if (!reloadWorksheets()) return systems;
+    	for (WorksheetEntry worksheet : worksheets) {
+            String title = worksheet.getTitle().getPlainText();
+    		if(title.endsWith(SubmissionService.PROJECTS)) continue;
+	        systems.add(title); 			
+    	}
+        return systems;
+    }
+    
+    public List<String> getProjects(String system) {
+    	List<String> projects = new ArrayList<String>();
+        if (!reloadWorksheets()) return projects;
+		URL worksheetListFeedUrl = null;
+    	for (WorksheetEntry worksheet : worksheets) {
+            String title = worksheet.getTitle().getPlainText();
+    		if(title.equals(system + SubmissionService.PROJECTS)) {
+	            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+    			break;
+    		}
+    	}
+		ListFeed feed;
+		try {
+			feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
+			for (ListEntry entry : feed.getEntries()) {
+				projects.add(entry.getCustomElements().getValue(PROJECT));
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return projects;    	
+    }
+    
+    public List<String> findTasksBySystemAndProject(String system, String project) {
+    	List<String> tasks = new ArrayList<String>();
+        if (!reloadWorksheets()) return tasks;
+		URL worksheetListFeedUrl = null;
+    	for (WorksheetEntry worksheet : worksheets) {
+            if(system.equals(worksheet.getTitle().getPlainText())) {
+	            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+            	break;
+            }
+    	}
+		ListQuery query = new ListQuery(worksheetListFeedUrl);
+		query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = " + project);
+		try {
+			ListFeed feed = service.query(query, ListFeed.class);
+			List<ListEntry> listEntries = feed.getEntries();
+			for (ListEntry entry : listEntries) {
+				tasks.add(entry.getCustomElements().getValue(TASK));
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ServiceException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	return tasks;
+    }
+    
     public Map<String, List<String>> getTasks() {
         return tasksMap;
     }

@@ -29,6 +29,7 @@ public interface StorageService {
     public static final String WEEKLY_TOTAL = "WT";
     public static final String WEEK = "Week";
     public static final String TASK = "Task";
+    public static final String PROJECT = "Project";
     public static final String OVERTIME = "Overtime";
     public static final String SUBMISSION_STATUS = "SubmissionStatus";
     public static final String CHECK_IN = "Check in";
@@ -39,6 +40,12 @@ public interface StorageService {
      * @return a list of tasks assigned to name of special time management system
      */
     Map<String, List<String>> getTasks();
+    
+    List<String> getSystems();
+    
+    List<String> getProjects(String system);
+    
+    List<String> findTasksBySystemAndProject(String system, String project);
 
     void addPropertyChangeListener(PropertyChangeListener listener);
     
