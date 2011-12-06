@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Task {
@@ -16,6 +17,8 @@ public class Task {
 	private Long id;
 	private Timestamp dateTime;
 	private String task;
+    @ManyToOne
+	private Project project;
 	private float total=0;
 	private boolean wholeDay=false;	
 	
@@ -32,6 +35,15 @@ public class Task {
 	public Task(Date dateTime, String task) {
 		this.dateTime = new Timestamp(dateTime.getTime());
 		this.task = task;
+	}
+	
+	/**
+	 * @param task
+	 * @param project
+	 */
+	public Task(String task, Project project) {
+		this.task = task;
+		this.project = project;
 	}
 
 	/**
@@ -69,6 +81,10 @@ public class Task {
 	
 	public float getTotal() {
 		return total;
+	}
+
+	public Project getProject() {
+		return project;
 	}
 
 	public boolean isWholeDay() {
