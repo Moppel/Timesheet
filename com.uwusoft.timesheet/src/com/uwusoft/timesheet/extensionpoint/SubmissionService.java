@@ -15,6 +15,7 @@ public interface SubmissionService {
 	public static final String SERVICE_NAME = "submission";
 	public static final String PROPERTY = "submission.system";
 	public static final String separator = ";";
+	public static final String PROJECTS = "Projects";
 
     List<String> getAssignedTasks();
 	

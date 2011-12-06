@@ -407,6 +407,7 @@ public class GoogleStorageService implements StorageService {
         taskLinkMap = new HashMap<String, String>();
         for (WorksheetEntry worksheet : worksheets) {
             String title = worksheet.getTitle().getPlainText();
+            if (title.endsWith(SubmissionService.PROJECTS)) continue;
             tasksMap.put(title, new ArrayList<String>());
             ListFeed feed;
 			try {
