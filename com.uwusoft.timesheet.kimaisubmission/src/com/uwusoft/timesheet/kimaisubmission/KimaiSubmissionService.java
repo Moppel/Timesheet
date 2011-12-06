@@ -45,9 +45,10 @@ public class KimaiSubmissionService implements SubmissionService {
 				secureProps.removeProperty(PASSWORD);
 			return true;
 		}
-		Display.getDefault().dispose();
+		/*Display.getDefault().dispose();
 		System.exit(1);
-		return false;
+		return false;*/
+		return true;
 	}
 
 	@Override
