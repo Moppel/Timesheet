@@ -30,7 +30,7 @@ public class TaskListDialog extends ListDialog {
 
     private StorageService storageService;
 	private String[] systems;
-    private Combo systemCombo;
+    private Combo systemCombo, projectCombo;
     private String taskSelected;
 
     public TaskListDialog(Shell shell, String taskSelected) {
@@ -38,14 +38,13 @@ public class TaskListDialog extends ListDialog {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		storageService = new ExtensionManager<StorageService>(
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		List<String> systemsList = new ArrayList<String>();
-        int count=0;
+		/*List<String> systemsList = new ArrayList<String>();
         for (String system : storageService.getTasks().keySet()) {
             if (storageService.getTasks().get(system).isEmpty()) continue;
             systemsList.add(system);
-            count++;
-        }
-        systems = systemsList.toArray(new String[count]);
+        }*/
+		List<String> systemsList = storageService.getSystems();
+        systems = systemsList.toArray(new String[systemsList.size()]);
     	this.taskSelected = taskSelected;
     }
     
@@ -54,17 +53,27 @@ public class TaskListDialog extends ListDialog {
         Composite parent = (Composite) super.createDialogArea(composite);
         
         Composite systemPanel = new Composite(parent, SWT.NONE);
-        systemPanel.setLayout(new GridLayout(2, false));
+        systemPanel.setLayout(new GridLayout(4, false));
         
         (new Label(systemPanel, SWT.NULL)).setText("Submission System: ");
         systemCombo = new Combo(systemPanel, SWT.READ_ONLY);
         systemCombo.setItems(systems);
         
+        (new Label(systemPanel, SWT.NULL)).setText("Project: ");
+        projectCombo = new Combo(systemPanel, SWT.READ_ONLY);
+
         systemCombo.select(0);
-        setTasks();
+        setTasksAndProjects();
         
         systemCombo.setBounds(50, 50, 180, 65);
         systemCombo.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+                setTasksAndProjects();
+            }
+        });
+        
+        projectCombo.setBounds(50, 50, 180, 65);
+        projectCombo.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
                 setTasks();
             }
@@ -72,13 +81,24 @@ public class TaskListDialog extends ListDialog {
         return parent;
     }
 
+	private void setTasksAndProjects() {
+		List<String> projects = storageService.getProjects(systemCombo.getText());
+        projectCombo.setItems(projects.toArray(new String[projects.size()]));
+        projectCombo.select(0);
+		setTasks();
+	}
+
 	private void setTasks() {
-		List<String> tasks = new ArrayList<String>(storageService.getTasks().get(systemCombo.getText()));
+		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemCombo.getText(), projectCombo.getText()));
 		tasks.remove(taskSelected);
         getTableViewer().setInput(tasks);
 	}
 	
 	public String getSystem() {
 		return systemCombo.getText();
+	}
+	
+	public String getProject() {
+		return projectCombo.getText();
 	}
 }

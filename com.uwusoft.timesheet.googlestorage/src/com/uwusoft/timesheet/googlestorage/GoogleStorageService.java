@@ -186,7 +186,6 @@ public class GoogleStorageService implements StorageService {
 
     public List<String> getSystems() {
     	List<String> systems = new ArrayList<String>();
-        if (!reloadWorksheets()) return systems;
     	for (WorksheetEntry worksheet : worksheets) {
             String title = worksheet.getTitle().getPlainText();
     		if(title.endsWith(SubmissionService.PROJECTS)) continue;
@@ -197,7 +196,6 @@ public class GoogleStorageService implements StorageService {
     
     public List<String> getProjects(String system) {
     	List<String> projects = new ArrayList<String>();
-        if (!reloadWorksheets()) return projects;
 		URL worksheetListFeedUrl = null;
     	for (WorksheetEntry worksheet : worksheets) {
             String title = worksheet.getTitle().getPlainText();
@@ -224,7 +222,6 @@ public class GoogleStorageService implements StorageService {
     
     public List<String> findTasksBySystemAndProject(String system, String project) {
     	List<String> tasks = new ArrayList<String>();
-        if (!reloadWorksheets()) return tasks;
 		URL worksheetListFeedUrl = null;
     	for (WorksheetEntry worksheet : worksheets) {
             if(system.equals(worksheet.getTitle().getPlainText())) {
