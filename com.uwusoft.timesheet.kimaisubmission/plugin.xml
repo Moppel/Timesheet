@@ -7,5 +7,14 @@
             class="com.uwusoft.timesheet.kimaisubmission.KimaiSubmissionService">
       </client>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
+            class="com.uwusoft.timesheet.kimaisubmission.KimaiPreferencePage"
+            id="com.uwusoft.timesheet.kimaisubmission.kimaipreferencepage"
+            name="Kimai Preferences">
+      </page>
+   </extension>
 
 </plugin>

@@ -4,5 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/com.uwusoft.timesheet"/>
+	<classpathentry kind="lib" path="lib/commons/commons-lang3-3.0.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
