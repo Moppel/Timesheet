@@ -53,9 +53,9 @@ import com.uwusoft.timesheet.util.SecurePreferencesManager;
  */
 public class GoogleStorageService implements StorageService {
 
-    public static final String USERNAME="user.name";
-    public static final String PASSWORD="user.password";
-    public static final String SPREADSHEET_KEY="spreadsheet.key";
+    public static final String USERNAME="google.user.name";
+    public static final String PASSWORD="google.user.password";
+    public static final String SPREADSHEET_KEY="google.spreadsheet.key";
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
@@ -66,7 +66,7 @@ public class GoogleStorageService implements StorageService {
 	private static Map<String, Integer> headingIndex;
     private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
     private static WorksheetEntry defaultWorksheet;
-    private static Map<String,String> taskLinkMap;
+    private static Map<String,String> taskLinkMap, submissionSystems;
     private static Map<String, List<String>> tasksMap;
     private static String message;
     private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
@@ -78,6 +78,15 @@ public class GoogleStorageService implements StorageService {
        	while (!authenticate());
 		factory = FeedURLFactory.getDefault();
 		headingIndex = new LinkedHashMap<String, Integer>();
+		submissionSystems = new HashMap<String, String>();
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
+		for (String system : systems) {
+			if (!StringUtils.isEmpty(system))
+				submissionSystems.put(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf("submission")),
+						system);
+		}
     }
     
     private static boolean authenticate() {
@@ -379,8 +388,10 @@ public class GoogleStorageService implements StorageService {
 	            String task = elements.getValue(TASK);
 	            if (task == null || CHECK_IN.equals(task) || taskLinkMap.get(task) == null) continue;
 	            String system = taskLinkMap.get(task).split("!")[0];	             
-	            entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
-	            		new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system));
+				if (submissionSystems.containsKey(system)) {
+			        entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
+			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
+				}
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());

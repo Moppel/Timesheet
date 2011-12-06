@@ -16,9 +16,10 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.dialogs.ListDialog;
 
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+
 public class PluginListEditor extends ListEditor {
 
-	private static final String separator = ";";
 	private Map<String, String> systems;
 	
 	public PluginListEditor(String name, String labelText, String serviceId, String serviceName,
@@ -39,7 +40,7 @@ public class PluginListEditor extends ListEditor {
         StringBuffer path = new StringBuffer("");//$NON-NLS-1$
         for (int i = 0; i < items.length; i++) {
             path.append(items[i]);
-            path.append(separator);
+            path.append(SubmissionService.separator);
         }
         return path.toString();
 	}
@@ -64,7 +65,7 @@ public class PluginListEditor extends ListEditor {
 
 	@Override
 	protected String[] parseString(String stringList) {
-        StringTokenizer st = new StringTokenizer(stringList, separator + "\n\r");//$NON-NLS-1$
+        StringTokenizer st = new StringTokenizer(stringList, SubmissionService.separator + "\n\r");//$NON-NLS-1$
         ArrayList<String> v = new ArrayList<String>();
         while (st.hasMoreElements()) {
             v.add(st.nextToken());

@@ -13,6 +13,7 @@ import java.util.List;
 public interface SubmissionService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.submissionservice";
 	public static final String PROPERTY = "submission.system";
+	public static final String separator = ";";
 
     List<String> getAssignedTasks();
 	
