@@ -17,11 +17,15 @@ public class ImportTasksHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		String system = preferenceStore.getString(SubmissionService.PROPERTY);
+		String system;
+		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
+		if (systems.length == 1) system = systems[0];
+		else return null; // TODO list dialog for available submission services
 		SubmissionService submissionService = new ExtensionManager<SubmissionService>(
 				SubmissionService.SERVICE_ID).getService(system);
 		storageService.importTasks(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf("submission")), submissionService.getAssignedTasks());
+				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
+				submissionService.getAssignedTasks());
 		return null;
 	}
 
