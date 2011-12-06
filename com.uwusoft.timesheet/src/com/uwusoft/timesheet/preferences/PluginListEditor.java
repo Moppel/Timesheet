@@ -3,10 +3,10 @@ package com.uwusoft.timesheet.preferences;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.Dialog;
@@ -39,7 +39,7 @@ public class PluginListEditor extends ListEditor {
 
 	@Override
 	protected String createList(String[] items) {
-        StringBuffer path = new StringBuffer("");//$NON-NLS-1$
+        StringBuffer path = new StringBuffer();
         for (int i = 0; i < items.length; i++) {
             path.append(systems.get(items[i]));
             path.append(SubmissionService.separator);
@@ -55,12 +55,13 @@ public class PluginListEditor extends ListEditor {
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
 		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);
-		listDialog.setInput(systems.keySet()); // TODO remove already selected systems
+		List<String> systemList = new ArrayList<String>(systems.keySet());
+		systemList.removeAll(Arrays.asList(getList().getItems()));
+		listDialog.setInput(systemList);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedSystem = Arrays.toString(listDialog.getResult());
 		    selectedSystem = selectedSystem.substring(selectedSystem.indexOf("[") + 1, selectedSystem.indexOf("]"));
-			if (StringUtils.isEmpty(selectedSystem)) return null;
-			return systems.get(selectedSystem);
+			return selectedSystem;
 		}
 		return null;
 	}
