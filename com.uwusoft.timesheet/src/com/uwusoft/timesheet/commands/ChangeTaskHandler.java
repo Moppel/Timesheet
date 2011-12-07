@@ -12,7 +12,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import com.uwusoft.timesheet.Activator;
@@ -20,6 +19,8 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -30,7 +31,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		ListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), preferenceStore.getString(TimesheetApp.LAST_TASK));
+		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), preferenceStore.getString(TimesheetApp.LAST_TASK));
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
 		listDialog.setContentProvider(ArrayContentProvider.getInstance());
@@ -42,8 +43,11 @@ public class ChangeTaskHandler extends AbstractHandler {
 			if (StringUtils.isEmpty(selectedTask)) return null;
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), selectedTask, new Date());
 			if (timeDialog.open() == Dialog.OK) {
-                storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
-				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask);
+				String[] lastTask = preferenceStore.getString(TimesheetApp.LAST_TASK).split(SubmissionService.separator);
+                storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0], new Project(lastTask[1], lastTask[2])));
+				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask
+						+ SubmissionService.separator + listDialog.getProject()
+						+ SubmissionService.separator + listDialog.getSystem());
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		}						

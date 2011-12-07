@@ -17,6 +17,7 @@ import org.eclipse.ui.dialogs.ListDialog;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -29,9 +30,9 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class TaskListDialog extends ListDialog {
 
     private StorageService storageService;
-	private String[] systems;
+	private String[] systems, tasks;
     private Combo systemCombo, projectCombo;
-    private String taskSelected;
+    private String projectSelected, systemSelected;
 
     public TaskListDialog(Shell shell, String taskSelected) {
         super(shell);
@@ -40,7 +41,7 @@ public class TaskListDialog extends ListDialog {
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		List<String> systemsList = storageService.getSystems();
         systems = systemsList.toArray(new String[systemsList.size()]);
-    	this.taskSelected = taskSelected;
+        tasks = taskSelected.split(SubmissionService.separator);
     }
     
     @Override
@@ -77,23 +78,25 @@ public class TaskListDialog extends ListDialog {
     }
 
 	private void setTasksAndProjects() {
-		List<String> projects = storageService.getProjects(systemCombo.getText());
+		systemSelected = systemCombo.getText();
+		List<String> projects = storageService.getProjects(systemSelected);
         projectCombo.setItems(projects.toArray(new String[projects.size()]));
         projectCombo.select(0);
 		setTasks();
 	}
 
 	private void setTasks() {
-		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemCombo.getText(), projectCombo.getText()));
-		tasks.remove(taskSelected);
+		projectSelected = projectCombo.getText();
+		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
+		tasks.remove(this.tasks[0]); // TODO
         getTableViewer().setInput(tasks);
 	}
 	
 	public String getSystem() {
-		return systemCombo.getText();
+		return systemSelected;
 	}
 	
 	public String getProject() {
-		return projectCombo.getText();
+		return projectSelected;
 	}
 }

@@ -279,13 +279,16 @@ public class GoogleStorageService implements StorageService {
 					if (task.isWholeDay())
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
-				taskLink = taskLinkMap.get(task.getTask());
+				taskLink = getTaskLink(task);
 			}
 			service.insert(listFeedUrl, timeEntry);
 
             if (!reloadWorksheets()) return;
 			if (taskLink != null) {
-				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TASK), "=" + taskLink);
+				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(),
+						headingIndex.get(TASK),	"=" + taskLink);
+				createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(),
+						headingIndex.get(PROJECT), "=" + taskLink.replace("!A", "!B")); // TODO hardcoded: project must be in the second column
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
@@ -519,6 +522,29 @@ public class GoogleStorageService implements StorageService {
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
+		return null;
+	}
+	
+	private String getTaskLink(Task task) {
+		if (task.getProject() == null) return null;
+        for (WorksheetEntry worksheet : worksheets) {
+            String system = worksheet.getTitle().getPlainText();
+            if (title.endsWith(SubmissionService.PROJECTS)) continue;
+			try {
+				ListFeed feed = service.getFeed(worksheet.getListFeedUrl(),
+						ListFeed.class);
+				List<ListEntry> entries = feed.getEntries();
+				for (int i = 0; i < entries.size(); i++) {
+					if (task.getTask().equals(entries.get(i).getCustomElements().getValue(TASK))
+							&& task.getProject().getName().equals(entries.get(i).getCustomElements().getValue(PROJECT)))
+						return system + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
+				}
+			} catch (IOException e) {
+				MessageBox.setError(title, e.getLocalizedMessage());
+			} catch (ServiceException e) {
+				MessageBox.setError(title, e.getLocalizedMessage());
+			}
+        }
 		return null;
 	}
 	

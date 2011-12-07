@@ -16,6 +16,7 @@ public class Project {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	private String name;
+	private String system;
 	@OneToMany
 	private List<Task> tasks = new ArrayList<Task>();
 
@@ -29,12 +30,17 @@ public class Project {
 	 * 
 	 * @param name
 	 */
-	public Project(String name) {
+	public Project(String name, String system) {
 		this.name = name;
+		this.system = system;
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public String getSystem() {
+		return system;
 	}
 
 	public List<Task> getTasks() {

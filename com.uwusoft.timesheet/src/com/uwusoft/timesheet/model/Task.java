@@ -38,11 +38,12 @@ public class Task {
 	}
 	
 	/**
+	 * @param dateTime
 	 * @param task
 	 * @param project
 	 */
-	public Task(String task, Project project) {
-		this.task = task;
+	public Task(Date dateTime, String task, Project project) {
+		this(dateTime, task);
 		this.project = project;
 	}
 
