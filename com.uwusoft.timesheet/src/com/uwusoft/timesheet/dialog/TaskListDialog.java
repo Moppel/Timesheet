@@ -38,11 +38,6 @@ public class TaskListDialog extends ListDialog {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		storageService = new ExtensionManager<StorageService>(
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		/*List<String> systemsList = new ArrayList<String>();
-        for (String system : storageService.getTasks().keySet()) {
-            if (storageService.getTasks().get(system).isEmpty()) continue;
-            systemsList.add(system);
-        }*/
 		List<String> systemsList = storageService.getSystems();
         systems = systemsList.toArray(new String[systemsList.size()]);
     	this.taskSelected = taskSelected;

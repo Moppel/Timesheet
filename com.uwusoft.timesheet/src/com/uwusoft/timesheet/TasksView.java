@@ -6,7 +6,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
@@ -35,6 +34,7 @@ import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
@@ -256,15 +256,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			ListDialog listDialog = new ListDialog(cellEditorWindow.getShell());
+			ListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(), entry.getTask());
 			listDialog.setTitle("Tasks");
 			listDialog.setMessage("Select task");
 			listDialog.setContentProvider(ArrayContentProvider.getInstance());
 			listDialog.setLabelProvider(new ViewLabelProvider());
 			listDialog.setWidthInChars(70);
-			List<String> tasks = storageService.getTasks().get("Primavera"); // TODO
-			tasks.remove(entry.getTask());
-			listDialog.setInput(tasks);
 			if (listDialog.open() == Dialog.OK) {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

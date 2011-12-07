@@ -211,11 +211,9 @@ public class GoogleStorageService implements StorageService {
 				projects.add(entry.getCustomElements().getValue(PROJECT));
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
         return projects;    	
     }
@@ -238,19 +236,13 @@ public class GoogleStorageService implements StorageService {
 				tasks.add(entry.getCustomElements().getValue(TASK));
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     	return tasks;
     }
     
-    public Map<String, List<String>> getTasks() {
-        return tasksMap;
-    }
-
     public List<TaskEntry> getTaskEntries(Date date) {
     	List <TaskEntry> taskEntries = new ArrayList<TaskEntry>();
 		try {

@@ -4,7 +4,6 @@ import java.beans.PropertyChangeListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.model.Task;
@@ -36,15 +35,13 @@ public interface StorageService {
     public static final String BREAK = "Break";
 	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
-    /**
-     * @return a list of tasks assigned to name of special time management system
-     */
-    Map<String, List<String>> getTasks();
-    
     List<String> getSystems();
     
     List<String> getProjects(String system);
     
+    /**
+     * @return a list of tasks assigned to name of special time management system
+     */
     List<String> findTasksBySystemAndProject(String system, String project);
 
     void addPropertyChangeListener(PropertyChangeListener listener);
