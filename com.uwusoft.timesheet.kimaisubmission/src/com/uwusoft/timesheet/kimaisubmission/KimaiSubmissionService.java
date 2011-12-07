@@ -55,9 +55,9 @@ public class KimaiSubmissionService implements SubmissionService {
 	public List<String> getAssignedTasks() {
 		// Todo implement
 		List<String> assignedTasks = new ArrayList<String>();
-		assignedTasks.add("Sample Task 1");
-		assignedTasks.add("Sample Task 2");
-		assignedTasks.add("Sample Task 3");
+		assignedTasks.add("Sample Task 1;Sample Project");
+		assignedTasks.add("Sample Task 2;Sample Project");
+		assignedTasks.add("Sample Task 3;Sample Project");
 		return assignedTasks;
 	}
 

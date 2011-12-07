@@ -68,7 +68,6 @@ public class GoogleStorageService implements StorageService {
     private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
     private static WorksheetEntry defaultWorksheet;
     private static Map<String,String> taskLinkMap, submissionSystems;
-    private static Map<String, List<String>> tasksMap;
     private static String message;
     private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
     private static String title = "Google Storage Service";
@@ -196,17 +195,9 @@ public class GoogleStorageService implements StorageService {
     
     public List<String> getProjects(String system) {
     	List<String> projects = new ArrayList<String>();
-		URL worksheetListFeedUrl = null;
-    	for (WorksheetEntry worksheet : worksheets) {
-            String title = worksheet.getTitle().getPlainText();
-    		if(title.equals(system + SubmissionService.PROJECTS)) {
-	            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-    			break;
-    		}
-    	}
-		ListFeed feed;
+		URL worksheetListFeedUrl = getListFeedUrl(system + SubmissionService.PROJECTS);
 		try {
-			feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
+			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			for (ListEntry entry : feed.getEntries()) {
 				projects.add(entry.getCustomElements().getValue(PROJECT));
 			}
@@ -220,15 +211,9 @@ public class GoogleStorageService implements StorageService {
     
     public List<String> findTasksBySystemAndProject(String system, String project) {
     	List<String> tasks = new ArrayList<String>();
-		URL worksheetListFeedUrl = null;
-    	for (WorksheetEntry worksheet : worksheets) {
-            if(system.equals(worksheet.getTitle().getPlainText())) {
-	            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-            	break;
-            }
-    	}
+		URL worksheetListFeedUrl = getListFeedUrl(system);
 		ListQuery query = new ListQuery(worksheetListFeedUrl);
-		query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = " + project);
+		query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project + "\"");
 		try {
 			ListFeed feed = service.query(query, ListFeed.class);
 			List<ListEntry> listEntries = feed.getEntries();
@@ -368,14 +353,20 @@ public class GoogleStorageService implements StorageService {
 	public void importTasks(String submissionSystem, List<String> tasks) {
 		try {
 			URL worksheetListFeedUrl = null;
-			if (tasksMap.containsKey(submissionSystem)) {
-				tasks.removeAll(tasksMap.get(submissionSystem));
-		        for (WorksheetEntry worksheet : worksheets) {
-		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
-			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-		            	break;
-		            }
-		        }   
+			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
+				List<String> availableTasks = new ArrayList<String>();
+		        try {
+					ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
+					for (ListEntry entry : feed.getEntries()) {
+						availableTasks.add(entry.getCustomElements().getValue(TASK)
+								+ SubmissionService.separator + entry.getCustomElements().getValue(PROJECT));
+					}
+					tasks.remove(availableTasks);
+				} catch (IOException e) {
+					MessageBox.setError(title, e.getLocalizedMessage());
+				} catch (ServiceException e) {
+					MessageBox.setError(title, e.getLocalizedMessage());
+				}
 			}
 			else {
 				WorksheetEntry newWorksheet = new WorksheetEntry();
@@ -384,19 +375,31 @@ public class GoogleStorageService implements StorageService {
 				newWorksheet.setRowCount(20);
 				service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
 				
-				reloadWorksheets();
+	            if (!reloadWorksheets()) return;
 		        for (WorksheetEntry worksheet : worksheets) {
 		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
 			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-				        createUpdateCellEntry(worksheet, 1, 1, TASK);
+				        // create column headers:
+			            createUpdateCellEntry(worksheet, 1, 1, TASK);
+				        createUpdateCellEntry(worksheet, 1, 2, PROJECT);
 		            	break;
 		            }
 		        }
 			}
 			for (String task : tasks) {
+				String[] splitTasks = task.split(SubmissionService.separator);
 	            ListEntry timeEntry = new ListEntry();
-				timeEntry.getCustomElements().setValueLocal(TASK, task);
+				timeEntry.getCustomElements().setValueLocal(TASK, splitTasks[0]);
 				service.insert(worksheetListFeedUrl, timeEntry);
+				reloadWorksheets();
+				if (splitTasks.length > 1) {
+					String projectLink = getProjectLink(submissionSystem, splitTasks[1], true);
+					if (projectLink != null) {
+						WorksheetEntry worksheet = getWorksheet(submissionSystem);
+						createUpdateCellEntry(worksheet, worksheet.getRowCount(),
+								getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
+					}
+				}
 			}
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -406,7 +409,7 @@ public class GoogleStorageService implements StorageService {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
 	}
-	
+
 	public void submitEntries() {
         try {
             if (!reloadWorksheets()) return;
@@ -458,13 +461,72 @@ public class GoogleStorageService implements StorageService {
 		}
     }
 
+	private WorksheetEntry getWorksheet(String system) {
+		for (WorksheetEntry worksheet : worksheets) {
+		    if(system.equals(worksheet.getTitle().getPlainText())) {
+		        return worksheet; 			
+		    }
+		}
+		return null;
+	}
+	
+	private URL getListFeedUrl(String system) {
+		WorksheetEntry worksheet = getWorksheet(system);
+		if (worksheet == null) return null;
+		return worksheet.getListFeedUrl();
+	}
+	
+	private Integer getHeadingIndex(String system, String heading) {
+		WorksheetEntry worksheet = getWorksheet(system);
+		if (worksheet == null) return null;		
+		try {
+			CellFeed cellFeed = service.getFeed(worksheet.getCellFeedUrl(), CellFeed.class);
+			for (CellEntry entry : cellFeed.getEntries()) {
+				if (entry.getCell().getRow() == 1) {
+					if (heading.equals(entry.getCell().getValue()))
+						return entry.getCell().getCol();
+				}
+				else
+					break;
+			}
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
+		return null;
+	}
+
+	private String getProjectLink(String system, String project, boolean createNew) {
+		String systemProjects = system + SubmissionService.PROJECTS;
+		URL worksheetListFeedUrl = getListFeedUrl(systemProjects);
+		try {
+			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
+			List<ListEntry> entries = feed.getEntries();
+			for (int i = 0; i < entries.size(); i++) {
+				if(project.equals(entries.get(i).getCustomElements().getValue(PROJECT)))
+					return systemProjects + "!A" + (i + 2); // TODO hardcoded: project must be in the first column
+			}
+			if (createNew) {
+				ListEntry listEntry = new ListEntry();
+				listEntry.getCustomElements().setValueLocal(PROJECT, project);
+				service.insert(worksheetListFeedUrl, listEntry);
+	            if (!reloadWorksheets()) return null;
+				return getProjectLink(system, project, false);
+			}
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
+		return null;
+	}
+	
     private void loadTasks() {
-        tasksMap = new HashMap<String, List<String>> ();
         taskLinkMap = new HashMap<String, String>();
         for (WorksheetEntry worksheet : worksheets) {
             String title = worksheet.getTitle().getPlainText();
             if (title.endsWith(SubmissionService.PROJECTS)) continue;
-            tasksMap.put(title, new ArrayList<String>());
             ListFeed feed;
 			try {
 				feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
@@ -473,8 +535,7 @@ public class GoogleStorageService implements StorageService {
 					ListEntry entry = entries.get(i);
 					String value = entry.getCustomElements().getValue(TASK);
 					if (value != null) {
-						taskLinkMap.put(value, title + "!$A$" + (i + 2)); // TODO hardcoded: task must be in the first column
-						tasksMap.get(title).add(value);
+						taskLinkMap.put(value, title + "!A" + (i + 2)); // TODO hardcoded: task must be in the first column
 					}
 				}
 			} catch (IOException e) {
