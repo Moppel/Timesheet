@@ -67,7 +67,7 @@ public class GoogleStorageService implements StorageService {
 	private static Map<String, Integer> headingIndex;
     private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
     private static WorksheetEntry defaultWorksheet;
-    private static Map<String,String> taskLinkMap, submissionSystems;
+    private static Map<String,String> submissionSystems;
     private static String message;
     private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
     private static String title = "Google Storage Service";
@@ -124,7 +124,8 @@ public class GoogleStorageService implements StorageService {
 
     public GoogleStorageService() {
         if (!reloadWorksheets()) return;
-        loadTasks();
+		for (PropertyChangeListener listener : listeners)
+			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
     }
     
     private boolean reloadSpreadsheetKey() {
@@ -157,9 +158,8 @@ public class GoogleStorageService implements StorageService {
 
     private boolean reloadWorksheets() {
     	if (!reloadSpreadsheetKey()) return false;
-        WorksheetFeed feed;
 		try {
-			feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
+			WorksheetFeed feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
 	        worksheets = feed.getEntries();
 	        defaultWorksheet = worksheets.get(0);
 	        worksheets.remove(defaultWorksheet); // only task sheets remaining
@@ -448,8 +448,11 @@ public class GoogleStorageService implements StorageService {
 	            }
 
 	            String task = elements.getValue(TASK);
-	            if (task == null || CHECK_IN.equals(task) || taskLinkMap.get(task) == null) continue;
-	            String system = taskLinkMap.get(task).split("!")[0];	             
+	            if (task == null || CHECK_IN.equals(task) || BREAK.equals(task)) continue;
+				CellEntry cellEntry = service.getEntry(new URL(defaultWorksheet.getCellFeedUrl().toString()
+						+ "/" + "R" + (i + 2) + "C" + headingIndex.get(TASK)), CellEntry.class);
+				String system = cellEntry.getCell().getInputValue().split("!")[0];
+				system = system.substring(system.indexOf("=") + 1);
 				if (submissionSystems.containsKey(system)) {
 			        entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
 			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
@@ -503,6 +506,9 @@ public class GoogleStorageService implements StorageService {
 	private String getProjectLink(String system, String project, boolean createNew) {
 		String systemProjects = system + SubmissionService.PROJECTS;
 		URL worksheetListFeedUrl = getListFeedUrl(systemProjects);
+		if (worksheetListFeedUrl == null) {
+			// TODO create projects worksheet
+		}
 		try {
 			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			List<ListEntry> entries = feed.getEntries();
@@ -548,32 +554,6 @@ public class GoogleStorageService implements StorageService {
 		return null;
 	}
 	
-    private void loadTasks() {
-        taskLinkMap = new HashMap<String, String>();
-        for (WorksheetEntry worksheet : worksheets) {
-            String title = worksheet.getTitle().getPlainText();
-            if (title.endsWith(SubmissionService.PROJECTS)) continue;
-            ListFeed feed;
-			try {
-				feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
-				List<ListEntry> entries = feed.getEntries();
-				for (int i = 0; i < entries.size(); i++) {
-					ListEntry entry = entries.get(i);
-					String value = entry.getCustomElements().getValue(TASK);
-					if (value != null) {
-						taskLinkMap.put(value, title + "!A" + (i + 2)); // TODO hardcoded: task must be in the first column
-					}
-				}
-			} catch (IOException e) {
-				MessageBox.setError(title, e.getLocalizedMessage());
-			} catch (ServiceException e) {
-				MessageBox.setError(title, e.getLocalizedMessage());
-			}
-        }
-		for (PropertyChangeListener listener : listeners)
-			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
-    }
-
     private void createUpdateCellEntry(WorksheetEntry worksheet, int row, int col, String value) {
 		try {
 			CellEntry entry = service.getEntry(new URL(worksheet.getCellFeedUrl().toString() + "/" + "R" + row + "C" + col), CellEntry.class);
