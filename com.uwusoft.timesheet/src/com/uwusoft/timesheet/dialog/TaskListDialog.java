@@ -58,13 +58,21 @@ public class TaskListDialog extends ListDialog {
         (new Label(systemPanel, SWT.NULL)).setText("Project: ");
         projectCombo = new Combo(systemPanel, SWT.READ_ONLY);
 
-        systemCombo.select(0);
-        setTasksAndProjects();
+        if (tasks.length > 2) {
+        	for (int i = 0; i < systems.length; i++) {
+        		if (tasks[2].equals(systems[i])) {
+                	systemCombo.select(i);
+                	break;
+        		}
+        	}
+        }
+        else systemCombo.select(0);
+        setTasksAndProjects(true);
         
         systemCombo.setBounds(50, 50, 180, 65);
         systemCombo.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
-                setTasksAndProjects();
+                setTasksAndProjects(false);
             }
         });
         
@@ -77,18 +85,29 @@ public class TaskListDialog extends ListDialog {
         return parent;
     }
 
-	private void setTasksAndProjects() {
+	private void setTasksAndProjects(boolean first) {
 		systemSelected = systemCombo.getText();
-		List<String> projects = storageService.getProjects(systemSelected);
-        projectCombo.setItems(projects.toArray(new String[projects.size()]));
-        projectCombo.select(0);
+		List<String> projectList = storageService.getProjects(systemSelected);
+		String[] projects = projectList.toArray(new String[projectList.size()]);
+        projectCombo.setItems(projects);
+        if (first && tasks.length > 1) {
+        	for (int i = 0; i < projects.length; i++) {
+        		if (tasks[1].equals(projects[i])) {
+                	projectCombo.select(i);
+                	break;
+        		}
+        	}
+        }
+        else projectCombo.select(0);
 		setTasks();
 	}
 
 	private void setTasks() {
 		projectSelected = projectCombo.getText();
 		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-		tasks.remove(this.tasks[0]); // TODO
+		if (this.tasks.length > 1 && this.tasks[1].equals(projectSelected)) {
+			if (this.tasks.length > 2 && this.tasks[2].equals(systemSelected)) tasks.remove(this.tasks[0]);
+		}
         getTableViewer().setInput(tasks);
 	}
 	
