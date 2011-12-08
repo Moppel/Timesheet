@@ -23,7 +23,7 @@ public class Project {
 	/**
 	 * JPA requires a no-arg constructor
 	 */
-	protected Project() {
+	public Project() {
 	}
 
 	/**
@@ -33,6 +33,10 @@ public class Project {
 	public Project(String name, String system) {
 		this.name = name;
 		this.system = system;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public String getName() {

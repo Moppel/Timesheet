@@ -11,7 +11,6 @@ import javax.persistence.ManyToOne;
 
 @Entity
 public class Task {
-	@SuppressWarnings("unused")
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -48,6 +47,18 @@ public class Task {
 	}
 
 	/**
+	 * @param id
+	 * @param dateTime
+	 * @param task
+	 * @param project
+	 */
+	public Task(Long id, Date dateTime, String task, float total, Project project) {
+		this(dateTime, task, project);
+		this.id = id;
+		this.total = total;
+	}
+
+	/**
 	 * @param dateTime
 	 * @param task
 	 * @param total
@@ -66,6 +77,13 @@ public class Task {
 	public Task(Date dateTime, String task, float total, boolean wholeDay) {
 		this(dateTime, task, total);
 		this.wholeDay = wholeDay;
+	}	
+	
+	/**
+	 * @return the id
+	 */
+	public Long getId() {
+		return id;
 	}
 
 	public Timestamp getDateTime() {
@@ -80,12 +98,24 @@ public class Task {
 		return task;
 	}
 	
+	public void setTask(String task) {
+		this.task = task;
+	}
+
 	public float getTotal() {
 		return total;
 	}
 
+	public void setTotal(float total) {
+		this.total = total;
+	}
+
 	public Project getProject() {
 		return project;
+	}
+
+	public void setProject(Project project) {
+		this.project = project;
 	}
 
 	public boolean isWholeDay() {

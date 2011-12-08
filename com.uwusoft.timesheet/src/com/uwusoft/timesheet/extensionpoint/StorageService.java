@@ -5,9 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import com.uwusoft.timesheet.extensionpoint.model.TaskEntry;
 import com.uwusoft.timesheet.model.Task;
-
 
 /**
  * todo: add class doc
@@ -52,7 +50,7 @@ public interface StorageService {
      * @param date
      * @return a list of {@link TaskEntry}'s for the date
      */
-    List<TaskEntry> getTaskEntries(Date date);
+    List<Task> getTaskEntries(Date date);
     
     /**
      * store task
@@ -73,7 +71,7 @@ public interface StorageService {
      * @param task
      * @param id
      */
-    void updateTaskEntry(String task, Long id);
+    void updateTaskEntry(Task task, Long id);
 
     void storeLastDailyTotal();
 
