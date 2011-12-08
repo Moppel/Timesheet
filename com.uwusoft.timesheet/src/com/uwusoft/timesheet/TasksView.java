@@ -127,7 +127,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
 		String[] titles = { "Time", "Task", "Project", "Total" };
-		int[] bounds = { 70, 300, 100, 50 };
+		int[] bounds = { 70, 300, 100, 70 };
 
 		// First column is for the time
 		TableViewerColumn col = createTableViewerColumn(titles[0], bounds[0], 0);
@@ -228,6 +228,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			public String getText(Object element) {
 				return ((Task) element).getProject().getName();
 			}
+			public Image getImage(Object obj) {
+				Task task = (Task) obj;
+				if (StorageService.CHECK_IN.equals(task.getTask()) || StorageService.BREAK.equals(task.getTask())) return null;
+				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+			}
 		});
 		// Fourth column is for the total
 		col = createTableViewerColumn(titles[3], bounds[3], 3);
@@ -254,7 +259,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
+				if (StorageService.CHECK_IN.equals(((Task) element).getTask()))	return "";
 		        return NumberFormat.getNumberInstance().format(((Task) element).getTotal());
+			}
+			public Image getImage(Object obj) {
+				if (StorageService.CHECK_IN.equals(((Task) obj).getTask())) return null;
+				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
 			}
 		});
 	}
