@@ -13,6 +13,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -46,7 +47,10 @@ public class WholeDayTasks {
 
 	public void addNextTask(Date to, String name) {
 		em.getTransaction().begin();
-		em.persist(new Task(to, name, total, true));
+		String[] tasks = name.split(SubmissionService.separator);
+		Task task = new Task(to, tasks[0], total, true);
+		if (tasks.length > 2) task.setProject(new Project(tasks[1], tasks[2]));
+		em.persist(task);
 		em.getTransaction().commit();
 		
 		nextBegin = BusinessDayUtil.getNextBusinessDay(to);
