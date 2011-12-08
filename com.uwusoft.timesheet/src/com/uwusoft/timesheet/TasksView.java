@@ -211,7 +211,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 			@Override
 			protected boolean canEdit(Object element) {
-				return true;
+				return false;
 			}
 
 			@Override
@@ -240,7 +240,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 			@Override
 			protected boolean canEdit(Object element) {
-				return true;
+				return false;
 			}
 
 			@Override
