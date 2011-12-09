@@ -7,6 +7,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -29,6 +32,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		ILog logger = Activator.getDefault().getLog();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), preferenceStore.getString(TimesheetApp.LAST_TASK));
@@ -51,6 +55,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask
 						+ SubmissionService.separator + listDialog.getProject()
 						+ SubmissionService.separator + listDialog.getSystem());
+	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + preferenceStore.getString(TimesheetApp.LAST_TASK)));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		}						

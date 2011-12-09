@@ -17,6 +17,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
@@ -71,6 +74,7 @@ public class GoogleStorageService implements StorageService {
     private static String message;
     private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
     private static String title = "Google Storage Service";
+    private ILog logger;
     
     static {
         service = new SpreadsheetService("Timesheet");
@@ -124,6 +128,7 @@ public class GoogleStorageService implements StorageService {
 
     public GoogleStorageService() {
         if (!reloadWorksheets()) return;
+        logger = Activator.getDefault().getLog();
     }
     
     private boolean reloadSpreadsheetKey() {
@@ -285,7 +290,10 @@ public class GoogleStorageService implements StorageService {
 			service.insert(listFeedUrl, timeEntry);
 
             if (!reloadWorksheets()) return;
-			if (taskLink != null) {
+            
+            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task));
+            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: task link " + taskLink));
+            if (taskLink != null) {
 				updateTask(taskLink);
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
