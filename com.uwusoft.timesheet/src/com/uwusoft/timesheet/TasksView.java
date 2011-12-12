@@ -3,7 +3,7 @@ package com.uwusoft.timesheet;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
-import java.text.NumberFormat;
+import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -127,7 +127,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
 		String[] titles = { "Time", "Task", "Project", "Total" };
-		int[] bounds = { 70, 300, 100, 70 };
+		int[] bounds = { 70, 300, 100, 60 };
 
 		// First column is for the time
 		TableViewerColumn col = createTableViewerColumn(titles[0], bounds[0], 0);
@@ -260,7 +260,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
 				if (StorageService.CHECK_IN.equals(((Task) element).getTask()))	return "";
-		        return NumberFormat.getNumberInstance().format(((Task) element).getTotal());
+				DecimalFormat df = new DecimalFormat( "0.00" );
+		        return df.format(((Task) element).getTotal());
 			}
 			public Image getImage(Object obj) {
 				if (StorageService.CHECK_IN.equals(((Task) obj).getTask())) return null;
