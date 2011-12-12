@@ -570,7 +570,18 @@ public class GoogleStorageService implements StorageService {
 	}
 	
 	private String getTaskLink(String task, String project, String system) {
-        WorksheetEntry worksheet = getWorksheet(system);
+        if (system == null) { // search for task in all task worksheets
+        	for (WorksheetEntry worksheet : worksheets) {
+        		String title = worksheet.getTitle().getPlainText();
+        		if(title.endsWith(SubmissionService.PROJECTS)) continue;
+        		String taskLink = getTaskLink(task, project, worksheet);
+        		if (taskLink != null) return taskLink;
+        	}
+        }
+		return getTaskLink(task, project, getWorksheet(system));
+	}
+
+	private String getTaskLink(String task, String project, WorksheetEntry worksheet) {
 		try {
 			ListFeed feed = service.getFeed(worksheet.getListFeedUrl(),	ListFeed.class);
 			List<ListEntry> entries = feed.getEntries();
@@ -578,7 +589,7 @@ public class GoogleStorageService implements StorageService {
 				if (project == null && task.equals(entries.get(i).getCustomElements().getValue(TASK))
 					|| task.equals(entries.get(i).getCustomElements().getValue(TASK))
 						&& project.equals(entries.get(i).getCustomElements().getValue(PROJECT)))
-					return system + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
+					return worksheet.getTitle().getPlainText() + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
 			}
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());

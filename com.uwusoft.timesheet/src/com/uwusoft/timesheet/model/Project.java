@@ -47,6 +47,10 @@ public class Project {
 		return system;
 	}
 
+	public void setSystem(String system) {
+		this.system = system;
+	}
+
 	public List<Task> getTasks() {
 		return tasks;
 	}

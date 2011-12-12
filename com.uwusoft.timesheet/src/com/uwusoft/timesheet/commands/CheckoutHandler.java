@@ -38,19 +38,22 @@ public class CheckoutHandler extends AbstractHandler {
 					preferenceStore.getString(TimesheetApp.LAST_TASK), shutdownDate);
 			if (timeDialog.open() == Dialog.OK) {
 				String[] lastTask = preferenceStore.getString(TimesheetApp.LAST_TASK).split(SubmissionService.separator);
-                if (lastTask.length > 2)
-                	storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0], new Project(lastTask[1], lastTask[2])));
-                else
-                	storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0]));
+				Project project = new Project();
+                if (lastTask.length > 2) {
+                	project.setName(lastTask[1]);
+                	project.setSystem(lastTask[2]);
+                }
+               	storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0], project));
 				storageService.storeLastDailyTotal();
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
 				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
 					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
-	                if (dailyTask.length > 2)
-	                	storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0], new Project(dailyTask[1], dailyTask[2]),
-	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
-	                else
-	                	storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0],
+					project = new Project();
+	                if (dailyTask.length > 2) {
+	                	project.setName(lastTask[1]);
+	                	project.setSystem(lastTask[2]);
+	                }
+	                storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0], project,
 	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
 				}
 				WholeDayTasks.getInstance().createTaskEntries();
