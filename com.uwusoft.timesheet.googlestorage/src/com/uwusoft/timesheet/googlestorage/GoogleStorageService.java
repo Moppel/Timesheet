@@ -393,22 +393,14 @@ public class GoogleStorageService implements StorageService {
 				}
 			}
 			else {
-				WorksheetEntry newWorksheet = new WorksheetEntry();
-				newWorksheet.setTitle(new PlainTextConstruct(submissionSystem));
-				newWorksheet.setColCount(6);
-				newWorksheet.setRowCount(20);
-				service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
+				createWorksheet(submissionSystem);
 				
 	            if (!reloadWorksheets()) return;
-		        for (WorksheetEntry worksheet : worksheets) {
-		            if(submissionSystem.equals(worksheet.getTitle().getPlainText())) {
-			            worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-				        // create column headers:
-			            createUpdateCellEntry(worksheet, 1, 1, TASK);
-				        createUpdateCellEntry(worksheet, 1, 2, PROJECT);
-		            	break;
-		            }
-		        }
+	            WorksheetEntry worksheet = getWorksheet(submissionSystem);
+			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+				// create column headers:
+			    createUpdateCellEntry(worksheet, 1, 1, TASK);
+				createUpdateCellEntry(worksheet, 1, 2, PROJECT);
 			}
 			for (String task : tasks) {
 				String[] splitTasks = task.split(SubmissionService.separator);
@@ -432,6 +424,15 @@ public class GoogleStorageService implements StorageService {
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
+	}
+
+	private void createWorksheet(String system) throws IOException,
+			ServiceException, MalformedURLException {
+		WorksheetEntry newWorksheet = new WorksheetEntry();
+		newWorksheet.setTitle(new PlainTextConstruct(system));
+		newWorksheet.setColCount(6);
+		newWorksheet.setRowCount(20);
+		service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
 	}
 
 	public void submitEntries() {
@@ -538,10 +539,15 @@ public class GoogleStorageService implements StorageService {
 	private String getProjectLink(String system, String project, boolean createNew) {
 		String systemProjects = system + SubmissionService.PROJECTS;
 		URL worksheetListFeedUrl = getListFeedUrl(systemProjects);
-		if (worksheetListFeedUrl == null) {
-			// TODO create projects worksheet
-		}
 		try {
+			if (worksheetListFeedUrl == null) {
+				createWorksheet(systemProjects);
+				if (!reloadWorksheets()) return null;
+	            WorksheetEntry worksheet = getWorksheet(systemProjects);
+			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
+				// create column headers:
+			    createUpdateCellEntry(worksheet, 1, 1, PROJECT);
+			}
 			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			List<ListEntry> entries = feed.getEntries();
 			for (int i = 0; i < entries.size(); i++) {
