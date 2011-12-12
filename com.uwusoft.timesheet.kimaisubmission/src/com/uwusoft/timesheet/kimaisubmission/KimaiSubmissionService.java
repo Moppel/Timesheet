@@ -2,7 +2,9 @@ package com.uwusoft.timesheet.kimaisubmission;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,7 +24,11 @@ public class KimaiSubmissionService implements SubmissionService {
 
 	public static final String USERNAME = "kimai.user.name";
 	public static final String PASSWORD = "kimai.user.password";
+    private static final String dateFormat = "MM/dd/yyyy";
+    private static final String timeFormat = "HH:mm";
 	private ILog logger;
+	private GregorianCalendar start;
+	private Date lastDate;
 
     static {
        	while (!authenticate());
@@ -57,11 +63,23 @@ public class KimaiSubmissionService implements SubmissionService {
 	
 	public KimaiSubmissionService() {
 		logger = Activator.getDefault().getLog();
+		start = new GregorianCalendar();
+		resetStartTime();
+		lastDate = new Date();
+	}
+	
+	/**
+	 * reset start time to 8 am
+	 */
+	private void resetStartTime() {
+		start.set(Calendar.HOUR, 8);
+		start.set(Calendar.AM_PM, 0);
+		start.set(Calendar.MINUTE, 0);		
 	}
 
 	@Override
 	public List<String> getAssignedTasks() {
-		// Todo implement
+		// TODO implement
 		List<String> assignedTasks = new ArrayList<String>();
 		assignedTasks.add("Sample Task 1;Sample Project");
 		assignedTasks.add("Sample Task 2;Sample Project");
@@ -71,8 +89,21 @@ public class KimaiSubmissionService implements SubmissionService {
 
 	@Override
 	public void submit(Date date, String task, String project, Double total) {
-		// Todo implement
-        logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "submit: "
-        		+ new SimpleDateFormat("dd/MM/yyyy").format(date) + "\t" + task + " (" + project + ")" + "\t" + total));
+		if(!new SimpleDateFormat(dateFormat).format(date).equals(new SimpleDateFormat(dateFormat).format(lastDate)))
+			resetStartTime();
+		int hours = total.intValue();
+		GregorianCalendar end = new GregorianCalendar();
+		end.setTime(start.getTime());
+		Double minutes = (total - hours) * 60.0;
+		end.add(Calendar.HOUR, hours);
+		end.add(Calendar.MINUTE, (int) Math.round(minutes));
+		
+		// TODO implement
+		logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "submit: "
+        		+ new SimpleDateFormat("dd/MM/yyyy").format(date) + "\t" + task + " (" + project + ")" + "\t"
+        		+ new SimpleDateFormat(timeFormat).format(start.getTime()) + " - " + new SimpleDateFormat(timeFormat).format(end.getTime())));
+
+		lastDate = date;
+		start.setTime(end.getTime());
 	}
 }
