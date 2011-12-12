@@ -16,6 +16,8 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -35,12 +37,22 @@ public class CheckoutHandler extends AbstractHandler {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 					preferenceStore.getString(TimesheetApp.LAST_TASK), shutdownDate);
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
+				String[] lastTask = preferenceStore.getString(TimesheetApp.LAST_TASK).split(SubmissionService.separator);
+                if (lastTask.length > 2)
+                	storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0], new Project(lastTask[1], lastTask[2])));
+                else
+                	storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0]));
 				storageService.storeLastDailyTotal();
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
-				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
-					storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.DAILY_TASK),
-							Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
+					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
+	                if (dailyTask.length > 2)
+	                	storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0], new Project(dailyTask[1], dailyTask[2]),
+	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+	                else
+	                	storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0],
+	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+				}
 				WholeDayTasks.getInstance().createTaskEntries();
 			}
 		} catch (ParseException e) {

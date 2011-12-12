@@ -41,7 +41,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.DailySubmitEntry;
+import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -285,7 +285,7 @@ public class GoogleStorageService implements StorageService {
 					if (task.isWholeDay())
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
-				taskLink = getTaskLink(task);
+				taskLink = getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
 			}
 			service.insert(listFeedUrl, timeEntry);
 
@@ -294,7 +294,7 @@ public class GoogleStorageService implements StorageService {
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task));
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: task link " + taskLink));
             if (taskLink != null) {
-				updateTask(taskLink);
+				updateTask(taskLink, defaultWorksheet.getRowCount());
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
@@ -308,10 +308,10 @@ public class GoogleStorageService implements StorageService {
 		}
     }
 
-	private void updateTask(String taskLink) {
-		createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(),
-				headingIndex.get(TASK),	"=" + taskLink);
-		createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(),
+	private void updateTask(String taskLink, int row) {
+		createUpdateCellEntry(defaultWorksheet,	row,
+				headingIndex.get(TASK), "=" + taskLink);
+		createUpdateCellEntry(defaultWorksheet,	row,
 				headingIndex.get(PROJECT), "=" + taskLink.replace("!A", "!B")); // TODO hardcoded: project must be in the second column
 	}
 
@@ -350,7 +350,8 @@ public class GoogleStorageService implements StorageService {
             if (!reloadWorksheets()) return;
 			
 			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
-			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C[-3]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
+			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C["
+						+ (headingIndex.get(OVERTIME) - headingIndex.get(WEEKLY_TOTAL)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
@@ -368,7 +369,7 @@ public class GoogleStorageService implements StorageService {
 		if (CHECK_IN.equals(task.getTask()) || BREAK.equals(task.getTask()))
 			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask());
 		else
-			updateTask(getTaskLink(task));
+			updateTask(getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem()), id.intValue());
 		for (PropertyChangeListener listener : listeners)
 			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
 	}
@@ -440,7 +441,7 @@ public class GoogleStorageService implements StorageService {
 	        List<ListEntry> listEntries = feed.getEntries();
 
 	        Date lastDate = null;
-	        DailySubmitEntry entry = null;
+	        DailySubmissionEntry entry = null;
 	        int i = defaultWorksheet.getRowCount() - 2;
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
@@ -448,7 +449,7 @@ public class GoogleStorageService implements StorageService {
 
 				if (elements.getValue(TIME) == null && elements.getValue(WEEKLY_TOTAL) == null || elements.getValue(DAILY_TOTAL) != null) { // search for last complete day and break
 					lastDate = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
-					entry = new DailySubmitEntry(lastDate);
+					entry = new DailySubmissionEntry(lastDate);
 					break;
 	            }
 	        }
@@ -463,15 +464,17 @@ public class GoogleStorageService implements StorageService {
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 	            if (!date.equals(lastDate)) { // another day
 	                entry.submitEntries();
-	                entry = new DailySubmitEntry(date);
+	                entry = new DailySubmissionEntry(date);
 	                lastDate = date;
 	            }
 
 	            String task = elements.getValue(TASK);
 	            if (task == null || CHECK_IN.equals(task) || BREAK.equals(task)) continue;
 	            String system = getSystem(i);
+	            String project = elements.getValue(PROJECT);
+	            //if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
 				if (submissionSystems.containsKey(system)) {
-			        entry.addSubmitEntry(task, Double.valueOf(elements.getValue(TOTAL)),
+			        entry.addSubmitEntry(task, project, Double.valueOf(elements.getValue(TOTAL)),
 			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
 				}
 	        }
@@ -485,10 +488,15 @@ public class GoogleStorageService implements StorageService {
     }
 
 	private String getSystem(int row) throws IOException, ServiceException {
-		CellEntry cellEntry = service.getEntry(new URL(defaultWorksheet.getCellFeedUrl().toString()
-				+ "/" + "R" + (row + 2) + "C" + headingIndex.get(TASK)), CellEntry.class);
-		String system = cellEntry.getCell().getInputValue().split("!")[0];
+		String system = getInputValue(row, headingIndex.get(TASK)).split("!")[0];
 		return system.substring(system.indexOf("=") + 1);
+	}
+
+	private String getInputValue(int row, int col) throws IOException, ServiceException,
+			MalformedURLException {
+		CellEntry cellEntry = service.getEntry(new URL(defaultWorksheet.getCellFeedUrl().toString()
+				+ "/" + "R" + (row + 2) + "C" + col), CellEntry.class);
+		return cellEntry.getCell().getInputValue();
 	}
 	
 	private WorksheetEntry getWorksheet(String system) {
@@ -555,25 +563,22 @@ public class GoogleStorageService implements StorageService {
 		return null;
 	}
 	
-	private String getTaskLink(Task task) {
-		if (task.getProject() == null) return null;
-        for (WorksheetEntry worksheet : worksheets) {
-            String system = worksheet.getTitle().getPlainText();
-            if (title.endsWith(SubmissionService.PROJECTS)) continue;
-			try {
-				ListFeed feed = service.getFeed(worksheet.getListFeedUrl(),	ListFeed.class);
-				List<ListEntry> entries = feed.getEntries();
-				for (int i = 0; i < entries.size(); i++) {
-					if (task.getTask().equals(entries.get(i).getCustomElements().getValue(TASK))
-							&& task.getProject().getName().equals(entries.get(i).getCustomElements().getValue(PROJECT)))
-						return system + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
-				}
-			} catch (IOException e) {
-				MessageBox.setError(title, e.getLocalizedMessage());
-			} catch (ServiceException e) {
-				MessageBox.setError(title, e.getLocalizedMessage());
+	private String getTaskLink(String task, String project, String system) {
+        WorksheetEntry worksheet = getWorksheet(system);
+		try {
+			ListFeed feed = service.getFeed(worksheet.getListFeedUrl(),	ListFeed.class);
+			List<ListEntry> entries = feed.getEntries();
+			for (int i = 0; i < entries.size(); i++) {
+				if (project == null && task.equals(entries.get(i).getCustomElements().getValue(TASK))
+					|| task.equals(entries.get(i).getCustomElements().getValue(TASK))
+						&& project.equals(entries.get(i).getCustomElements().getValue(PROJECT)))
+					return system + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
 			}
-        }
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
 		return null;
 	}
 	

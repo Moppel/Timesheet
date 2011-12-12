@@ -19,5 +19,5 @@ public interface SubmissionService {
 
     List<String> getAssignedTasks();
 	
-	void submit(Date date, String task, Double total);
+	void submit(Date date, String task, String project, Double total);
 }

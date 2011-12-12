@@ -71,6 +71,17 @@ public class Task {
 	/**
 	 * @param dateTime
 	 * @param task
+	 * @param project
+	 * @param total
+	 */
+	public Task(Date dateTime, String task, Project project, float total) {
+		this(dateTime, task, project);
+		this.total = total;
+	}
+	
+	/**
+	 * @param dateTime
+	 * @param task
 	 * @param total
 	 * @param wholeDay
 	 */

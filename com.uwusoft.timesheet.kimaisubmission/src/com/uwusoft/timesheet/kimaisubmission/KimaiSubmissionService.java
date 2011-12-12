@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
@@ -19,6 +22,7 @@ public class KimaiSubmissionService implements SubmissionService {
 
 	public static final String USERNAME = "kimai.user.name";
 	public static final String PASSWORD = "kimai.user.password";
+	private ILog logger;
 
     static {
        	while (!authenticate());
@@ -50,6 +54,10 @@ public class KimaiSubmissionService implements SubmissionService {
 		return false;*/
 		return true;
 	}
+	
+	public KimaiSubmissionService() {
+		logger = Activator.getDefault().getLog();
+	}
 
 	@Override
 	public List<String> getAssignedTasks() {
@@ -62,9 +70,9 @@ public class KimaiSubmissionService implements SubmissionService {
 	}
 
 	@Override
-	public void submit(Date date, String task, Double total) {
+	public void submit(Date date, String task, String project, Double total) {
 		// Todo implement
-		System.out.println(new SimpleDateFormat("dd/MM/yyyy").format(date) + "\t" + task + "\t" + total);
+        logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "submit: "
+        		+ new SimpleDateFormat("dd/MM/yyyy").format(date) + "\t" + task + " (" + project + ")" + "\t" + total));
 	}
-
 }

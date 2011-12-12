@@ -85,9 +85,16 @@ public class WholeDayTasks {
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				task.setDateTime(new Timestamp(begin.getTime()));
 				storageService.createTaskEntry(task);
-				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK)))
-					storageService.createTaskEntry(new Task(begin, preferenceStore.getString(TimesheetApp.DAILY_TASK),
-							Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
+					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
+	                if (dailyTask.length > 2)
+	                	storageService.createTaskEntry(new Task(begin, dailyTask[0], new Project(dailyTask[1], dailyTask[2]),
+	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+	                else
+	                	storageService.createTaskEntry(new Task(begin, dailyTask[0],
+	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
+					
+				}
 				MessageBox.setMessage("Set whole day task", begin + "\n" + task); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin)).after(end));
 			em.remove(task);
