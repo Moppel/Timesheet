@@ -60,14 +60,14 @@ public interface StorageService {
     void createTaskEntry(Task task);
    
     /**
-     * 
+     * update date/time for task
      * @param time the time of the task entry
      * @param id the id of the task entry
      */
     void updateTaskEntry(Date time, Long id);
     
     /**
-     * 
+     * update task name and project
      * @param task
      * @param id
      */

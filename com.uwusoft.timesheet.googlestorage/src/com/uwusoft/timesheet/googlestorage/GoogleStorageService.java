@@ -17,8 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -63,23 +65,25 @@ public class GoogleStorageService implements StorageService {
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
-    private static String spreadsheetKey;
-    private static SpreadsheetService service;
-    private static FeedURLFactory factory;
-    private static URL listFeedUrl;
-	private static Map<String, Integer> headingIndex;
-    private static List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
-    private static WorksheetEntry defaultWorksheet;
-    private static Map<String,String> submissionSystems;
-    private static String message;
-    private static List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
-    private static String title = "Google Storage Service";
+    private String spreadsheetKey;
+    private SpreadsheetService service;
+    private FeedURLFactory factory;
+    private URL listFeedUrl;
+	private Map<String, Integer> headingIndex;
+    private List<WorksheetEntry> worksheets = new ArrayList<WorksheetEntry>();
+    private WorksheetEntry defaultWorksheet;
+    private Map<String,String> submissionSystems;
+    private String message;
+    private List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
+    private String title = "Google Storage Service";
     private ILog logger;
     
-    static {
+    public GoogleStorageService() throws CoreException {
         service = new SpreadsheetService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
-       	while (!authenticate());
+        boolean lastSuccess = true;
+        do lastSuccess = authenticate(lastSuccess);
+       	while (!lastSuccess);
 		factory = FeedURLFactory.getDefault();
 		headingIndex = new LinkedHashMap<String, Integer>();
 		submissionSystems = new HashMap<String, String>();
@@ -91,15 +95,17 @@ public class GoogleStorageService implements StorageService {
 						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
 						system);
 		}
+        if (!reloadWorksheets()) return;
+        logger = Activator.getDefault().getLog();
     }
     
-    private static boolean authenticate() {
+    private boolean authenticate(boolean lastSuccess) throws CoreException {
         try {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
 	    	String userName = preferenceStore.getString(USERNAME);
 	    	String password = secureProps.getProperty(PASSWORD);
-	    	if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
+	    	if (lastSuccess && !StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
@@ -121,16 +127,13 @@ public class GoogleStorageService implements StorageService {
 			message = e.getLocalizedMessage();
 			return false;
 		}
-        Display.getDefault().dispose();
+		IStatus status = new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null);
+        throw new CoreException(status);
+        /*Display.getDefault().dispose();
 		System.exit(1);
-		return false; 
+		return false;*/ 
    }
 
-    public GoogleStorageService() {
-        if (!reloadWorksheets()) return;
-        logger = Activator.getDefault().getLog();
-    }
-    
     private boolean reloadSpreadsheetKey() {
     	if (StringUtils.isEmpty(spreadsheetKey)) {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
