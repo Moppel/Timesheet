@@ -48,8 +48,13 @@ public class WholeDayTasks {
 	public void addNextTask(Date to, String name) {
 		em.getTransaction().begin();
 		String[] tasks = name.split(SubmissionService.separator);
+		Project project = new Project();
+        if (tasks.length > 2) {
+        	project.setName(tasks[1]);
+        	project.setSystem(tasks[2]);
+        }
 		Task task = new Task(to, tasks[0], total, true);
-		if (tasks.length > 2) task.setProject(new Project(tasks[1], tasks[2]));
+		task.setProject(project);
 		em.persist(task);
 		em.getTransaction().commit();
 		
@@ -87,13 +92,13 @@ public class WholeDayTasks {
 				storageService.createTaskEntry(task);
 				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
 					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
-	                if (dailyTask.length > 2)
-	                	storageService.createTaskEntry(new Task(begin, dailyTask[0], new Project(dailyTask[1], dailyTask[2]),
-	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
-	                else
-	                	storageService.createTaskEntry(new Task(begin, dailyTask[0],
-	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
-					
+					Project project = new Project();
+	                if (dailyTask.length > 2) {
+	                	project.setName(dailyTask[1]);
+	                	project.setSystem(dailyTask[2]);
+	                }
+                	storageService.createTaskEntry(new Task(begin, dailyTask[0], project,
+                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
 				}
 				MessageBox.setMessage("Set whole day task", begin + "\n" + task); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin)).after(end));
