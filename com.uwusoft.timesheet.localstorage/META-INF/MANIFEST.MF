@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Localstorage
+Bundle-SymbolicName: com.uwusoft.timesheet.localstorage;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: UWUSOFT
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ com.uwusoft.timesheet;bundle-version="1.0.0"
+Bundle-ClassPath: lib/persistence/javax.persistence_1.0.0.jar,
+ lib/commons/commons-lang3-3.0.1.jar,
+ .
