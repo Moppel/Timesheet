@@ -295,7 +295,7 @@ public class GoogleStorageService implements StorageService {
             if (!reloadWorksheets()) return;
             
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task
-            		+ (taskLink == null ? "" : " (task link " + taskLink +")")));
+            		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
             
             if (taskLink != null) {
 				updateTask(taskLink, defaultWorksheet.getRowCount());
@@ -389,14 +389,16 @@ public class GoogleStorageService implements StorageService {
 					try {
 						ListFeed feed = service.query(query, ListFeed.class);
 						List<ListEntry> listEntries = feed.getEntries();
-						for (ListEntry entry : listEntries)
-							availableTasks.add(entry.getCustomElements().getValue(TASK));
+						for (ListEntry entry : listEntries) {
+							String availableTask = entry.getCustomElements().getValue(TASK);
+							availableTasks.add(availableTask);
+							projects.get(project).remove(availableTask);							
+						}
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
 					} catch (ServiceException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
 					}
-					projects.get(project).remove(availableTasks); // TODO remove available tasks
 				}
 			}
 			else {
@@ -410,20 +412,19 @@ public class GoogleStorageService implements StorageService {
 				createUpdateCellEntry(worksheet, 1, 2, PROJECT);
 			}
 			for (String project : projects.keySet()) {
-			for (String task : projects.get(project)) {
-	            ListEntry timeEntry = new ListEntry();
-				timeEntry.getCustomElements().setValueLocal(TASK, task);
-				service.insert(worksheetListFeedUrl, timeEntry);
-				reloadWorksheets();
-				if (!StringUtils.isEmpty(project)) {
-					String projectLink = getProjectLink(submissionSystem, project, true);
-					if (projectLink != null) {
-						WorksheetEntry worksheet = getWorksheet(submissionSystem);
-						createUpdateCellEntry(worksheet, worksheet.getRowCount(),
-								getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
+				for (String task : projects.get(project)) {
+					ListEntry timeEntry = new ListEntry();
+					timeEntry.getCustomElements().setValueLocal(TASK, task);
+					service.insert(worksheetListFeedUrl, timeEntry);
+					reloadWorksheets();
+					if (!StringUtils.isEmpty(project)) {
+						String projectLink = getProjectLink(submissionSystem, project, true);
+						if (projectLink != null) {
+							WorksheetEntry worksheet = getWorksheet(submissionSystem);
+							createUpdateCellEntry(worksheet, worksheet.getRowCount(), getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
+						}
 					}
 				}
-			}
 			}
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
