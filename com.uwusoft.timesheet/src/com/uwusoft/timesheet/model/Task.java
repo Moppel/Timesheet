@@ -135,6 +135,6 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return "Task [Date=" + dateTime + ", task=" + task + " (project: " + project.getName() + ", system: " + project.getSystem() + "), total=" + total + ", wholeDay=" + wholeDay + "]";
+		return "Task [Date=" + dateTime + ", task=" + task + (project == null ? "" : " (project: " + project.getName() + ", system: " + project.getSystem() + ")") + ", total=" + total + ", wholeDay=" + wholeDay + "]";
 	}
 }
