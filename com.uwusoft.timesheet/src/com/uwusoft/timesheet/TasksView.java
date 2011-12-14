@@ -145,16 +145,16 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		    protected void setValue(Object element, Object value) {
 		    	Task entry = (Task) element;
-		    	if (value instanceof Timestamp)
-		    		entry.setDateTime((Timestamp) value);
-		    	else
-		    		try {
-		    			entry.setDateTime(new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime()));
-		    		} catch (ParseException e) {
-		    			MessageBox.setError("Task's view", e.getLocalizedMessage());
-		    		}
-				storageService.updateTaskEntry(entry.getDateTime(), entry.getId());
-		        viewer.refresh(element);
+	    		try {
+	    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
+			    	if (!entry.getDateTime().equals(newTime)) {
+		    			entry.setDateTime(newTime);
+						storageService.updateTaskEntry(entry.getDateTime(), entry.getId());
+				        viewer.refresh(element);
+			    	}
+	    		} catch (ParseException e) {
+	    			MessageBox.setError("Task's view", e.getLocalizedMessage());
+	    		}
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
@@ -184,15 +184,17 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		    protected void setValue(Object element, Object value) {
 		    	Task entry = (Task) element;
-		    	entry.setTask(String.valueOf(value));
-		        storageService.updateTaskEntry(entry, entry.getId());
-		        viewer.refresh(element);
+		    	String task = String.valueOf(value);
+		    	if (!entry.getTask().equals(task)) {
+			    	entry.setTask(task);
+			        storageService.updateTaskEntry(entry, entry.getId());
+			        viewer.refresh(element);
+		    	}
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				Task task = (Task) element;
-				return task.getTask();
+		        return ((Task) element).getTask();
 			}
 			public Image getImage(Object obj) {
 				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
