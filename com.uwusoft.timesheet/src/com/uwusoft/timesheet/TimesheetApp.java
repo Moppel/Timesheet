@@ -31,6 +31,7 @@ public class TimesheetApp implements IApplication {
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
     public static final String LAST_TASK = "task.last";
     public static final String SYSTEM_SHUTDOWN = "system.shutdown";
+    public static final String SYSTEM_START= "system.start";
     public static Date startDate;
     
 	/* (non-Javadoc)

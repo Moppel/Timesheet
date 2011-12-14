@@ -1,6 +1,9 @@
 package com.uwusoft.timesheet;
 
 import java.io.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
@@ -56,7 +59,10 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
     }
 
     public static void main(String[] args) {
-        SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
+		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
+		Date startDate = new Date(mx.getStartTime());
+
+		SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
 
         formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
@@ -77,6 +83,7 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
 
 					OutputStream out = new FileOutputStream(props);
 					transferProps.setProperty("system.shutdown", formatter.format(formatter.parse(line)));
+					transferProps.setProperty("system.start", formatter.format(startDate));
 					transferProps.store(out, comment);
 					out.close();
 				}

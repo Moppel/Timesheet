@@ -57,6 +57,7 @@ public class CheckoutHandler extends AbstractHandler {
 	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
 				}
 				WholeDayTasks.getInstance().createTaskEntries();
+				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, preferenceStore.getString(TimesheetApp.SYSTEM_START));
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check out", e.getLocalizedMessage());

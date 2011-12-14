@@ -81,8 +81,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		if (trayItem != null) {
 			window.getShell().setVisible(false);
 
-			Date shutdownDate = TimesheetApp.startDate;
+			Date startDate = TimesheetApp.startDate;
+			Date shutdownDate = startDate;
 			try {
+				String startTime = preferenceStore.getString(TimesheetApp.SYSTEM_START);
+				if (!StringUtils.isEmpty(startTime))
+					startDate = StorageService.formatter.parse(startTime);				
+
 				String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
 				if (!StringUtils.isEmpty(shutdownTime))
 					shutdownDate = StorageService.formatter.parse(shutdownTime);				
@@ -94,8 +99,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			int shutdownDay = 0;
 			int shutdownWeek = 0;
 			
-			calDay.setTime(TimesheetApp.startDate);
-			calWeek.setTime(TimesheetApp.startDate);
+			calDay.setTime(startDate);
+			calWeek.setTime(startDate);
 			int startDay = calDay.get(Calendar.DAY_OF_YEAR);
 			int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
 
@@ -122,7 +127,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {					
 				try { // automatic check in
 					Map<String, String> parameters = new HashMap<String, String>();
-					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(TimesheetApp.startDate));
+					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
 					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(
 							commandService.getCommand("Timesheet.checkin"), parameters), null);
