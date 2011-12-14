@@ -50,8 +50,8 @@ public class CheckoutHandler extends AbstractHandler {
 					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
 					project = new Project();
 	                if (dailyTask.length > 2) {
-	                	project.setName(lastTask[1]);
-	                	project.setSystem(lastTask[2]);
+	                	project.setName(dailyTask[1]);
+	                	project.setSystem(dailyTask[2]);
 	                }
 	                storageService.createTaskEntry(new Task(timeDialog.getTime(), dailyTask[0], project,
 	                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
