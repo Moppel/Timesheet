@@ -140,7 +140,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 
 		    protected Object getValue(Object element) {
-		        return ((Task) element).getDateTime();
+		        return new SimpleDateFormat(timeFormat).format(((Task) element).getDateTime());
 		    }
 
 		    protected void setValue(Object element, Object value) {
