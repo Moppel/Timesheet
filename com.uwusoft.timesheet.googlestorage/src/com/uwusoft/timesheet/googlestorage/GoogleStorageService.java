@@ -294,8 +294,9 @@ public class GoogleStorageService implements StorageService {
 
             if (!reloadWorksheets()) return;
             
-            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task));
-            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: task link " + taskLink));
+            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task
+            		+ (taskLink == null ? "" : " (task link " + taskLink +")")));
+            
             if (taskLink != null) {
 				updateTask(taskLink, defaultWorksheet.getRowCount());
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
@@ -377,22 +378,25 @@ public class GoogleStorageService implements StorageService {
 			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
-	public void importTasks(String submissionSystem, List<String> tasks) {
+	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
-				List<String> availableTasks = new ArrayList<String>();
-		        try {
-					ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
-					for (ListEntry entry : feed.getEntries()) {
-						availableTasks.add(entry.getCustomElements().getValue(TASK)
-								+ SubmissionService.separator + entry.getCustomElements().getValue(PROJECT));
+				for (String project : projects.keySet()) {
+					ListQuery query = new ListQuery(worksheetListFeedUrl);
+					query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project + "\"");
+					List<String> availableTasks = new ArrayList<String>();
+					try {
+						ListFeed feed = service.query(query, ListFeed.class);
+						List<ListEntry> listEntries = feed.getEntries();
+						for (ListEntry entry : listEntries)
+							availableTasks.add(entry.getCustomElements().getValue(TASK));
+					} catch (IOException e) {
+						MessageBox.setError(title, e.getLocalizedMessage());
+					} catch (ServiceException e) {
+						MessageBox.setError(title, e.getLocalizedMessage());
 					}
-					tasks.remove(availableTasks);
-				} catch (IOException e) {
-					MessageBox.setError(title, e.getLocalizedMessage());
-				} catch (ServiceException e) {
-					MessageBox.setError(title, e.getLocalizedMessage());
+					projects.get(project).remove(availableTasks); // TODO remove available tasks
 				}
 			}
 			else {
@@ -405,20 +409,21 @@ public class GoogleStorageService implements StorageService {
 			    createUpdateCellEntry(worksheet, 1, 1, TASK);
 				createUpdateCellEntry(worksheet, 1, 2, PROJECT);
 			}
-			for (String task : tasks) {
-				String[] splitTasks = task.split(SubmissionService.separator);
+			for (String project : projects.keySet()) {
+			for (String task : projects.get(project)) {
 	            ListEntry timeEntry = new ListEntry();
-				timeEntry.getCustomElements().setValueLocal(TASK, splitTasks[0]);
+				timeEntry.getCustomElements().setValueLocal(TASK, task);
 				service.insert(worksheetListFeedUrl, timeEntry);
 				reloadWorksheets();
-				if (splitTasks.length > 1) {
-					String projectLink = getProjectLink(submissionSystem, splitTasks[1], true);
+				if (!StringUtils.isEmpty(project)) {
+					String projectLink = getProjectLink(submissionSystem, project, true);
 					if (projectLink != null) {
 						WorksheetEntry worksheet = getWorksheet(submissionSystem);
 						createUpdateCellEntry(worksheet, worksheet.getRowCount(),
 								getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
 					}
 				}
+			}
 			}
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -476,7 +481,7 @@ public class GoogleStorageService implements StorageService {
 	            if (task == null || CHECK_IN.equals(task) || BREAK.equals(task)) continue;
 	            String system = getSystem(i);
 	            String project = elements.getValue(PROJECT);
-	            //if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
+	            if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
 				if (submissionSystems.containsKey(system)) {
 			        entry.addSubmitEntry(task, project, Double.valueOf(elements.getValue(TOTAL)),
 			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));

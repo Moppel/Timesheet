@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import com.uwusoft.timesheet.model.Task;
 
@@ -77,7 +78,7 @@ public interface StorageService {
 
     void storeLastWeekTotal(String weeklyWorkingHours);
     
-    void importTasks(String submissionSystem, List<String> tasks);
+    void importTasks(String submissionSystem, Map<String, List<String>> projects);
     
     void submitEntries();
 }

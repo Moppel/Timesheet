@@ -101,7 +101,7 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
-	public void importTasks(String submissionSystem, List<String> tasks) {
+	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
 		// TODO Auto-generated method stub
 		
 	}

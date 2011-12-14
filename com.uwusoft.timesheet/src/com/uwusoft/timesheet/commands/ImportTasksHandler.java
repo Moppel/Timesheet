@@ -25,7 +25,7 @@ public class ImportTasksHandler extends AbstractHandler {
 				SubmissionService.SERVICE_ID).getService(system);
 		storageService.importTasks(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
 				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
-				submissionService.getAssignedTasks());
+				submissionService.getAssignedProjects());
 		return null;
 	}
 

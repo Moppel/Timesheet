@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.ILog;
@@ -29,6 +31,7 @@ public class KimaiSubmissionService implements SubmissionService {
 	private ILog logger;
 	private GregorianCalendar start;
 	private Date lastDate;
+	private Map<String, List<String>> projects;
 
     static {
        	while (!authenticate());
@@ -66,6 +69,7 @@ public class KimaiSubmissionService implements SubmissionService {
 		start = new GregorianCalendar();
 		resetStartTime();
 		lastDate = new Date();
+		projects = new HashMap<String, List<String>>();
 	}
 	
 	/**
@@ -78,13 +82,14 @@ public class KimaiSubmissionService implements SubmissionService {
 	}
 
 	@Override
-	public List<String> getAssignedTasks() {
+	public Map<String, List<String>> getAssignedProjects() {
 		// TODO implement
-		List<String> assignedTasks = new ArrayList<String>();
-		assignedTasks.add("Sample Task 1;Sample Project");
-		assignedTasks.add("Sample Task 2;Sample Project");
-		assignedTasks.add("Sample Task 3;Sample Project");
-		return assignedTasks;
+		projects.put("Overhead", new ArrayList<String>());
+		projects.put("WebPac", new ArrayList<String>());
+		projects.get("Overhead").add("General Administration & Time Entry");
+		projects.get("WebPac").add("Core Development WP");
+		projects.get("WebPac").add("General Project Meetings WP");
+		return projects;
 	}
 
 	@Override
@@ -100,7 +105,7 @@ public class KimaiSubmissionService implements SubmissionService {
 		
 		// TODO implement
 		logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "submit: "
-        		+ new SimpleDateFormat("dd/MM/yyyy").format(date) + "\t" + task + " (" + project + ")" + "\t"
+        		+ new SimpleDateFormat(dateFormat).format(date) + "\t" + task + " (" + project + ")" + "\t"
         		+ new SimpleDateFormat(timeFormat).format(start.getTime()) + " - " + new SimpleDateFormat(timeFormat).format(end.getTime())));
 
 		lastDate = date;
