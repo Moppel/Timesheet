@@ -54,6 +54,7 @@ public class TaskListDialog extends ListDialog {
         (new Label(systemPanel, SWT.NULL)).setText("Submission System: ");
         systemCombo = new Combo(systemPanel, SWT.READ_ONLY);
         systemCombo.setItems(systems);
+        if (systems.length == 1) systemCombo.setEnabled(false);
         
         (new Label(systemPanel, SWT.NULL)).setText("Project: ");
         projectCombo = new Combo(systemPanel, SWT.READ_ONLY);
@@ -90,6 +91,7 @@ public class TaskListDialog extends ListDialog {
 		List<String> projectList = storageService.getProjects(systemSelected);
 		String[] projects = projectList.toArray(new String[projectList.size()]);
         projectCombo.setItems(projects);
+        if (projects.length == 1) projectCombo.setEnabled(false);
         if (first && tasks.length > 1) {
         	for (int i = 0; i < projects.length; i++) {
         		if (tasks[1].equals(projects[i])) {
