@@ -36,4 +36,5 @@ Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  lib/persistence/eclipselink.jar,
  .
 Import-Package: com.uwusoft.timesheet,
+ org.apache.commons.lang;version="2.4.0",
  org.apache.commons.lang.time;version="2.4.0"
