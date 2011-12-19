@@ -85,8 +85,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			Date shutdownDate = startDate;
 			try {
 				String startTime = preferenceStore.getString(TimesheetApp.SYSTEM_START);
-				if (!StringUtils.isEmpty(startTime))
+				if (!StringUtils.isEmpty(startTime)) {
+					preferenceStore.setToDefault(TimesheetApp.SYSTEM_START);
 					startDate = StorageService.formatter.parse(startTime);				
+				}
 
 				String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
 				if (!StringUtils.isEmpty(shutdownTime))
