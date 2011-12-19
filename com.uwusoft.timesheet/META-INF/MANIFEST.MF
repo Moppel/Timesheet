@@ -29,7 +29,8 @@ Export-Package: com.uwusoft.timesheet;
  com.uwusoft.timesheet.extensionpoint,
  com.uwusoft.timesheet.extensionpoint.model;uses:="com.uwusoft.timesheet.extensionpoint",
  com.uwusoft.timesheet.model,
- com.uwusoft.timesheet.util
+ com.uwusoft.timesheet.util,
+ com.uwusoft.timesheet.wizard
 Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  lib/persistence/javax.persistence_1.0.0.jar,
  lib/persistence/derby.jar,
