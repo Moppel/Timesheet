@@ -90,10 +90,12 @@ public class GoogleStorageService implements StorageService {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
 		for (String system : systems) {
-			if (!StringUtils.isEmpty(system))
-				submissionSystems.put(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
-						system);
+			if (!StringUtils.isEmpty(system)) {
+				String descriptiveName = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
+				submissionSystems.put(descriptiveName, system);
+				if (getWorksheet(descriptiveName) == null); // TODO create import task dialog
+			}
 		}
         if (!reloadWorksheets()) return;
         logger = Activator.getDefault().getLog();
@@ -127,11 +129,7 @@ public class GoogleStorageService implements StorageService {
 			message = e.getLocalizedMessage();
 			return false;
 		}
-		IStatus status = new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null);
-        throw new CoreException(status);
-        /*Display.getDefault().dispose();
-		System.exit(1);
-		return false;*/ 
+        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
    }
 
     private boolean reloadSpreadsheetKey() {
@@ -355,7 +353,7 @@ public class GoogleStorageService implements StorageService {
 			
 			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
 			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C["
-						+ (headingIndex.get(OVERTIME) - headingIndex.get(WEEKLY_TOTAL)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
+						+ (headingIndex.get(WEEKLY_TOTAL) - headingIndex.get(OVERTIME)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
