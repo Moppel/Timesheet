@@ -237,7 +237,7 @@ public class GoogleStorageService implements StorageService {
 		try {
 	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 	        List<ListEntry> listEntries = feed.getEntries();
-	        for (int i = defaultWorksheet.getRowCount() - 2; i > 0; i--) {
+	        for (int i = listEntries.size() - 1; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
 	            if (elements.getValue(DATE) == null) continue;
 	            if (!new SimpleDateFormat(dateFormat).format(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)))
@@ -296,10 +296,11 @@ public class GoogleStorageService implements StorageService {
             		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
             
             if (taskLink != null) {
-				updateTask(taskLink, defaultWorksheet.getRowCount());
+            	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+				updateTask(taskLink, feed.getEntries().size() + 1);
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
-					createUpdateCellEntry(defaultWorksheet,	defaultWorksheet.getRowCount(), headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
+					createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
 			for (PropertyChangeListener listener : listeners)
 				listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
@@ -323,11 +324,11 @@ public class GoogleStorageService implements StorageService {
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();			
             int rowsOfDay = 0;
-            for (int i = defaultWorksheet.getRowCount() - 3; i > 0; i--, rowsOfDay++) {
+            for (int i = listEntries.size() - 2; i > 0; i--, rowsOfDay++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
                 if (CHECK_IN.equals(elements.getValue(TASK))) break; // begin of day
             }
-            createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(DAILY_TOTAL), "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])");
+            createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(DAILY_TOTAL), "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])");
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
@@ -341,7 +342,7 @@ public class GoogleStorageService implements StorageService {
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();
             int rowsOfWeek = 0;
-            for (int i = defaultWorksheet.getRowCount() - 3; i > 0; i--, rowsOfWeek++) {
+            for (int i = listEntries.size() - 2; i > 0; i--, rowsOfWeek++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
                 if (elements.getValue(WEEKLY_TOTAL) != null) break; // end of last week
                 if (i==1) break;
@@ -351,8 +352,8 @@ public class GoogleStorageService implements StorageService {
 			service.insert(listFeedUrl, timeEntry);
             if (!reloadWorksheets()) return;
 			
-			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
-			createUpdateCellEntry(defaultWorksheet, defaultWorksheet.getRowCount(), headingIndex.get(OVERTIME), "=R[0]C["
+			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
+			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(OVERTIME), "=R[0]C["
 						+ (headingIndex.get(WEEKLY_TOTAL) - headingIndex.get(OVERTIME)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -379,6 +380,7 @@ public class GoogleStorageService implements StorageService {
 	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
+			int row = 2;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
 				for (String project : projects.keySet()) {
 					ListQuery query = new ListQuery(worksheetListFeedUrl);
@@ -392,6 +394,7 @@ public class GoogleStorageService implements StorageService {
 							availableTasks.add(availableTask);
 							projects.get(project).remove(availableTask);							
 						}
+						row = listEntries.size() - 1;
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
 					} catch (ServiceException e) {
@@ -419,7 +422,7 @@ public class GoogleStorageService implements StorageService {
 						String projectLink = getProjectLink(submissionSystem, project, true);
 						if (projectLink != null) {
 							WorksheetEntry worksheet = getWorksheet(submissionSystem);
-							createUpdateCellEntry(worksheet, worksheet.getRowCount(), getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
+							createUpdateCellEntry(worksheet, row, getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
 						}
 					}
 				}
@@ -443,14 +446,14 @@ public class GoogleStorageService implements StorageService {
 	}
 
 	public void submitEntries() {
+        DailySubmissionEntry entry = null;
         try {
             if (!reloadWorksheets()) return;
 	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 	        List<ListEntry> listEntries = feed.getEntries();
 
 	        Date lastDate = null;
-	        DailySubmissionEntry entry = null;
-	        int i = defaultWorksheet.getRowCount() - 2;
+	        int i = listEntries.size() - 1;
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
 	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) break;
@@ -493,6 +496,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
+        if (entry != null) entry.submitEntries();
     }
 
 	private String getSystem(int row) throws IOException, ServiceException {
