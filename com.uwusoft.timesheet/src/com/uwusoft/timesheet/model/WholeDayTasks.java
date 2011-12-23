@@ -53,6 +53,7 @@ public class WholeDayTasks {
         	project.setName(tasks[1]);
         	project.setSystem(tasks[2]);
         }
+		em.persist(project);
 		Task task = new Task(to, tasks[0], total, true);
 		task.setProject(project);
 		em.persist(task);
