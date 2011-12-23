@@ -2,6 +2,7 @@ package com.uwusoft.timesheet.model;
 
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -53,7 +54,18 @@ public class WholeDayTasks {
         	project.setName(tasks[1]);
         	project.setSystem(tasks[2]);
         }
-		em.persist(project);
+		Query q = em.createQuery("select p from Project p where p.name='" + project.getName()
+				+ "' and p.system ='" + project.getSystem() + "'");
+		@SuppressWarnings("unchecked")
+		List<Project> projectList = q.getResultList();
+		if (projectList.isEmpty()) em.persist(project);
+		else {
+			Iterator<Project> iterator = projectList.iterator();
+			project = iterator.next();
+			while (iterator.hasNext())
+				em.remove(iterator.next());
+		}
+		
 		Task task = new Task(to, tasks[0], total, true);
 		task.setProject(project);
 		em.persist(task);
