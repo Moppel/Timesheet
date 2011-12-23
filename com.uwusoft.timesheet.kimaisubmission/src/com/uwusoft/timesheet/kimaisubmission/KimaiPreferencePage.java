@@ -23,6 +23,8 @@ public class KimaiPreferencePage extends FieldEditorPreferencePage implements
 
 	@Override
 	protected void createFieldEditors() {
+		addField(new StringFieldEditor(KimaiSubmissionService.URL, "Server Url:",
+				getFieldEditorParent()));
 		addField(new StringFieldEditor(KimaiSubmissionService.USERNAME, "User name:",
 				getFieldEditorParent()));
 	}
