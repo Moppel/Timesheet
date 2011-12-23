@@ -21,7 +21,7 @@ public class DailySubmissionEntry {
         entries = new HashMap<String, TaskSubmissionEntry>();
     }
 
-    public void addSubmitEntry(String task, String project, double total, SubmissionService service) {
+    public void addSubmissionEntry(String task, String project, double total, SubmissionService service) {
         String key = task + project; // has to be unique
     	TaskSubmissionEntry available = entries.get(key);
         if (available == null)

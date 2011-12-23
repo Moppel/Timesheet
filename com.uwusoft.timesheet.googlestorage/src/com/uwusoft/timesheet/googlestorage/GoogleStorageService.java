@@ -482,7 +482,7 @@ public class GoogleStorageService implements StorageService {
 	            String project = elements.getValue(PROJECT);
 	            if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
 				if (submissionSystems.containsKey(system)) {
-			        entry.addSubmitEntry(task, project, Double.valueOf(elements.getValue(TOTAL)),
+			        entry.addSubmissionEntry(task, project, Double.valueOf(elements.getValue(TOTAL)),
 			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
 				}
 	        }
