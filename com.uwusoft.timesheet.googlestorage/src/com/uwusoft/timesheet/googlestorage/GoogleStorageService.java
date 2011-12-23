@@ -380,7 +380,6 @@ public class GoogleStorageService implements StorageService {
 	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
-			int row = 2;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
 				for (String project : projects.keySet()) {
 					ListQuery query = new ListQuery(worksheetListFeedUrl);
@@ -389,12 +388,13 @@ public class GoogleStorageService implements StorageService {
 					try {
 						ListFeed feed = service.query(query, ListFeed.class);
 						List<ListEntry> listEntries = feed.getEntries();
+						List<String> tasks = new ArrayList<String>(projects.get(project));
 						for (ListEntry entry : listEntries) {
 							String availableTask = entry.getCustomElements().getValue(TASK);
 							availableTasks.add(availableTask);
-							projects.get(project).remove(availableTask);							
+							tasks.remove(availableTask);							
 						}
-						row = listEntries.size() - 1;
+						projects.put(project, tasks);
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
 					} catch (ServiceException e) {
@@ -414,15 +414,16 @@ public class GoogleStorageService implements StorageService {
 			}
 			for (String project : projects.keySet()) {
 				for (String task : projects.get(project)) {
-					ListEntry timeEntry = new ListEntry();
-					timeEntry.getCustomElements().setValueLocal(TASK, task);
-					service.insert(worksheetListFeedUrl, timeEntry);
+					ListEntry taskEntry = new ListEntry();
+					taskEntry.getCustomElements().setValueLocal(TASK, task);
+					service.insert(worksheetListFeedUrl, taskEntry);
 					reloadWorksheets();
 					if (!StringUtils.isEmpty(project)) {
 						String projectLink = getProjectLink(submissionSystem, project, true);
 						if (projectLink != null) {
 							WorksheetEntry worksheet = getWorksheet(submissionSystem);
-							createUpdateCellEntry(worksheet, row, getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
+							ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
+							createUpdateCellEntry(worksheet, feed.getEntries().size() + 1, getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
 						}
 					}
 				}
