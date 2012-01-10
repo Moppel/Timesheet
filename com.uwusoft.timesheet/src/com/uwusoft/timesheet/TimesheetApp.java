@@ -2,7 +2,7 @@ package com.uwusoft.timesheet;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
-import java.sql.Date;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,9 +11,14 @@ import javax.persistence.Persistence;
 
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
+
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 
 /**
  * This class controls all aspects of the application's execution
@@ -73,5 +78,21 @@ public class TimesheetApp implements IApplication {
 					workbench.close();
 			}
 		});
+	}
+
+
+	public static String buildProperty(String task, String project, String system) {
+		return task	+ SubmissionService.separator + project	+ SubmissionService.separator + system;
+	}
+	
+	public static Task createTask(Date date, String propertyName) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
+		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);
+		Project project = new Project();
+		if (task.length > 2) {
+			project.setName(task[1]);
+			project.setSystem(task[2]);
+		}
+		return new Task(date, task[0], project);
 	}
 }

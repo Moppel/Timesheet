@@ -7,7 +7,7 @@ Bundle-Activator: com.uwusoft.timesheet.Activator
 Bundle-Vendor: UWUSOFT
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.eclipse.equinox.security;bundle-version="1.1.0",
+ org.eclipse.equinox.security,
  org.eclipse.ui.intro
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
@@ -37,5 +37,4 @@ Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  lib/persistence/eclipselink.jar,
  .
 Import-Package: com.uwusoft.timesheet,
- org.apache.commons.lang;version="2.4.0",
  org.apache.commons.lang.time;version="2.4.0"

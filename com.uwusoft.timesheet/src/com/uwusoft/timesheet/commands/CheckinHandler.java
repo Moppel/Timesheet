@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -26,8 +27,9 @@ public class CheckinHandler extends AbstractHandler {
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
 		try {
-			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check in at "	+ startTime,
-					StorageService.CHECK_IN, StorageService.formatter.parse(startTime));
+			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check in at "
+					+ DateFormat.getDateInstance(DateFormat.SHORT).format(StorageService.formatter.parse(startTime)),
+					preferenceStore.getString(TimesheetApp.DEFAULT_TASK), StorageService.formatter.parse(startTime));
 			if (timeDialog.open() == Dialog.OK) {
 				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime

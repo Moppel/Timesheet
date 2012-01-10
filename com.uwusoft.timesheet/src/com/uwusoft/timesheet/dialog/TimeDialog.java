@@ -7,7 +7,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -40,19 +39,17 @@ public class TimeDialog extends Dialog {
 	}
 
 	@Override
-    protected Control createDialogArea(Composite parent) {
+    protected Control createDialogArea(final Composite parent) {
         Composite composite = (Composite) super.createDialogArea(parent);
-        composite.setLayout(new GridLayout(1, false));
-        
-        GridData gridData = new GridData();
-        gridData.horizontalAlignment = SWT.CENTER;
-    	gridData.minimumWidth = 50;
+        composite.setLayout(new GridLayout(1, false));        
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
-        label.setLayoutData(gridData);
+        label.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER));
 
         DateTime timeEntry = new DateTime(composite, SWT.TIME | SWT.SHORT);
+        GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL);
+        gridData.horizontalSpan = 2;
         timeEntry.setLayoutData(gridData);
         timeEntry.setHours(hours);
         timeEntry.setMinutes(minutes);
@@ -67,11 +64,6 @@ public class TimeDialog extends Dialog {
 		});
         timeEntry.setFocus();
         return composite;
-    }
-
-    @Override
-    protected Point getInitialSize() {
-        return new Point(220, 120);
     }
 
     @Override

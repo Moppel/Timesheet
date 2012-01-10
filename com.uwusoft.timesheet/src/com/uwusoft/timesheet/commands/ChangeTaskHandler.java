@@ -22,9 +22,6 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.model.Project;
-import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ChangeTaskHandler extends AbstractHandler {
@@ -45,23 +42,16 @@ public class ChangeTaskHandler extends AbstractHandler {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 			if (StringUtils.isEmpty(selectedTask)) return null;
-			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), selectedTask, new Date());
+			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), listDialog.getSystem() == null ? "Time" : "System " + listDialog.getSystem(),
+									selectedTask + (listDialog.getProject() == null ? "" : " (" + listDialog.getProject() + ")"), new Date());
 			if (timeDialog.open() == Dialog.OK) {
-				String[] lastTask = preferenceStore.getString(TimesheetApp.LAST_TASK).split(SubmissionService.separator);
-				Project project = new Project();
-                if (lastTask.length > 2) {
-                	project.setName(lastTask[1]);
-                	project.setSystem(lastTask[2]);
-                }
-                storageService.createTaskEntry(new Task(timeDialog.getTime(), lastTask[0], project));
-				preferenceStore.setValue(TimesheetApp.LAST_TASK, selectedTask
-						+ SubmissionService.separator + listDialog.getProject()
-						+ SubmissionService.separator + listDialog.getSystem());
+				storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
+				preferenceStore.setValue(TimesheetApp.LAST_TASK,
+						TimesheetApp.buildProperty(selectedTask, listDialog.getProject(), listDialog.getSystem()));
 	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + preferenceStore.getString(TimesheetApp.LAST_TASK)));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		}						
 		return null;
 	}
-
 }
