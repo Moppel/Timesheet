@@ -38,7 +38,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -325,9 +324,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(), entry.getTask()
-					+ SubmissionService.separator + entry.getProject().getName()
-					+ SubmissionService.separator + entry.getProject().getSystem());
+			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),
+					TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
 			listDialog.setTitle("Tasks");
 			listDialog.setMessage("Select task");
 			listDialog.setContentProvider(ArrayContentProvider.getInstance());
