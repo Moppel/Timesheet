@@ -6,8 +6,10 @@ import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
@@ -49,7 +51,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     private static final String timeFormat = "HH:mm";
 
 	private StorageService storageService;
-	IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 	private TableViewer viewer;
 	
 	/**
@@ -108,7 +110,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			return;
 		
 		storageService.addPropertyChangeListener(this);
-		viewer.setInput(storageService.getTaskEntries(new Date()));
+		
+		addTaskEntries();
 		// Make the selection available to other views
 		getSite().setSelectionProvider(viewer);
 
@@ -122,6 +125,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		viewer.getControl().setLayoutData(gridData);
 	}
 
+	private void addTaskEntries() {
+		List<Task> taskEntries = new ArrayList<Task>(storageService.getTaskEntries(new Date()));
+		if (!taskEntries.isEmpty()) taskEntries.add(TimesheetApp.createTask(null, TimesheetApp.LAST_TASK));
+		viewer.setInput(taskEntries);
+	}
+
 	private void createColumns(final Composite parent, final TableViewer viewer) {
 		String[] titles = { "Time", "Task", "Project", "Total" };
 		int[] bounds = { 70, 300, 100, 60 };
@@ -131,7 +140,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return true;
+		        return ((Task) element).getDateTime() != null;
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
@@ -144,21 +153,26 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		    protected void setValue(Object element, Object value) {
 		    	Task entry = (Task) element;
-	    		try {
-	    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
-			    	if (!entry.getDateTime().equals(newTime)) {
-		    			entry.setDateTime(newTime);
-						storageService.updateTaskEntry(entry.getDateTime(), entry.getId());
-				        viewer.refresh(element);
-			    	}
-	    		} catch (ParseException e) {
-	    			MessageBox.setError("Task's view", e.getLocalizedMessage());
-	    		}
+		    	if (entry.getDateTime() != null) {
+		    		try {
+		    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
+		    			if (!entry.getDateTime().equals(newTime)) {
+		    				entry.setDateTime(newTime);
+		    				storageService.updateTaskEntry(entry.getDateTime(), entry.getId());
+		    				viewer.refresh(element);
+		    			}
+		    		
+		    		} catch (ParseException e) {
+		    			MessageBox.setError("Task's view", e.getLocalizedMessage());
+		    		}
+		    	}
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				return new SimpleDateFormat(timeFormat).format(((Task) element).getDateTime());
+				Timestamp date = ((Task) element).getDateTime();
+				if (date!= null) return new SimpleDateFormat(timeFormat).format(date);
+				return "Last task";
 			}
 			public Image getImage(Object obj) {
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
@@ -186,7 +200,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    	String task = String.valueOf(value);
 		    	if (!entry.getTask().equals(task)) {
 			    	entry.setTask(task);
-			        storageService.updateTaskEntry(entry, entry.getId());
+			        if (entry.getId() == null) {
+			        	preferenceStore.setValue(TimesheetApp.LAST_TASK,
+			        			TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
+			        }
+			        else
+			        	storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
 		    	}
 		    }
@@ -344,7 +363,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent e) {
-		viewer.setInput(storageService.getTaskEntries(new Date()));
+		addTaskEntries();
 		viewer.refresh();
 	}
 }

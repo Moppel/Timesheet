@@ -32,7 +32,7 @@ public class Task {
 	 * @param task
 	 */
 	public Task(Date dateTime, String task) {
-		this.dateTime = new Timestamp(dateTime.getTime());
+		if (dateTime != null) this.dateTime = new Timestamp(dateTime.getTime());
 		this.task = task;
 	}
 	
