@@ -44,29 +44,24 @@ public class DateDialog extends Dialog {
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(2, false));
         
-        GridData gridData = new GridData();
-        gridData.horizontalAlignment = SWT.FILL;
+        GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.horizontalSpan = 2;
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
         label.setLayoutData(gridData);
 
-        gridData = new GridData();
-        gridData.minimumWidth = 100;
-        gridData.horizontalAlignment = SWT.FILL;
-		
 		label = new Label(composite, SWT.NONE);
         label.setText("From:");
-        label.setLayoutData(gridData);
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
         label = new Label(composite, SWT.NONE);
         label.setText("" + date);
-        label.setLayoutData(gridData);
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         
         label = new Label(composite, SWT.NONE);
         label.setText("To:");
-        label.setLayoutData(gridData);
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
 		
 		DateTime dateEntry = new DateTime(composite, SWT.DATE);
         dateEntry.setDay(day);
