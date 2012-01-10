@@ -84,4 +84,6 @@ public interface StorageService {
     void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects);
     
     void submitEntries();
+    
+    void submitTask(Date date, Task task, Double total);
 }

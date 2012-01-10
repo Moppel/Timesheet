@@ -514,6 +514,15 @@ public class GoogleStorageService implements StorageService {
         if (entry != null) entry.submitEntries();
     }
 
+	public void submitTask(Date date, Task task, Double total) {
+		if (submissionSystems.containsKey(task.getProject().getSystem())) {
+			SubmissionTask submissionTask = getSubmissionTask(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
+			if (submissionTask != null)
+				new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(task.getProject().getSystem()))
+				.submit(date, submissionTask, total);
+		}
+	}
+	
 	private String getSystem(int row) throws IOException, ServiceException {
 		String system = getInputValue(row, headingIndex.get(TASK)).split("!")[0];
 		return system.substring(system.indexOf("=") + 1);
