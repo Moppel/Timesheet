@@ -1,13 +1,15 @@
 package com.uwusoft.timesheet.kimaisubmission;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.ILog;
@@ -20,82 +22,79 @@ import org.eclipse.swt.widgets.Display;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
 public class KimaiSubmissionService implements SubmissionService {
 
 	public static final String USERNAME = "kimai.user.name";
 	public static final String PASSWORD = "kimai.user.password";
+	public static final String URL = "kimai.server.url";
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
+    private static final String title = "Kimai";
 	private ILog logger;
 	private GregorianCalendar start;
 	private Date lastDate;
-	private Map<String, List<String>> projects;
-
-    static {
-       	while (!authenticate());
-    }
     
-	private static boolean authenticate() {
+	private boolean authenticate() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		SecurePreferencesManager secureProps = new SecurePreferencesManager("Kimai");
 		String userName = preferenceStore.getString(USERNAME);
-		String password = secureProps.getProperty(PASSWORD);
+		String password = secureProps.getProperty(PASSWORD + "." + userName);
 		if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
-			// service.setUserCredentials(userName, password);
+			// TODO implement
 			return true;
 		}
 
 		Display display = Display.getDefault();
 		LoginDialog loginDialog = new LoginDialog(display, "Kimai Log in",	"", userName, password);
 		if (loginDialog.open() == Dialog.OK) {
-			// service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+			// TODO implement
 			preferenceStore.setValue(USERNAME, loginDialog.getUser());
 			if (loginDialog.isStorePassword())
-				secureProps.storeProperty(PASSWORD, loginDialog.getPassword());
+				secureProps.storeProperty(PASSWORD + "." + userName, loginDialog.getPassword());
 			else
-				secureProps.removeProperty(PASSWORD);
+				secureProps.removeProperty(PASSWORD + "." + userName);
 			return true;
 		}
-		/*Display.getDefault().dispose();
-		System.exit(1);
-		return false;*/
 		return true;
 	}
 	
 	public KimaiSubmissionService() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		logger = Activator.getDefault().getLog();
+       	while (!authenticate());
+		
 		start = new GregorianCalendar();
-		resetStartTime();
 		lastDate = new Date();
-		projects = new HashMap<String, List<String>>();
+		resetStartTime(lastDate);
 	}
 	
 	/**
 	 * reset start time to 8 am
 	 */
-	private void resetStartTime() {
+	private void resetStartTime(Date date) {
+		start.setTime(date);
 		start.set(Calendar.HOUR, 8);
 		start.set(Calendar.AM_PM, 0);
 		start.set(Calendar.MINUTE, 0);		
 	}
 
 	@Override
-	public Map<String, List<String>> getAssignedProjects() {
+	public Map<String, Set<SubmissionTask>> getAssignedProjects() {
+		Map<String, Set<SubmissionTask>> projects = new HashMap<String, Set<SubmissionTask>>();
 		// TODO implement
-		projects.put("Overhead", new ArrayList<String>());
-		projects.put("WebPac", new ArrayList<String>());
-		projects.get("Overhead").add("General Administration & Time Entry");
-		projects.get("WebPac").add("Core Development WP");
-		projects.get("WebPac").add("General Project Meetings WP");
 		return projects;
 	}
 
 	@Override
-	public void submit(Date date, String task, String project, Double total) {
+	public void submit(Date date, SubmissionTask task, Double total) {
+		if (task.getId() == null) return;
+		
 		if(!new SimpleDateFormat(dateFormat).format(date).equals(new SimpleDateFormat(dateFormat).format(lastDate)))
-			resetStartTime();
+			resetStartTime(date);
 		int hours = total.intValue();
 		GregorianCalendar end = new GregorianCalendar();
 		end.setTime(start.getTime());
@@ -104,10 +103,6 @@ public class KimaiSubmissionService implements SubmissionService {
 		end.add(Calendar.MINUTE, (int) Math.round(minutes));
 		
 		// TODO implement
-		logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "submit: "
-        		+ new SimpleDateFormat(dateFormat).format(date) + "\t" + task + " (" + project + ")" + "\t"
-        		+ new SimpleDateFormat(timeFormat).format(start.getTime()) + " - " + new SimpleDateFormat(timeFormat).format(end.getTime())));
-
 		lastDate = date;
 		start.setTime(end.getTime());
 	}

@@ -1,8 +1,8 @@
 package com.uwusoft.timesheet.wizard;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -11,17 +11,18 @@ import org.eclipse.jface.wizard.Wizard;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ImportTaskWizard extends Wizard {
 
 	private SubmissionService submissionService;
-	private Map<String, List<String>> projects;
+	private Map<String, Set<SubmissionTask>> projects;
 	private String system;
 
 	public ImportTaskWizard(String system) {
 		super();
-		projects = new HashMap<String, List<String>>();
+		projects = new HashMap<String, Set<SubmissionTask>>();
 		this.system = system;
 		setNeedsProgressMonitor(true);
 	}
@@ -36,7 +37,7 @@ public class ImportTaskWizard extends Wizard {
 				break;
 			}
 		}
-		Map<String, List<String>> projects = submissionService.getAssignedProjects();
+		Map<String, Set<SubmissionTask>> projects = submissionService.getAssignedProjects();
 		for (String project : projects.keySet()) {
 			addPage(new TaskListPage(system,  project, projects.get(project)));			
 		}

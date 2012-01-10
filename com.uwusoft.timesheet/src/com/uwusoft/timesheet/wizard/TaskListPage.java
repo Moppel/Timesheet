@@ -1,31 +1,27 @@
 package com.uwusoft.timesheet.wizard;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
-import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 
 public class TaskListPage extends WizardPage {
 
-	IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 	private TableViewer viewer;
 	private String project;
-	private List<String> tasks;
+	private Set<SubmissionTask> tasks;
 
-	protected TaskListPage(String system, String project, List<String> tasks) {
+	protected TaskListPage(String system, String project, Set<SubmissionTask> tasks) {
 		super("Submission system: " + system);
 		setTitle("Project: " + project);
-		setDescription("Project " + project + " for system " + system);
-		//setControl(text1);
+		setDescription("System: " + system);
 		this.project = project;
 		this.tasks = tasks;
 	}
@@ -41,8 +37,7 @@ public class TaskListPage extends WizardPage {
 		setPageComplete(true);
 	}
 
-	@SuppressWarnings("unchecked")
-	public void addTasksToProjects(Map<String, List<String>> projects) {
-		projects.put(project, ((StructuredSelection) viewer.getSelection()).toList());
+	public void addTasksToProjects(Map<String, Set<SubmissionTask>> projects) {
+		projects.put(project, tasks); // TODO
 	}
 }

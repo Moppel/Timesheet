@@ -4,6 +4,7 @@ import java.beans.PropertyChangeListener;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -14,6 +15,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.model.Task;
 
 public class LocalStorageService implements StorageService {
@@ -101,7 +103,7 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
-	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
+	public void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects) {
 		// TODO Auto-generated method stub
 		
 	}

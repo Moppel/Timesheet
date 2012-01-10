@@ -12,9 +12,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
@@ -44,6 +46,7 @@ import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -377,7 +380,7 @@ public class GoogleStorageService implements StorageService {
 			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
-	public void importTasks(String submissionSystem, Map<String, List<String>> projects) {
+	public void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
@@ -387,9 +390,12 @@ public class GoogleStorageService implements StorageService {
 					try {
 						ListFeed feed = service.query(query, ListFeed.class);
 						List<ListEntry> listEntries = feed.getEntries();
-						List<String> tasks = new ArrayList<String>(projects.get(project));
+						Set<SubmissionTask> tasks = new HashSet<SubmissionTask>(projects.get(project));
+						
 						for (ListEntry entry : listEntries) // collect available tasks
-							tasks.remove(entry.getCustomElements().getValue(TASK));							
+							for (SubmissionTask task : projects.get(project))
+								if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
+									tasks.remove(task);							
 						projects.put(project, tasks);
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
@@ -407,15 +413,22 @@ public class GoogleStorageService implements StorageService {
 				// create column headers:
 			    createUpdateCellEntry(worksheet, 1, 1, TASK);
 				createUpdateCellEntry(worksheet, 1, 2, PROJECT);
+				createUpdateCellEntry(worksheet, 1, 3, ID);
 			}
 			for (String project : projects.keySet()) {
-				for (String task : projects.get(project)) {
+				for (SubmissionTask task : projects.get(project)) {
 					ListEntry taskEntry = new ListEntry();
-					taskEntry.getCustomElements().setValueLocal(TASK, task);
+					taskEntry.getCustomElements().setValueLocal(TASK, task.getName());
+					taskEntry.getCustomElements().setValueLocal(ID, Long.toString(task.getId()));
+					taskEntry.getCustomElements().setValueLocal(PROJECT + ID, Long.toString(task.getProjectId()));
+		            
+					logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Import task: " + task.getName() + " id=" + task.getId()
+		            		+ " (" + task.getProjectName() + " id=" + task.getProjectId() + ") "));
+					
 					service.insert(worksheetListFeedUrl, taskEntry);
 					reloadWorksheets();
 					if (!StringUtils.isEmpty(project)) {
-						String projectLink = getProjectLink(submissionSystem, project, true);
+						String projectLink = getProjectLink(submissionSystem, project, task.getProjectId(), true);
 						if (projectLink != null) {
 							WorksheetEntry worksheet = getWorksheet(submissionSystem);
 							ListFeed feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
@@ -465,14 +478,15 @@ public class GoogleStorageService implements StorageService {
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
 	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) {
-	            	entry.submitEntries();
-	            	break;
+	            	if (entry != null ) entry.submitEntries();
+	            	entry = null;
+	            	continue;
 	            }
 
 	            if (elements.getValue(DATE) == null) continue;
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 	            if (!date.equals(lastDate)) { // another day
-	                entry.submitEntries();
+	            	if (entry != null ) entry.submitEntries();
 	                entry = new DailySubmissionEntry(date);
 	                lastDate = date;
 	            }
@@ -483,9 +497,12 @@ public class GoogleStorageService implements StorageService {
 	            String project = elements.getValue(PROJECT);
 	            if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
 				if (submissionSystems.containsKey(system)) {
-			        entry.addSubmissionEntry(task, project, Double.valueOf(elements.getValue(TOTAL)),
-			            new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
+					SubmissionTask submissionTask = getSubmissionTask(task, project, system);
+					if (submissionTask != null)
+						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)),
+								new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
 				}
+				createUpdateCellEntry(defaultWorksheet, i + 2, headingIndex.get(SUBMISSION_STATUS), "Submitted");
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -545,7 +562,7 @@ public class GoogleStorageService implements StorageService {
 		return null;
 	}
 
-	private String getProjectLink(String system, String project, boolean createNew) {
+	private String getProjectLink(String system, String project, Long projectId, boolean createNew) {
 		String systemProjects = system + SubmissionService.PROJECTS;
 		URL worksheetListFeedUrl = getListFeedUrl(systemProjects);
 		try {
@@ -556,19 +573,21 @@ public class GoogleStorageService implements StorageService {
 			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
 				// create column headers:
 			    createUpdateCellEntry(worksheet, 1, 1, PROJECT);
+			    createUpdateCellEntry(worksheet, 1, 2, ID);
 			}
 			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			List<ListEntry> entries = feed.getEntries();
 			for (int i = 0; i < entries.size(); i++) {
 				if(project.equals(entries.get(i).getCustomElements().getValue(PROJECT)))
-					return systemProjects + "!A" + (i + 2); // TODO hardcoded: project must be in the first column
+					return systemProjects + "!A" + (i + 2); // TODO hardcoded: project must be in the first column					
 			}
 			if (createNew) {
 				ListEntry listEntry = new ListEntry();
 				listEntry.getCustomElements().setValueLocal(PROJECT, project);
+				listEntry.getCustomElements().setValueLocal(ID, Long.toString(projectId));
 				service.insert(worksheetListFeedUrl, listEntry);
 	            if (!reloadWorksheets()) return null;
-				return getProjectLink(system, project, false);
+				return getProjectLink(system, project, projectId, false);
 			}
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -599,6 +618,26 @@ public class GoogleStorageService implements StorageService {
 					|| task.equals(entries.get(i).getCustomElements().getValue(TASK))
 						&& project.equals(entries.get(i).getCustomElements().getValue(PROJECT)))
 					return worksheet.getTitle().getPlainText() + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
+			}
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}
+		return null;
+	}
+	
+	private SubmissionTask getSubmissionTask(String task, String project, String system) {
+		ListQuery query = new ListQuery(getWorksheet(system).getListFeedUrl());
+		query.setSpreadsheetQuery(TASK.toLowerCase() + " = \"" + task + "\" and "
+								+ PROJECT.toLowerCase() + " = \"" + project + "\"");
+		try {
+			ListFeed feed = service.query(query, ListFeed.class);
+			for (ListEntry entry : feed.getEntries()) {
+				if (entry.getCustomElements().getValue(PROJECT + ID) == null) return null;
+				return new SubmissionTask(Long.parseLong(entry.getCustomElements().getValue(PROJECT + ID)),
+						Long.parseLong(entry.getCustomElements().getValue(ID)),
+						entry.getCustomElements().getValue(TASK), entry.getCustomElements().getValue(PROJECT));
 			}
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());

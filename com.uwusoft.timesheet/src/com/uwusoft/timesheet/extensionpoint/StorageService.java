@@ -5,7 +5,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.model.Task;
 
 /**
@@ -28,6 +30,7 @@ public interface StorageService {
     public static final String WEEK = "Week";
     public static final String TASK = "Task";
     public static final String PROJECT = "Project";
+    public static final String ID = "ID";
     public static final String OVERTIME = "Overtime";
     public static final String SUBMISSION_STATUS = "SubmissionStatus";
     public static final String CHECK_IN = "Check in";
@@ -78,7 +81,7 @@ public interface StorageService {
 
     void storeLastWeekTotal(String weeklyWorkingHours);
     
-    void importTasks(String submissionSystem, Map<String, List<String>> projects);
+    void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects);
     
     void submitEntries();
 }
