@@ -45,12 +45,10 @@ public class TimeDialog extends Dialog {
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
-        label.setLayoutData(new GridData(GridData.VERTICAL_ALIGN_CENTER));
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 
         DateTime timeEntry = new DateTime(composite, SWT.TIME | SWT.SHORT);
-        GridData gridData = new GridData(GridData.VERTICAL_ALIGN_FILL);
-        gridData.horizontalSpan = 2;
-        timeEntry.setLayoutData(gridData);
+        timeEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         timeEntry.setHours(hours);
         timeEntry.setMinutes(minutes);
         timeEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
