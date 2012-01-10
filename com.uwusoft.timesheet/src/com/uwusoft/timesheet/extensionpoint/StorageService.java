@@ -85,5 +85,5 @@ public interface StorageService {
     
     void submitEntries();
     
-    void submitTask(Date date, Task task, Double total);
+    void submitFillTask(Date date);
 }

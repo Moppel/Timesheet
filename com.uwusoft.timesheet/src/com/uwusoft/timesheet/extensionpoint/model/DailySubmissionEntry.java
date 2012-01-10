@@ -1,16 +1,14 @@
 package com.uwusoft.timesheet.extensionpoint.model;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.TaskSubmissionEntry;
-import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -23,6 +21,9 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class DailySubmissionEntry {
     private Date date;
     private Map<String, TaskSubmissionEntry> entries;
+	private static IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+	private static StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+			.getService(preferenceStore.getString(StorageService.PROPERTY));
 
     public DailySubmissionEntry(Date date) {
         this.date = date;
@@ -41,12 +42,6 @@ public class DailySubmissionEntry {
         for (TaskSubmissionEntry entry : entries.values()) {
             entry.submit(date);
         }
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
-            Task task = TimesheetApp.createTask(date, TimesheetApp.DAILY_TASK);
-			StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-					.getService(preferenceStore.getString(StorageService.PROPERTY));
-			storageService.submitTask(date, task, Double.parseDouble(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL)));
-		}    
+		storageService.submitFillTask(date);
     }
 }

@@ -42,6 +42,7 @@ import com.google.gdata.data.spreadsheet.WorksheetFeed;
 import com.google.gdata.util.AuthenticationException;
 import com.google.gdata.util.ServiceException;
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -514,12 +515,16 @@ public class GoogleStorageService implements StorageService {
         if (entry != null) entry.submitEntries();
     }
 
-	public void submitTask(Date date, Task task, Double total) {
-		if (submissionSystems.containsKey(task.getProject().getSystem())) {
-			SubmissionTask submissionTask = getSubmissionTask(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
-			if (submissionTask != null)
-				new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(task.getProject().getSystem()))
-				.submit(date, submissionTask, total);
+	public void submitFillTask(Date date) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
+			Task task = TimesheetApp.createTask(date, TimesheetApp.DAILY_TASK);
+			if (submissionSystems.containsKey(task.getProject().getSystem())) {
+				SubmissionTask submissionTask = getSubmissionTask(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
+				if (submissionTask != null)
+					new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(task.getProject().getSystem()))
+							.submit(date, submissionTask, Double.parseDouble(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL)));
+			}
 		}
 	}
 	

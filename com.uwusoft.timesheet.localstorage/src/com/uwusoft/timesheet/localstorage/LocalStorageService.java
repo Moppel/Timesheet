@@ -114,7 +114,7 @@ public class LocalStorageService implements StorageService {
 		
 	}
 
-	public void submitTask(Date date, Task task, Double total) {
+	public void submitFillTask(Date date) {
 		// TODO Auto-generated method stub
 		
 	}
