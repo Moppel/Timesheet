@@ -175,6 +175,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				return "Last task";
 			}
 			public Image getImage(Object obj) {
+				if (((Task)obj).getId() == null) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
 			}
 		});
@@ -200,10 +201,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    	String task = String.valueOf(value);
 		    	if (!entry.getTask().equals(task)) {
 			    	entry.setTask(task);
-			        if (entry.getId() == null) {
+			        if (entry.getId() == null)
 			        	preferenceStore.setValue(TimesheetApp.LAST_TASK,
 			        			TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
-			        }
 			        else
 			        	storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
@@ -277,12 +277,14 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				if (StorageService.CHECK_IN.equals(((Task) element).getTask()))	return "";
+				Task entry = (Task) element;
+				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask())) return "";
 				DecimalFormat df = new DecimalFormat( "0.00" );
 		        return df.format(((Task) element).getTotal());
 			}
 			public Image getImage(Object obj) {
-				if (StorageService.CHECK_IN.equals(((Task) obj).getTask())) return null;
+				Task entry = (Task) obj;
+				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask())) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
 			}
 		});
