@@ -465,6 +465,7 @@ public class GoogleStorageService implements StorageService {
 	        List<ListEntry> listEntries = feed.getEntries();
 
 	        Date lastDate = null;
+	        int lastWeekNum = 0;
 	        int i = listEntries.size() - 1;
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
@@ -478,13 +479,24 @@ public class GoogleStorageService implements StorageService {
 	        }
 	        for (; i > 0; i--) {
 	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
-	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) {
-	            	if (entry != null ) entry.submitEntries();
+	            String task = elements.getValue(TASK);
+	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task)) {
+	            	if (entry != null) entry.submitEntries();
 	            	entry = null;
 	            	continue;
 	            }
 
 	            if (elements.getValue(DATE) == null) continue;
+
+	            if (elements.getValue(WEEK) != null) {
+	            	int weekNum = Integer.parseInt(elements.getValue(WEEK));
+		            if (lastWeekNum != 0 && weekNum != lastWeekNum) {
+		            	if (entry != null ) entry.submitEntries();
+		            	break;
+		            }
+		            lastWeekNum = weekNum;
+	            }
+	            
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 	            if (!date.equals(lastDate)) { // another day
 	            	if (entry != null ) entry.submitEntries();
@@ -492,8 +504,6 @@ public class GoogleStorageService implements StorageService {
 	                lastDate = date;
 	            }
 
-	            String task = elements.getValue(TASK);
-	            if (task == null || CHECK_IN.equals(task) || BREAK.equals(task)) continue;
 	            String system = getSystem(i);
 	            String project = elements.getValue(PROJECT);
 	            if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
