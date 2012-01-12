@@ -291,6 +291,7 @@ public class GoogleStorageService implements StorageService {
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
 				taskLink = getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
+				if (taskLink != null) timeEntry.getCustomElements().setValueLocal(SYSTEM, taskLink.substring(0, taskLink.indexOf("!")));
 			}
 			service.insert(listFeedUrl, timeEntry);
 
@@ -457,64 +458,44 @@ public class GoogleStorageService implements StorageService {
 		service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
 	}
 
-	public void submitEntries() {
-        DailySubmissionEntry entry = null;
+	public void submitEntries(int weekNum) {
         try {
             if (!reloadWorksheets()) return;
-	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-	        List<ListEntry> listEntries = feed.getEntries();
+    		
+            ListQuery query = new ListQuery(listFeedUrl);
+    		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"Submitted\" and "
+    								+ WEEK.toLowerCase() + " = \"" + weekNum + "\"");
+	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
+            
+            Date lastDate = new SimpleDateFormat(dateFormat).parse(listEntries.get(0).getCustomElements().getValue(DATE));
+            DailySubmissionEntry entry = new DailySubmissionEntry(lastDate);
 
-	        Date lastDate = null;
-	        int lastWeekNum = 0;
-	        int i = listEntries.size() - 1;
-	        for (; i > 0; i--) {
-	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
-	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS))) break;
-
-				if (elements.getValue(TIME) == null && elements.getValue(WEEKLY_TOTAL) == null || elements.getValue(DAILY_TOTAL) != null) { // search for last complete day and break
-					lastDate = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
-					entry = new DailySubmissionEntry(lastDate);
-					break;
-	            }
-	        }
-	        for (; i > 0; i--) {
-	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
+            for (ListEntry listEntry : listEntries) {
+            	CustomElementCollection elements = listEntry.getCustomElements();
 	            String task = elements.getValue(TASK);
 	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task)) {
-	            	if (entry != null) entry.submitEntries();
-	            	entry = null;
 	            	continue;
 	            }
-
 	            if (elements.getValue(DATE) == null) continue;
-
-	            if (elements.getValue(WEEK) != null) {
-	            	int weekNum = Integer.parseInt(elements.getValue(WEEK));
-		            if (lastWeekNum != 0 && weekNum != lastWeekNum) {
-		            	if (entry != null ) entry.submitEntries();
-		            	break;
-		            }
-		            lastWeekNum = weekNum;
-	            }
-	            
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 	            if (!date.equals(lastDate)) { // another day
-	            	if (entry != null ) entry.submitEntries();
+	            	entry.submitEntries();
 	                entry = new DailySubmissionEntry(date);
 	                lastDate = date;
 	            }
 
-	            String system = getSystem(i);
+	            String system = elements.getValue(SYSTEM);
 	            String project = elements.getValue(PROJECT);
-	            if (project == null) updateTask(getTaskLink(task, project, system), i + 2);
 				if (submissionSystems.containsKey(system)) {
 					SubmissionTask submissionTask = getSubmissionTask(task, project, system);
 					if (submissionTask != null)
 						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)),
 								new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
 				}
-				createUpdateCellEntry(defaultWorksheet, i + 2, headingIndex.get(SUBMISSION_STATUS), "Submitted");
-	        }
+				elements.setValueLocal(SUBMISSION_STATUS, "Submitted");
+    		}
+            entry.submitEntries();
+            for (ListEntry listEntry : listEntries) listEntry.update();
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
@@ -522,7 +503,6 @@ public class GoogleStorageService implements StorageService {
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
-        if (entry != null) entry.submitEntries();
     }
 
 	public void submitFillTask(Date date) {

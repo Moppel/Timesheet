@@ -208,8 +208,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                         submit.addSelectionListener(new SelectionAdapter() {
                             @Override
                             public void widgetSelected(final SelectionEvent e) {
+                            	Calendar cal = Calendar.getInstance();
+                            	cal.setTime(new Date());
         						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
-										.getString(StorageService.PROPERTY)).submitEntries();
+										.getString(StorageService.PROPERTY)).submitEntries(cal.get(Calendar.WEEK_OF_YEAR)); // TODO
                             }
                         });
                     }
