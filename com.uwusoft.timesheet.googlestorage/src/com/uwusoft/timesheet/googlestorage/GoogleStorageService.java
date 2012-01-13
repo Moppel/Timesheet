@@ -270,10 +270,11 @@ public class GoogleStorageService implements StorageService {
     public void createTaskEntry(Task task) {
         Calendar cal = new GregorianCalendar();
         cal.setTime(task.getDateTime());
+        cal.setMinimalDaysInFirstWeek(1);
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
-			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
+			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
 			
 			timeEntry.getCustomElements().setValueLocal(DATE,
 					new SimpleDateFormat(dateFormat).format(task.getDateTime()));
