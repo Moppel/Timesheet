@@ -2,6 +2,7 @@ package com.uwusoft.timesheet;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -13,6 +14,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
@@ -201,9 +203,15 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    	String task = String.valueOf(value);
 		    	if (!entry.getTask().equals(task)) {
 			    	entry.setTask(task);
-			        if (entry.getId() == null)
+			        if (entry.getId() == null) {
 			        	preferenceStore.setValue(TimesheetApp.LAST_TASK,
 			        			TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
+						try {
+							((IPersistentPreferenceStore) preferenceStore).save();
+						} catch (IOException e) {
+							MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
+						}
+			        }
 			        else
 			        	storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
