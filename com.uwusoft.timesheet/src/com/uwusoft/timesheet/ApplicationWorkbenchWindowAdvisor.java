@@ -12,6 +12,7 @@ import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -21,6 +22,7 @@ import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -39,6 +41,7 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.SubmissionDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -204,14 +207,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     @Override
                     public void fill(final Menu menu, final int index) {
                         MenuItem submit = new MenuItem(menu, SWT.PUSH);
-                        submit.setText("Submit");
+                        submit.setText("Submit"); // TODO extract to SubmissionCommand
                         submit.addSelectionListener(new SelectionAdapter() {
                             @Override
                             public void widgetSelected(final SelectionEvent e) {
                             	Calendar cal = Calendar.getInstance();
                             	cal.setTime(new Date());
-        						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
-										.getString(StorageService.PROPERTY)).submitEntries(cal.get(Calendar.WEEK_OF_YEAR)); // TODO
+                            	cal.set(Calendar.WEEK_OF_YEAR, cal.get(Calendar.WEEK_OF_YEAR) - 1);
+                    			SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), cal.get(Calendar.WEEK_OF_YEAR));
+                    			if (submissionDialog.open() == Dialog.OK) {
+            						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
+    										.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());
+                    			}                            	
                             }
                         });
                     }
