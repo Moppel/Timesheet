@@ -12,8 +12,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.viewers.ArrayContentProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
 
@@ -35,8 +33,6 @@ public class ChangeTaskHandler extends AbstractHandler {
 		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), preferenceStore.getString(TimesheetApp.LAST_TASK));
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
-		listDialog.setContentProvider(ArrayContentProvider.getInstance());
-		listDialog.setLabelProvider(new LabelProvider());
 		listDialog.setWidthInChars(70);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());

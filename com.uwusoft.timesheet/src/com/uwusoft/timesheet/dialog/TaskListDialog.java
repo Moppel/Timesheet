@@ -1,13 +1,22 @@
 package com.uwusoft.timesheet.dialog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -16,8 +25,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.ListDialog;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -30,9 +41,13 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class TaskListDialog extends ListDialog {
 
     private StorageService storageService;
+    private SubmissionService submissionService;
+    private Map<String,String> submissionSystems;
 	private String[] systems, tasks;
+	private Map<String, SubmissionTask> tasksMap;
     private Combo systemCombo, projectCombo;
     private String projectSelected, systemSelected;
+    private boolean original;
 
     public TaskListDialog(Shell shell, String taskSelected) {
         super(shell);
@@ -42,6 +57,9 @@ public class TaskListDialog extends ListDialog {
 		List<String> systemsList = storageService.getSystems();
         systems = systemsList.toArray(new String[systemsList.size()]);
         tasks = taskSelected.split(SubmissionService.separator);
+        submissionSystems = TimesheetApp.getSubmissionSystems();
+		setContentProvider(ArrayContentProvider.getInstance());
+		setLabelProvider(new LabelProvider());
     }
     
     @Override
@@ -58,6 +76,15 @@ public class TaskListDialog extends ListDialog {
         
         (new Label(systemPanel, SWT.NULL)).setText("Project: ");
         projectCombo = new Combo(systemPanel, SWT.READ_ONLY);
+        
+        Button originalButton = new Button(parent, SWT.CHECK);
+        originalButton.setText("original");
+        originalButton.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+            	original = ((Button) e.getSource()).getSelection();
+                setTasksAndProjects(true);
+            }
+        });
 
         if (tasks.length > 2) {
         	for (int i = 0; i < systems.length; i++) {
@@ -88,31 +115,70 @@ public class TaskListDialog extends ListDialog {
 
 	private void setTasksAndProjects(boolean first) {
 		systemSelected = systemCombo.getText();
-		List<String> projectList = storageService.getProjects(systemSelected);
+		List<String> projectList;
+		if (original) {
+			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(systemSelected));
+			projectList = new ArrayList<String>(submissionService.getAssignedProjects().keySet());
+		}
+		else {
+			projectList = storageService.getProjects(systemSelected);
+		}
 		String[] projects = projectList.toArray(new String[projectList.size()]);
         projectCombo.setItems(projects);
         if (projects.length == 1) projectCombo.setEnabled(false);
-        if (first && tasks.length > 1) {
-        	for (int i = 0; i < projects.length; i++) {
-        		if (tasks[1].equals(projects[i])) {
-                	projectCombo.select(i);
-                	break;
-        		}
-        	}
-        }
+		if (projectSelected == null && tasks.length > 1 && projectList.contains(tasks[1])) projectSelected = tasks[1];
+		if (projectSelected != null) {
+			for (int i = 0; i < projects.length; i++) {
+				if (projectSelected.equals(projects[i])) {
+					projectCombo.select(i);
+					break;
+				}
+			}
+		}
         else projectCombo.select(0);
 		setTasks();
 	}
 
 	private void setTasks() {
 		projectSelected = projectCombo.getText();
-		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-		if (this.tasks.length > 1 && this.tasks[1].equals(projectSelected)) {
-			if (this.tasks.length > 2 && this.tasks[2].equals(systemSelected)) tasks.remove(this.tasks[0]);
+		if (original) {
+			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(systemSelected));
+			Map<String, Set<SubmissionTask>> assignedProjects = submissionService.getAssignedProjects();
+			Set<SubmissionTask> submissionTasks = assignedProjects.get(projectSelected);
+			if (submissionTasks == null) {
+				projectSelected = assignedProjects.keySet().iterator().next();
+				submissionTasks = assignedProjects.get(projectSelected);
+			}
+			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
+			tasksMap = new HashMap<String, SubmissionTask>();
+			for (SubmissionTask task : submissionTasks) {
+				if (!tasks.contains(task.getName())) tasksMap.put(task.getName(), task);
+			}
+			getTableViewer().setInput(tasksMap.keySet());
 		}
-        getTableViewer().setInput(tasks);
+		else {
+			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
+			if (this.tasks.length > 1 && this.tasks[1].equals(projectSelected)) {
+				if (this.tasks.length > 2 && this.tasks[2].equals(systemSelected)) tasks.remove(this.tasks[0]);
+			}
+	        getTableViewer().setInput(tasks);
+		}
 	}
 	
+	@Override
+	protected void okPressed() {
+		super.okPressed();
+		if (original) {
+		    String selectedTask = Arrays.toString(getResult());
+		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+			if (StringUtils.isEmpty(selectedTask)) return;
+			Map<String, Set<SubmissionTask>> projects = new HashMap<String, Set<SubmissionTask>>();
+			projects.put(projectSelected, new HashSet<SubmissionTask>());
+			projects.get(projectSelected).add(tasksMap.get(selectedTask));
+			storageService.importTasks(systemSelected, projects);
+		}
+	}
+
 	public String getSystem() {
 		return systemSelected;
 	}

@@ -9,6 +9,7 @@ import java.util.Map;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -80,7 +81,20 @@ public class TimesheetApp implements IApplication {
 		});
 	}
 
-
+	public static Map<String, String> getSubmissionSystems() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
+		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
+		Map<String,String> submissionSystems = new HashMap<String, String>();
+		for (String system : systems) {
+			if (!StringUtils.isEmpty(system)) {
+				String descriptiveName = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
+				submissionSystems.put(descriptiveName, system);
+			}
+		}
+		return submissionSystems;
+	}
+	
 	public static String buildProperty(String task, String project, String system) {
 		return task	+ SubmissionService.separator + project	+ SubmissionService.separator + system;
 	}
