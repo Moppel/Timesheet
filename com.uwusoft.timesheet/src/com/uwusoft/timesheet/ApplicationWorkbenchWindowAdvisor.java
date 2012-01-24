@@ -211,10 +211,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                         submit.addSelectionListener(new SelectionAdapter() {
                             @Override
                             public void widgetSelected(final SelectionEvent e) {
-                            	Calendar cal = Calendar.getInstance();
+                                Calendar cal = new GregorianCalendar();
                             	cal.setTime(new Date());
-                            	cal.set(Calendar.WEEK_OF_YEAR, cal.get(Calendar.WEEK_OF_YEAR) - 1);
-                    			SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), cal.get(Calendar.WEEK_OF_YEAR));
+                            	//cal.setFirstDayOfWeek(Calendar.MONDAY);
+                    			SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), cal.get(Calendar.WEEK_OF_YEAR) - 1);
                     			if (submissionDialog.open() == Dialog.OK) {
             						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
     										.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());

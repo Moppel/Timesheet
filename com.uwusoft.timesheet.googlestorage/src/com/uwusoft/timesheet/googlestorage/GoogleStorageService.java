@@ -270,7 +270,7 @@ public class GoogleStorageService implements StorageService {
     public void createTaskEntry(Task task) {
         Calendar cal = new GregorianCalendar();
         cal.setTime(task.getDateTime());
-        cal.setMinimalDaysInFirstWeek(1);
+        //cal.setFirstDayOfWeek(Calendar.MONDAY);
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
@@ -358,8 +358,8 @@ public class GoogleStorageService implements StorageService {
 			service.insert(listFeedUrl, timeEntry);
             if (!reloadWorksheets()) return;
 			
-			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
-			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(OVERTIME), "=R[0]C["
+			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
+			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(OVERTIME), "=R[0]C["
 						+ (headingIndex.get(WEEKLY_TOTAL) - headingIndex.get(OVERTIME)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -468,7 +468,8 @@ public class GoogleStorageService implements StorageService {
     								+ WEEK.toLowerCase() + " = \"" + weekNum + "\"");
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
             
-            Date lastDate = new SimpleDateFormat(dateFormat).parse(listEntries.get(0).getCustomElements().getValue(DATE));
+            if (listEntries.isEmpty()) return;
+	        Date lastDate = new SimpleDateFormat(dateFormat).parse(listEntries.get(0).getCustomElements().getValue(DATE));
             DailySubmissionEntry entry = new DailySubmissionEntry(lastDate);
 
             for (ListEntry listEntry : listEntries) {
