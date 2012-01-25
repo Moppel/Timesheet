@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 
@@ -7,6 +8,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
@@ -29,12 +31,17 @@ public class CheckinHandler extends AbstractHandler {
 		try {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check in at "
 					+ DateFormat.getDateInstance(DateFormat.SHORT).format(StorageService.formatter.parse(startTime)),
-					preferenceStore.getString(TimesheetApp.DEFAULT_TASK), StorageService.formatter.parse(startTime));
+					TimesheetApp.getTaskName(TimesheetApp.DEFAULT_TASK), StorageService.formatter.parse(startTime));
 			if (timeDialog.open() == Dialog.OK) {
 				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				storageService.createTaskEntry(new Task(timeDialog.getTime(), StorageService.CHECK_IN));
 				preferenceStore.setValue(TimesheetApp.LAST_TASK, preferenceStore.getString(TimesheetApp.DEFAULT_TASK));
+				try {
+					((IPersistentPreferenceStore) preferenceStore).save();
+				} catch (IOException e) {
+					MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
+				}
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		} catch (ParseException e) {

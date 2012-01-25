@@ -99,6 +99,15 @@ public class TimesheetApp implements IApplication {
 		return task	+ SubmissionService.separator + project	+ SubmissionService.separator + system;
 	}
 	
+	public static String getTaskName(String propertyName) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
+		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);
+		if (task.length > 2) {
+			return task[0] + " (" + task[1] + ")" + "\nSystem: " + task[2]; 
+		}
+		else return preferenceStore.getString(propertyName);
+	}
+	
 	public static Task createTask(Date date, String propertyName) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
 		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);

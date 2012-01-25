@@ -41,8 +41,10 @@ public class ChangeTaskHandler extends AbstractHandler {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 			if (StringUtils.isEmpty(selectedTask)) return null;
-			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), listDialog.getSystem() == null ? "Time" : "System " + listDialog.getSystem(),
-									selectedTask + (listDialog.getProject() == null ? "" : " (" + listDialog.getProject() + ")"), new Date());
+			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Change Task",
+									selectedTask + (listDialog.getProject() == null ? ""
+											: " (" + listDialog.getProject() + ")") + (listDialog.getSystem() == null ? "" : "\nSystem: " + listDialog.getSystem()),
+									new Date());
 			if (timeDialog.open() == Dialog.OK) {
 				storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
 				preferenceStore.setValue(TimesheetApp.LAST_TASK,
