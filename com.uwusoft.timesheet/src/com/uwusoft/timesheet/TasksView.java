@@ -1,7 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
@@ -16,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -47,7 +46,7 @@ import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
-public class TasksView extends ViewPart implements PropertyChangeListener {
+public class TasksView extends ViewPart implements IPropertyChangeListener {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
 	
     private static final String timeFormat = "HH:mm";
@@ -111,8 +110,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
 			return;
 		
-		storageService.addPropertyChangeListener(this);
-		
+		preferenceStore.addPropertyChangeListener(this);
+
 		addTaskEntries();
 		// Make the selection available to other views
 		getSite().setSelectionProvider(viewer);
@@ -372,8 +371,10 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	}
 
 	@Override
-	public void propertyChange(PropertyChangeEvent e) {
-		addTaskEntries();
-		viewer.refresh();
+	public void propertyChange(org.eclipse.jface.util.PropertyChangeEvent event) {
+		if (TimesheetApp.LAST_TASK.equals(event.getProperty())) {
+			addTaskEntries();
+			viewer.refresh();
+		}		
 	}
 }
