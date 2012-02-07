@@ -239,23 +239,24 @@ public class GoogleStorageService implements StorageService {
     public List<Task> getTaskEntries(Date date) {
     	List <Task> taskEntries = new ArrayList<Task>();
 		try {
-	        ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-	        List<ListEntry> listEntries = feed.getEntries();
-	        for (int i = listEntries.size() - 1; i > 0; i--) {
-	            CustomElementCollection elements = listEntries.get(i).getCustomElements();
+            ListQuery query = new ListQuery(listFeedUrl);
+    		query.setSpreadsheetQuery(DATE.toLowerCase() + " = " + new SimpleDateFormat(dateFormat).format(date));
+	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
+	        for (ListEntry listEntry : listEntries) {
+	            CustomElementCollection elements = listEntry.getCustomElements();
 	            if (elements.getValue(DATE) == null) continue;
 	            if (!new SimpleDateFormat(dateFormat).format(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)))
 	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;
 	            
 	            String task = elements.getValue(TASK);
+
 	            if (task == null || elements.getValue(TIME) == null) break;
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
-	            	taskEntries.add(0, new Task(new Long(i + 2), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            	taskEntries.add(new Task(Long.parseLong(elements.getValue(ID)), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
 	            			task, 0, new Project()));
 	            else
-	            	taskEntries.add(0, new Task(new Long(i + 2), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), getSystem(i))));
-	            if (CHECK_IN.equals(task)) break;
+	            	taskEntries.add(new Task(Long.parseLong(elements.getValue(ID)), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), elements.getValue(SYSTEM))));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -301,8 +302,10 @@ public class GoogleStorageService implements StorageService {
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task
             		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
             
+        	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+            createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(ID), "=ROW()");
+            
             if (taskLink != null) {
-            	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 				updateTask(taskLink, feed.getEntries().size() + 1);
 				// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
 				if (task.getTotal() == 0)
@@ -494,10 +497,9 @@ public class GoogleStorageService implements StorageService {
 						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)),
 								new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
 				}
-				elements.setValueLocal(SUBMISSION_STATUS, "Submitted");
+            	createUpdateCellEntry(defaultWorksheet,	Integer.parseInt(elements.getValue(ID)), headingIndex.get(SUBMISSION_STATUS), "Submitted");
     		}
             entry.submitEntries();
-            for (ListEntry listEntry : listEntries) listEntry.update();
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
