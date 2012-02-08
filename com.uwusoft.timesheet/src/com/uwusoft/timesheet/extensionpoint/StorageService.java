@@ -30,7 +30,6 @@ public interface StorageService {
     public static final String WEEK = "Week";
     public static final String TASK = "Task";
     public static final String PROJECT = "Project";
-    public static final String SYSTEM = "System";
     public static final String ID = "ID";
     public static final String OVERTIME = "Overtime";
     public static final String SUBMISSION_STATUS = "SubmissionStatus";

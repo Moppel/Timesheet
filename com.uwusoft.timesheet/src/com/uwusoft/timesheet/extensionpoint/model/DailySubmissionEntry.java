@@ -8,7 +8,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -30,11 +29,11 @@ public class DailySubmissionEntry {
         entries = new HashMap<String, TaskSubmissionEntry>();
     }
 
-    public void addSubmissionEntry(SubmissionTask task, double total, SubmissionService service) {
+    public void addSubmissionEntry(SubmissionTask task, double total) {
         String key = task.getName() + task.getProjectName(); // has to be unique
     	TaskSubmissionEntry available = entries.get(key);
         if (available == null)
-        	entries.put(key, new TaskSubmissionEntry(task, total, service));
+        	entries.put(key, new TaskSubmissionEntry(task, total));
         else available.addTotal(total);
     }
 

@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -90,17 +89,7 @@ public class GoogleStorageService implements StorageService {
        	while (!lastSuccess);
 		factory = FeedURLFactory.getDefault();
 		headingIndex = new LinkedHashMap<String, Integer>();
-		submissionSystems = new HashMap<String, String>();
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
-		for (String system : systems) {
-			if (!StringUtils.isEmpty(system)) {
-				String descriptiveName = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
-				submissionSystems.put(descriptiveName, system);
-				if (getWorksheet(descriptiveName) == null); // TODO create import task dialog
-			}
-		}
+		submissionSystems = TimesheetApp.getSubmissionSystems();
         if (!reloadWorksheets()) return;
         logger = Activator.getDefault().getLog();
     }
@@ -249,14 +238,14 @@ public class GoogleStorageService implements StorageService {
 	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;
 	            
 	            String task = elements.getValue(TASK);
-
 	            if (task == null || elements.getValue(TIME) == null) break;
+	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
-	            	taskEntries.add(new Task(Long.parseLong(elements.getValue(ID)), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            	taskEntries.add(new Task(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
 	            			task, 0, new Project()));
 	            else
-	            	taskEntries.add(new Task(Long.parseLong(elements.getValue(ID)), new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), elements.getValue(SYSTEM))));
+	            	taskEntries.add(new Task(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), getSystem(id.intValue()))));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -293,7 +282,6 @@ public class GoogleStorageService implements StorageService {
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
 				taskLink = getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
-				if (taskLink != null) timeEntry.getCustomElements().setValueLocal(SYSTEM, taskLink.substring(0, taskLink.indexOf("!")));
 			}
 			service.insert(listFeedUrl, timeEntry);
 
@@ -489,13 +477,12 @@ public class GoogleStorageService implements StorageService {
 	                lastDate = date;
 	            }
 
-	            String system = elements.getValue(SYSTEM);
+	            String system = getSystem(Integer.parseInt(elements.getValue(ID)));
 	            String project = elements.getValue(PROJECT);
 				if (submissionSystems.containsKey(system)) {
 					SubmissionTask submissionTask = getSubmissionTask(task, project, system);
 					if (submissionTask != null)
-						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)),
-								new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)));
+						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)));
 				}
             	createUpdateCellEntry(defaultWorksheet,	Integer.parseInt(elements.getValue(ID)), headingIndex.get(SUBMISSION_STATUS), "Submitted");
     		}
@@ -530,7 +517,7 @@ public class GoogleStorageService implements StorageService {
 	private String getInputValue(int row, int col) throws IOException, ServiceException,
 			MalformedURLException {
 		CellEntry cellEntry = service.getEntry(new URL(defaultWorksheet.getCellFeedUrl().toString()
-				+ "/" + "R" + (row + 2) + "C" + col), CellEntry.class);
+				+ "/" + "R" + row + "C" + col), CellEntry.class);
 		return cellEntry.getCell().getInputValue();
 	}
 	
@@ -645,7 +632,7 @@ public class GoogleStorageService implements StorageService {
 				if (entry.getCustomElements().getValue(PROJECT + ID) == null) return null;
 				return new SubmissionTask(Long.parseLong(entry.getCustomElements().getValue(PROJECT + ID)),
 						Long.parseLong(entry.getCustomElements().getValue(ID)),
-						entry.getCustomElements().getValue(TASK), entry.getCustomElements().getValue(PROJECT));
+						entry.getCustomElements().getValue(TASK), entry.getCustomElements().getValue(PROJECT), system);
 			}
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());

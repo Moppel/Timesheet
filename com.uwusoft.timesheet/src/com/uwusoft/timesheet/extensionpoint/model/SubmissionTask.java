@@ -7,13 +7,14 @@ package com.uwusoft.timesheet.extensionpoint.model;
  */
 public class SubmissionTask {
 	private Long id, projectId;
-	private String name, projectName;
+	private String name, projectName, system;
 	
-	public SubmissionTask(Long projectId, Long id, String name,	String projectName) {
+	public SubmissionTask(Long projectId, Long id, String name,	String projectName, String system) {
 		this.projectId = projectId;
 		this.id = id;
 		this.name = name;
 		this.projectName = projectName;
+		this.system = system;
 	}
 
 	public Long getId() {
@@ -30,5 +31,9 @@ public class SubmissionTask {
 
 	public String getProjectName() {
 		return projectName;
+	}
+
+	public String getSystem() {
+		return system;
 	}
 }
