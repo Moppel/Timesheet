@@ -9,24 +9,18 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.ParameterizedCommand;
-import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tray;
 import org.eclipse.swt.widgets.TrayItem;
@@ -41,9 +35,7 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.dialog.SubmissionDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -136,6 +128,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(
 							commandService.getCommand("Timesheet.checkin"), parameters), null);
+					if (startWeek == shutdownWeek + 1) {
+						parameters.clear();
+						parameters.put("Timesheet.commands.weekNum", Integer.toString(shutdownWeek));
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(
+								commandService.getCommand("Timesheet.submit"), parameters), null);
+					}
 				} catch (Exception ex) {
 					MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
 				}
@@ -203,26 +201,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 trayMenu.add(new CommandContributionItem(
         				new CommandContributionItemParameter(window, null, "Timesheet.importTasks", CommandContributionItem.STYLE_PUSH)));
 
-                trayMenu.add(new ContributionItem() {
-                    @Override
-                    public void fill(final Menu menu, final int index) {
-                        MenuItem submit = new MenuItem(menu, SWT.PUSH);
-                        submit.setText("Submit"); // TODO extract to SubmissionCommand
-                        submit.addSelectionListener(new SelectionAdapter() {
-                            @Override
-                            public void widgetSelected(final SelectionEvent e) {
-                                Calendar cal = new GregorianCalendar();
-                            	cal.setTime(new Date());
-                            	//cal.setFirstDayOfWeek(Calendar.MONDAY);
-                    			SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), cal.get(Calendar.WEEK_OF_YEAR) - 1);
-                    			if (submissionDialog.open() == Dialog.OK) {
-            						new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
-    										.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());
-                    			}                            	
-                            }
-                        });
-                    }
-                });
+                Calendar cal = new GregorianCalendar();
+            	cal.setTime(new Date());
+            	//cal.setFirstDayOfWeek(Calendar.MONDAY);
+				Map<String, String> parameters = new HashMap<String, String>();
+				parameters.put("Timesheet.commands.weekNum", Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
+				CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.submit", CommandContributionItem.STYLE_PUSH);
+                p.parameters = parameters;         
+                trayMenu.add(new CommandContributionItem(p));
+                
                 trayMenu.add(new Separator());
 			    
                 Menu menu = trayMenu.createContextMenu(window.getShell());

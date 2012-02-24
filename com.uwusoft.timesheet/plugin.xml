@@ -171,6 +171,16 @@
             id="Timesheet.importTasks"
             name="Import Tasks">
       </command>
+      <command
+            defaultHandler="com.uwusoft.timesheet.commands.SubmissionHandler"
+            id="Timesheet.submit"
+            name="Submit week">
+         <commandParameter
+               id="Timesheet.commands.weekNum"
+               name="weekNum"
+               optional="true">
+         </commandParameter>
+      </command>
    </extension>
 
 </plugin>
