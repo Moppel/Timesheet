@@ -83,7 +83,7 @@ public interface StorageService {
     
     void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects);
     
-    void submitEntries(int weekNum);
+    Set<String> submitEntries(int weekNum);
     
     void submitFillTask(Date date);
 }

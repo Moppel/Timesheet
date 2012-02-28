@@ -128,7 +128,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(
 							commandService.getCommand("Timesheet.checkin"), parameters), null);
-					if (startWeek == shutdownWeek + 1) {
+					if (startWeek > shutdownWeek) {
 						parameters.clear();
 						parameters.put("Timesheet.commands.weekNum", Integer.toString(shutdownWeek));
 						handlerService.executeCommand(ParameterizedCommand.generateCommand(

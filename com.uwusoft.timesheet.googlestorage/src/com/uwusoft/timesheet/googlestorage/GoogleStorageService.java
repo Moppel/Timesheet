@@ -291,6 +291,10 @@ public class GoogleStorageService implements StorageService {
             		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
             
         	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+        	if (feed.getTotalResults() == 1) {
+    			MessageBox.setError(title, "Couldn't insert cell (Maybe there's an empty line in the spreadsheet)");
+    			return;
+        	}
             createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(ID), "=ROW()");
             
             if (taskLink != null) {
@@ -450,16 +454,17 @@ public class GoogleStorageService implements StorageService {
 		service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
 	}
 
-	public void submitEntries(int weekNum) {
-        try {
-            if (!reloadWorksheets()) return;
+	public Set<String> submitEntries(int weekNum) {
+        Set<String> systems = new HashSet<String>();
+		try {
+            if (!reloadWorksheets()) return systems;
     		
             ListQuery query = new ListQuery(listFeedUrl);
     		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"Submitted\" and "
     								+ WEEK.toLowerCase() + " = \"" + weekNum + "\"");
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
             
-            if (listEntries.isEmpty()) return;
+            if (listEntries.isEmpty()) return systems;
 	        Date lastDate = new SimpleDateFormat(dateFormat).parse(listEntries.get(0).getCustomElements().getValue(DATE));
             DailySubmissionEntry entry = new DailySubmissionEntry(lastDate);
 
@@ -480,6 +485,7 @@ public class GoogleStorageService implements StorageService {
 	            String system = getSystem(Integer.parseInt(elements.getValue(ID)));
 	            String project = elements.getValue(PROJECT);
 				if (submissionSystems.containsKey(system)) {
+					systems.add(system);
 					SubmissionTask submissionTask = getSubmissionTask(task, project, system);
 					if (submissionTask != null)
 						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)));
@@ -494,6 +500,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
+		return systems;
     }
 
 	public void submitFillTask(Date date) {

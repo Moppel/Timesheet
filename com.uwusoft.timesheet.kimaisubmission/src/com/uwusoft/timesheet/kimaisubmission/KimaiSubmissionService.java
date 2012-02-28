@@ -28,9 +28,7 @@ import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
 public class KimaiSubmissionService implements SubmissionService {
 
-	public static final String USERNAME = "kimai.user.name";
-	public static final String PASSWORD = "kimai.user.password";
-	public static final String URL = "kimai.server.url";
+	public static final String PREFIX = "kimai.";
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
     private static final String title = "Kimai";
@@ -40,7 +38,7 @@ public class KimaiSubmissionService implements SubmissionService {
     
 	private boolean authenticate() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		SecurePreferencesManager secureProps = new SecurePreferencesManager("Kimai");
+		SecurePreferencesManager secureProps = new SecurePreferencesManager(title);
 		String userName = preferenceStore.getString(USERNAME);
 		String password = secureProps.getProperty(PASSWORD + "." + userName);
 		if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {

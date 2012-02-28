@@ -109,7 +109,8 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
-	public void submitEntries(int weekNum) {
+	public Set<String> submitEntries(int weekNum) {
+		return null;
 		// TODO Auto-generated method stub
 		
 	}
