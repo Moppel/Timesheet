@@ -49,6 +49,7 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
@@ -662,4 +663,11 @@ public class GoogleStorageService implements StorageService {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
     }
+
+	@Override
+	public void openUrl() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (preferenceStore.getBoolean("google." + StorageService.OPEN_BROWSER))
+			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&hl=en_US&pli=1#gid=0");
+	}
 }

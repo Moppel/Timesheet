@@ -21,6 +21,9 @@ public interface StorageService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.storageservice";
 	public static final String SERVICE_NAME = "storage";
 	public static final String PROPERTY = "storage.system";
+	public static final String OPEN_BROWSER = "openbrowser";
+	public static final String USERNAME = "user.name";
+	public static final String PASSWORD = "user.password";
 
 	public static final String DATE = "Date";
     public static final String TIME = "Time";
@@ -86,4 +89,6 @@ public interface StorageService {
     Set<String> submitEntries(int weekNum);
     
     void submitFillTask(Date date);
+    
+    void openUrl();
 }

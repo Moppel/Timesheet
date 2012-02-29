@@ -1,11 +1,13 @@
 package com.uwusoft.timesheet.googlestorage;
 
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.extensionpoint.StorageService;
 
 public class GooglePreferencePage extends FieldEditorPreferencePage implements
 		IWorkbenchPreferencePage {
@@ -23,9 +25,12 @@ public class GooglePreferencePage extends FieldEditorPreferencePage implements
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new StringFieldEditor(GoogleStorageService.USERNAME, "User name:",
+		String prefix = "google.";
+		addField(new StringFieldEditor(prefix + StorageService.USERNAME, "User name:",
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(GoogleStorageService.SPREADSHEET_KEY, "Spreadsheet key:",
+				getFieldEditorParent()));
+		addField(new BooleanFieldEditor(prefix + StorageService.OPEN_BROWSER, "Open Url after check in",
 				getFieldEditorParent()));
 	}
 }

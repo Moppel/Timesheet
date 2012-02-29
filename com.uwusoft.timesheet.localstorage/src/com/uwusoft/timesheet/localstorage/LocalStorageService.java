@@ -119,4 +119,8 @@ public class LocalStorageService implements StorageService {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public void openUrl() {
+	}
 }

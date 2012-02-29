@@ -43,6 +43,7 @@ public class CheckinHandler extends AbstractHandler {
 					MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
 				}
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
+				storageService.openUrl();
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check in", e.getLocalizedMessage());
