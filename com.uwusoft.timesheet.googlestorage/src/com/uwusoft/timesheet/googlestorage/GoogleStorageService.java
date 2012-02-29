@@ -63,8 +63,7 @@ import com.uwusoft.timesheet.util.SecurePreferencesManager;
  */
 public class GoogleStorageService implements StorageService {
 
-    public static final String USERNAME="google.user.name";
-    public static final String PASSWORD="google.user.password";
+	public static final String PREFIX = "google.";
     public static final String SPREADSHEET_KEY="google.spreadsheet.key";
 
     private static final String dateFormat = "MM/dd/yyyy";
@@ -99,8 +98,8 @@ public class GoogleStorageService implements StorageService {
         try {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
-	    	String userName = preferenceStore.getString(USERNAME);
-	    	String password = secureProps.getProperty(PASSWORD);
+	    	String userName = preferenceStore.getString(PREFIX + USERNAME);
+	    	String password = secureProps.getProperty(PREFIX + PASSWORD);
 	    	if (lastSuccess && !StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
@@ -111,11 +110,11 @@ public class GoogleStorageService implements StorageService {
 	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
-	        	preferenceStore.setValue(USERNAME, loginDialog.getUser());
+	        	preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
 	        	if (loginDialog.isStorePassword())
-	        		secureProps.storeProperty(PASSWORD, loginDialog.getPassword());
+	        		secureProps.storeProperty(PREFIX + PASSWORD, loginDialog.getPassword());
 	        	else
-	        		secureProps.removeProperty(PASSWORD);
+	        		secureProps.removeProperty(PREFIX + PASSWORD);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
 			}
@@ -667,7 +666,7 @@ public class GoogleStorageService implements StorageService {
 	@Override
 	public void openUrl() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		if (preferenceStore.getBoolean("google." + StorageService.OPEN_BROWSER))
+		if (preferenceStore.getBoolean(PREFIX + OPEN_BROWSER))
 			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&hl=en_US&pli=1#gid=0");
 	}
 }
