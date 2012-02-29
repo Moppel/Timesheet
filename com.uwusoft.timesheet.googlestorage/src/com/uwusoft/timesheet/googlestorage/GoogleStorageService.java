@@ -664,9 +664,9 @@ public class GoogleStorageService implements StorageService {
     }
 
 	@Override
-	public void openUrl() {
+	public void openUrl(String openBrowser) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		if (preferenceStore.getBoolean(PREFIX + OPEN_BROWSER))
+		if (preferenceStore.getBoolean(PREFIX + openBrowser))
 			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&hl=en_US&pli=1#gid=0");
 	}
 }

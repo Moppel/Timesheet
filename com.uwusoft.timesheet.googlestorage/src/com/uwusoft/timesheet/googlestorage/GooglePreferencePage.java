@@ -29,7 +29,9 @@ public class GooglePreferencePage extends FieldEditorPreferencePage implements
 				getFieldEditorParent()));
 		addField(new StringFieldEditor(GoogleStorageService.SPREADSHEET_KEY, "Spreadsheet key:",
 				getFieldEditorParent()));
-		addField(new BooleanFieldEditor(GoogleStorageService.PREFIX + StorageService.OPEN_BROWSER, "Open Url after check in",
+		addField(new BooleanFieldEditor(GoogleStorageService.PREFIX + StorageService.OPEN_BROWSER_CHECKIN, "Open Url after Check in",
+				getFieldEditorParent()));
+		addField(new BooleanFieldEditor(GoogleStorageService.PREFIX + StorageService.OPEN_BROWSER_CHANGE_TASK, "Open Url after Change task",
 				getFieldEditorParent()));
 	}
 }

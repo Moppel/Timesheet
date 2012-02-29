@@ -121,6 +121,6 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
-	public void openUrl() {
+	public void openUrl(String openBrowser) {
 	}
 }

@@ -56,6 +56,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				}
 	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + preferenceStore.getString(TimesheetApp.LAST_TASK)));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
+				storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			}
 		}						
 		return null;

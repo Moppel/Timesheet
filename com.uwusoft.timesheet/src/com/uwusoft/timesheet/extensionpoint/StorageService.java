@@ -21,7 +21,8 @@ public interface StorageService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.storageservice";
 	public static final String SERVICE_NAME = "storage";
 	public static final String PROPERTY = "storage.system";
-	public static final String OPEN_BROWSER = "openbrowser";
+	public static final String OPEN_BROWSER_CHECKIN = "openbrowser.checkin";
+	public static final String OPEN_BROWSER_CHANGE_TASK = "openbrowser.changetask";
 	public static final String USERNAME = "user.name";
 	public static final String PASSWORD = "user.password";
 
@@ -90,5 +91,5 @@ public interface StorageService {
     
     void submitFillTask(Date date);
     
-    void openUrl();
+    void openUrl(String openBrowser);
 }

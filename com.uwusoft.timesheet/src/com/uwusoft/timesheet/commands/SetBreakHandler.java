@@ -36,6 +36,7 @@ public class SetBreakHandler extends AbstractHandler {
 			}
             storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
+			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 		}
 		return null;
 	}
