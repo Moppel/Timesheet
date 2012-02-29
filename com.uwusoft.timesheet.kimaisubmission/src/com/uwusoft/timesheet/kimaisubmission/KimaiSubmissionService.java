@@ -23,6 +23,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
@@ -39,8 +40,8 @@ public class KimaiSubmissionService implements SubmissionService {
 	private boolean authenticate() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		SecurePreferencesManager secureProps = new SecurePreferencesManager(title);
-		String userName = preferenceStore.getString(USERNAME);
-		String password = secureProps.getProperty(PASSWORD + "." + userName);
+		String userName = preferenceStore.getString(PREFIX + USERNAME);
+		String password = secureProps.getProperty(PREFIX + PASSWORD + "." + userName);
 		if (!StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 			// TODO implement
 			return true;
@@ -50,11 +51,11 @@ public class KimaiSubmissionService implements SubmissionService {
 		LoginDialog loginDialog = new LoginDialog(display, "Kimai Log in",	"", userName, password);
 		if (loginDialog.open() == Dialog.OK) {
 			// TODO implement
-			preferenceStore.setValue(USERNAME, loginDialog.getUser());
+			preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
 			if (loginDialog.isStorePassword())
 				secureProps.storeProperty(PASSWORD + "." + userName, loginDialog.getPassword());
 			else
-				secureProps.removeProperty(PASSWORD + "." + userName);
+				secureProps.removeProperty(PREFIX + PASSWORD + "." + userName);
 			return true;
 		}
 		return true;
@@ -103,5 +104,12 @@ public class KimaiSubmissionService implements SubmissionService {
 		// TODO implement
 		lastDate = date;
 		start.setTime(end.getTime());
+	}
+
+	@Override
+	public void openUrl() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (preferenceStore.getBoolean(PREFIX + OPEN_BROWSER))
+			DesktopUtil.openUrl(preferenceStore.getString(PREFIX + URL));
 	}
 }

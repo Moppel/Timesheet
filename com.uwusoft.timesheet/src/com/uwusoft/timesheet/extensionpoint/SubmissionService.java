@@ -31,4 +31,6 @@ public interface SubmissionService {
 	Map<String, Set<SubmissionTask>> getAssignedProjects();
 
 	void submit(Date date, SubmissionTask task, Double total);
+
+    void openUrl();
 }
