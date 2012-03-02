@@ -159,4 +159,8 @@ public class Task {
 	public String toString() {
 		return "Task [Date=" + dateTime + ", task=" + task + (project == null ? "" : " (project: " + project.getName() + ", system: " + project.getSystem() + ")") + ", total=" + total + ", wholeDay=" + wholeDay + "]";
 	}
+	
+	public String display() {
+		return task + " (" + project.getName() + ")" + "\nSystem: " + project.getSystem(); 		
+	}
 }

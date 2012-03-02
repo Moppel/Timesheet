@@ -34,7 +34,7 @@ public class CheckoutHandler extends AbstractHandler {
 					.getService(preferenceStore.getString(StorageService.PROPERTY));
 			Task lastTask = storageService.getLastTask();
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
-					TimesheetApp.getTaskName(TimesheetApp.LAST_TASK), shutdownDate);
+					lastTask.display(), shutdownDate);
 			if (timeDialog.open() == Dialog.OK) {
 				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId());
                	//storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
