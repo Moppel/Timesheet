@@ -16,6 +16,7 @@ public class Task {
 	private Long id;
 	private Timestamp dateTime;
 	private String task;
+	private String comment;
     @ManyToOne
 	private Project project;
 	private float total=0;
@@ -43,6 +44,19 @@ public class Task {
 	 */
 	public Task(Date dateTime, String task, Project project) {
 		this(dateTime, task);
+		this.project = project;
+	}
+	
+	/**
+	 * @param id
+	 * @param task
+	 * @param comment
+	 * @param project
+	 */
+
+	public Task(Long id, String task, Project project) {
+		this.id = id;
+		this.task = task;
 		this.project = project;
 	}
 
@@ -111,6 +125,14 @@ public class Task {
 	
 	public void setTask(String task) {
 		this.task = task;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 
 	public float getTotal() {

@@ -36,6 +36,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -108,9 +109,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 			IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 			ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
+			StorageService storageService = new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 				
-			if (startDay != shutdownDay) { // don't automatically check in/out if computer is rebooted
-				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) { // last task will be set to empty if a manual check out has occurred						
+			if (startDay != shutdownDay) { // don't automatically check in/out if program is restarted
+				if (storageService.getLastTask() != null) {						
 					try { // automatic check out
 						Map<String, String> parameters = new HashMap<String, String>();
 						parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
@@ -121,7 +124,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					}
 				}
 			}
-			if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {					
+			if (storageService.getLastTask() == null) {					
 				try { // automatic check in
 					Map<String, String> parameters = new HashMap<String, String>();
 					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
@@ -152,7 +155,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			public void handleEvent(Event event) {
 				MenuManager trayMenu = new MenuManager();
                 
-				if (StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.LAST_TASK))) {
+				StorageService storageService = new ExtensionManager<StorageService>(
+						StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+				if (storageService.getLastTask() == null) {					
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);

@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet;
 
-import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.ParseException;
@@ -12,7 +11,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -110,7 +108,7 @@ public class TasksView extends ViewPart implements IPropertyChangeListener {
 				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
 			return;
 		
-		preferenceStore.addPropertyChangeListener(this);
+		preferenceStore.addPropertyChangeListener(this); // TODO
 
 		addTaskEntries();
 		// Make the selection available to other views
@@ -128,7 +126,10 @@ public class TasksView extends ViewPart implements IPropertyChangeListener {
 
 	private void addTaskEntries() {
 		List<Task> taskEntries = new ArrayList<Task>(storageService.getTaskEntries(new Date()));
-		if (!taskEntries.isEmpty()) taskEntries.add(TimesheetApp.createTask(null, TimesheetApp.LAST_TASK));
+		if (!taskEntries.isEmpty()) {
+			Task lastTask = storageService.getLastTask();
+			if (lastTask != null) taskEntries.add(lastTask);
+		}
 		viewer.setInput(taskEntries);
 	}
 
@@ -202,17 +203,7 @@ public class TasksView extends ViewPart implements IPropertyChangeListener {
 		    	String task = String.valueOf(value);
 		    	if (!entry.getTask().equals(task)) {
 			    	entry.setTask(task);
-			        if (entry.getId() == null) {
-			        	preferenceStore.setValue(TimesheetApp.LAST_TASK,
-			        			TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
-						try {
-							((IPersistentPreferenceStore) preferenceStore).save();
-						} catch (IOException e) {
-							MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
-						}
-			        }
-			        else
-			        	storageService.updateTaskEntry(entry, entry.getId());
+			        storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
 		    	}
 		    }
@@ -352,8 +343,7 @@ public class TasksView extends ViewPart implements IPropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),
-					TimesheetApp.buildProperty(entry.getTask(), entry.getProject().getName(), entry.getProject().getSystem()));
+			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry);
 			listDialog.setTitle("Tasks");
 			listDialog.setMessage("Select task");
 			listDialog.setContentProvider(ArrayContentProvider.getInstance());

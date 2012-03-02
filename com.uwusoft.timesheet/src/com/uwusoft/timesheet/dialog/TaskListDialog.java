@@ -15,6 +15,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
@@ -22,6 +23,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ListDialog;
 
 import com.uwusoft.timesheet.Activator;
@@ -29,6 +31,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -42,22 +45,22 @@ public class TaskListDialog extends ListDialog {
 
     private StorageService storageService;
     private SubmissionService submissionService;
-    private Map<String,String> submissionSystems;
-	private String[] systems, tasks;
+    private Task taskSelected;
+	private String[] systems;
 	private Map<String, SubmissionTask> tasksMap;
     private Combo systemCombo, projectCombo;
-    private String projectSelected, systemSelected;
+    private Text commentText;
+    private String projectSelected, systemSelected, comment;
     private boolean original;
 
-    public TaskListDialog(Shell shell, String taskSelected) {
+    public TaskListDialog(Shell shell, Task taskSelected) {
         super(shell);
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		storageService = new ExtensionManager<StorageService>(
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		List<String> systemsList = storageService.getSystems();
         systems = systemsList.toArray(new String[systemsList.size()]);
-        tasks = taskSelected.split(SubmissionService.separator);
-        submissionSystems = TimesheetApp.getSubmissionSystems();
+        this.taskSelected = taskSelected;
 		setContentProvider(ArrayContentProvider.getInstance());
 		setLabelProvider(new LabelProvider());
     }
@@ -86,9 +89,13 @@ public class TaskListDialog extends ListDialog {
             }
         });
 
-        if (tasks.length > 2) {
+        (new Label(parent, SWT.NULL)).setText("Comment: ");
+        commentText = new Text(parent, SWT.NONE);
+        commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+
+        if (taskSelected != null) {
         	for (int i = 0; i < systems.length; i++) {
-        		if (tasks[2].equals(systems[i])) {
+        		if (taskSelected.getProject().getSystem().equals(systems[i])) {
                 	systemCombo.select(i);
                 	break;
         		}
@@ -117,7 +124,8 @@ public class TaskListDialog extends ListDialog {
 		systemSelected = systemCombo.getText();
 		List<String> projectList;
 		if (original) {
-			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(systemSelected));
+			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(
+					TimesheetApp.getSubmissionSystems().get(systemSelected));
 			projectList = new ArrayList<String>(submissionService.getAssignedProjects().keySet());
 		}
 		else {
@@ -126,7 +134,8 @@ public class TaskListDialog extends ListDialog {
 		String[] projects = projectList.toArray(new String[projectList.size()]);
         projectCombo.setItems(projects);
         if (projects.length == 1) projectCombo.setEnabled(false);
-		if (projectSelected == null && tasks.length > 1 && projectList.contains(tasks[1])) projectSelected = tasks[1];
+		if (projectSelected == null && taskSelected != null && projectList.contains(taskSelected.getProject().getName()))
+			projectSelected = taskSelected.getProject().getName();
 		if (projectSelected != null) {
 			for (int i = 0; i < projects.length; i++) {
 				if (projectSelected.equals(projects[i])) {
@@ -142,7 +151,8 @@ public class TaskListDialog extends ListDialog {
 	private void setTasks() {
 		projectSelected = projectCombo.getText();
 		if (original) {
-			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(systemSelected));
+			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(
+					TimesheetApp.getSubmissionSystems().get(systemSelected));
 			Map<String, Set<SubmissionTask>> assignedProjects = submissionService.getAssignedProjects();
 			Set<SubmissionTask> submissionTasks = assignedProjects.get(projectSelected);
 			if (submissionTasks == null) {
@@ -158,8 +168,8 @@ public class TaskListDialog extends ListDialog {
 		}
 		else {
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-			if (this.tasks.length > 1 && this.tasks[1].equals(projectSelected)) {
-				if (this.tasks.length > 2 && this.tasks[2].equals(systemSelected)) tasks.remove(this.tasks[0]);
+			if (taskSelected != null && taskSelected.getProject().getName().equals(projectSelected)) {
+				if (taskSelected.getProject().getSystem().equals(systemSelected)) tasks.remove(this.taskSelected.getTask());
 			}
 	        getTableViewer().setInput(tasks);
 		}
@@ -176,6 +186,7 @@ public class TaskListDialog extends ListDialog {
 			projects.put(projectSelected, new HashSet<SubmissionTask>());
 			projects.get(projectSelected).add(tasksMap.get(selectedTask));
 			storageService.importTasks(systemSelected, projects);
+			comment = commentText.getText();
 		}
 	}
 
@@ -186,4 +197,8 @@ public class TaskListDialog extends ListDialog {
 	public String getProject() {
 		return projectSelected;
 	}
+
+	public String getComment() {
+		return comment;
+	}	
 }

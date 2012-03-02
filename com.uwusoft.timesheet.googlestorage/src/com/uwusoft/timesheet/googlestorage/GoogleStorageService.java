@@ -148,7 +148,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
     	return true;
     }
@@ -165,7 +165,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 		return true;
     }
@@ -201,7 +201,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
         return projects;    	
     }
@@ -220,7 +220,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
     	return tasks;
     }
@@ -250,7 +250,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
@@ -258,19 +258,21 @@ public class GoogleStorageService implements StorageService {
     }
     
     public void createTaskEntry(Task task) {
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(task.getDateTime());
-        //cal.setFirstDayOfWeek(Calendar.MONDAY);
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
-			timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
 			
-			timeEntry.getCustomElements().setValueLocal(DATE,
-					new SimpleDateFormat(dateFormat).format(task.getDateTime()));
-			
-			if (task.getTotal() == 0)
-				timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
+			if (task.getDateTime() != null) {
+		        Calendar cal = new GregorianCalendar();
+		        cal.setTime(task.getDateTime());
+		        //cal.setFirstDayOfWeek(Calendar.MONDAY);
+				timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+				timeEntry.getCustomElements().setValueLocal(DATE,
+						new SimpleDateFormat(dateFormat).format(task.getDateTime()));			
+				if (task.getTotal() == 0)
+					timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
+			}
+			else timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
 			
 			String taskLink = null;
 			if (CHECK_IN.equals(task.getTask()) || BREAK.equals(task.getTask()))
@@ -283,6 +285,7 @@ public class GoogleStorageService implements StorageService {
 				}
 				taskLink = getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
 			}
+			if (task.getComment() != null) timeEntry.getCustomElements().setValueLocal(COMMENT, task.getComment());
 			service.insert(listFeedUrl, timeEntry);
 
             if (!reloadWorksheets()) return;
@@ -308,9 +311,25 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
     }
+
+	@Override
+	public Task getLastTask() {
+    	try {
+			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
+			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null) // if date and time isn't set yet this should be the last task
+				return new Task(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), new Project(elements.getValue(PROJECT), getSystem(feed.getEntries().size())));
+			return null;
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getResponseBody());
+		}
+		return null;
+	}
 
 	private void updateTask(String taskLink, int row) {
 		createUpdateCellEntry(defaultWorksheet,	row,
@@ -333,7 +352,7 @@ public class GoogleStorageService implements StorageService {
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
         }
     }
 
@@ -359,12 +378,17 @@ public class GoogleStorageService implements StorageService {
         } catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
         } catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
         }        
     }
 
 	public void updateTaskEntry(Date time, Long id) {
+        createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(time);
+        //cal.setFirstDayOfWeek(Calendar.MONDAY);
+        createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
 		for (PropertyChangeListener listener : listeners)
 			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
 	}
@@ -398,7 +422,7 @@ public class GoogleStorageService implements StorageService {
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getLocalizedMessage());
 					} catch (ServiceException e) {
-						MessageBox.setError(title, e.getLocalizedMessage());
+						MessageBox.setError(title, e.getResponseBody());
 					}
 				}
 			}
@@ -441,7 +465,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 	}
 
@@ -496,7 +520,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		}
@@ -559,7 +583,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 		return null;
 	}
@@ -594,7 +618,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 		return null;
 	}
@@ -624,7 +648,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 		return null;
 	}
@@ -644,7 +668,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
 		return null;
 	}
@@ -659,7 +683,7 @@ public class GoogleStorageService implements StorageService {
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getResponseBody());
 		}
     }
 

@@ -91,6 +91,12 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
+	public Task getLastTask() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public void storeLastDailyTotal() {
 		// TODO Auto-generated method stub
 		

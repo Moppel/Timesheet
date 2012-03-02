@@ -26,15 +26,19 @@ public class SetBreakHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		Task lastTask = storageService.getLastTask();
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), StorageService.BREAK, new Date());
 		if (timeDialog.open() == Dialog.OK) {
+			storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId());
+			Task task = new Task(null, StorageService.BREAK);
+			storageService.createTaskEntry(task);				
 			preferenceStore.setValue(TimesheetApp.LAST_TASK, StorageService.BREAK);
 			try {
 				((IPersistentPreferenceStore) preferenceStore).save();
 			} catch (IOException e) {
 				MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
 			}
-            storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
+            //storageService.createTaskEntry(new Task(timeDialog.getTime(), preferenceStore.getString(TimesheetApp.LAST_TASK)));
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 		}

@@ -7,6 +7,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.StringButtonFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
@@ -19,7 +20,7 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
 
 	@Override
 	protected String changePressed() {
-		TaskListDialog listDialog = new TaskListDialog(getShell(), oldValue);
+		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(null, oldValue)); // TODO
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select task");
 		listDialog.setWidthInChars(70);

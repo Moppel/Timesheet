@@ -29,6 +29,7 @@ public interface StorageService {
 	public static final String DATE = "Date";
     public static final String TIME = "Time";
     public static final String TOTAL = "Total";
+    public static final String COMMENT = "Comment";
     public static final String DAILY_TOTAL = "DT";
     public static final String WEEKLY_TOTAL = "WT";
     public static final String WEEK = "Week";
@@ -84,6 +85,8 @@ public interface StorageService {
     void storeLastDailyTotal();
 
     void storeLastWeekTotal(String weeklyWorkingHours);
+    
+    Task getLastTask();
     
     void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects);
     

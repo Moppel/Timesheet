@@ -22,6 +22,8 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -33,7 +35,8 @@ public class ChangeTaskHandler extends AbstractHandler {
 		ILog logger = Activator.getDefault().getLog();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), preferenceStore.getString(TimesheetApp.LAST_TASK));
+		Task lastTask = storageService.getLastTask();
+		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask);
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
 		listDialog.setWidthInChars(70);
@@ -46,7 +49,12 @@ public class ChangeTaskHandler extends AbstractHandler {
 											: " (" + listDialog.getProject() + ")") + (listDialog.getSystem() == null ? "" : "\nSystem: " + listDialog.getSystem()),
 									new Date());
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
+				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId());
+				//storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
+				Task task = new Task(null, selectedTask);
+				task.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+				task.setComment(listDialog.getComment());
+				storageService.createTaskEntry(task);				
 				preferenceStore.setValue(TimesheetApp.LAST_TASK,
 						TimesheetApp.buildProperty(selectedTask, listDialog.getProject(), listDialog.getSystem()));
 				try {
@@ -54,7 +62,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				} catch (IOException e) {
 					MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
 				}
-	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + preferenceStore.getString(TimesheetApp.LAST_TASK)));
+	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + lastTask));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			}
