@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
@@ -61,7 +62,7 @@ import com.uwusoft.timesheet.util.SecurePreferencesManager;
  * @version $Revision: $, $Date: Aug 15, 2011
  * @since Aug 15, 2011
  */
-public class GoogleStorageService implements StorageService {
+public class GoogleStorageService extends EventManager implements StorageService {
 
 	public static final String PREFIX = "google.";
     public static final String SPREADSHEET_KEY="google.spreadsheet.key";
@@ -77,7 +78,6 @@ public class GoogleStorageService implements StorageService {
     private WorksheetEntry defaultWorksheet;
     private Map<String,String> submissionSystems;
     private String message;
-    private List<PropertyChangeListener> listeners = new ArrayList<PropertyChangeListener>();
     private String title = "Google Storage Service";
     private ILog logger;
     
@@ -170,16 +170,24 @@ public class GoogleStorageService implements StorageService {
 		return true;
     }
 
-    public void addPropertyChangeListener(PropertyChangeListener listener) 
-    { 
-    	listeners.add(listener); 
+    public void addPropertyChangeListener(final PropertyChangeListener listener) { 
+		addListenerObject(listener);
     } 
    
-    public void removePropertyChangeListener(PropertyChangeListener listener) 
-    { 
-    	listeners.remove(listener); 
+    public void removePropertyChangeListener(final PropertyChangeListener listener) { 
+		removeListenerObject(listener);
     } 
 
+    protected void firePropertyChangeEvent(final PropertyChangeEvent event) {
+		if (event == null) {
+			throw new NullPointerException();
+		}
+
+		for (Object listener : getListeners()) {
+			((PropertyChangeListener) listener).propertyChange(event);
+		}    	
+    }
+    
     public List<String> getSystems() {
     	List<String> systems = new ArrayList<String>();
     	for (WorksheetEntry worksheet : worksheets) {
@@ -306,8 +314,7 @@ public class GoogleStorageService implements StorageService {
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
-			for (PropertyChangeListener listener : listeners)
-				listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
+			firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
@@ -389,8 +396,7 @@ public class GoogleStorageService implements StorageService {
         cal.setTime(time);
         //cal.setFirstDayOfWeek(Calendar.MONDAY);
         createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
-		for (PropertyChangeListener listener : listeners)
-			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
+		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
 	public void updateTaskEntry(Task task, Long id) {
@@ -398,8 +404,7 @@ public class GoogleStorageService implements StorageService {
 			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask());
 		else
 			updateTask(getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem()), id.intValue());
-		for (PropertyChangeListener listener : listeners)
-			listener.propertyChange(new PropertyChangeEvent(this, "tasks", null, null));
+		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
 	public void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects) {
@@ -691,6 +696,6 @@ public class GoogleStorageService implements StorageService {
 	public void openUrl(String openBrowser) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (preferenceStore.getBoolean(PREFIX + openBrowser))
-			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&hl=en_US&pli=1#gid=0");
+			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&pli=1#gid=0");
 	}
 }
