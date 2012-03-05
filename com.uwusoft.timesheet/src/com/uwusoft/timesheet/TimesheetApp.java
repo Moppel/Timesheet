@@ -36,7 +36,6 @@ public class TimesheetApp implements IApplication {
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
-    public static final String LAST_TASK = "task.last";
     public static final String SYSTEM_SHUTDOWN = "system.shutdown";
     public static final String SYSTEM_START= "system.start";
     public static Date startDate;
@@ -95,10 +94,6 @@ public class TimesheetApp implements IApplication {
 			}
 		}
 		return submissionSystems;
-	}
-	
-	public static String buildProperty(String task, String project, String system) {
-		return task	+ SubmissionService.separator + project	+ SubmissionService.separator + system;
 	}
 	
 	public static String getTaskName(String propertyName) {

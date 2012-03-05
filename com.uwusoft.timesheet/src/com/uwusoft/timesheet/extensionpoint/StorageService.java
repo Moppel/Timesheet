@@ -72,8 +72,9 @@ public interface StorageService {
      * update date/time for task
      * @param time the time of the task entry
      * @param id the id of the task entry
+     * @param wholeDate true: set Date, Time and Week column, false: set only Time column
      */
-    void updateTaskEntry(Date time, Long id);
+    void updateTaskEntry(Date time, Long id, boolean wholeDate);
     
     /**
      * update task name and project

@@ -389,13 +389,15 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public void updateTaskEntry(Date time, Long id) {
+	public void updateTaskEntry(Date time, Long id, boolean wholeDate) {
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
-        createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(time);
-        //cal.setFirstDayOfWeek(Calendar.MONDAY);
-        createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+        if (wholeDate) {
+    		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
+            Calendar cal = new GregorianCalendar();
+            cal.setTime(time);
+            //cal.setFirstDayOfWeek(Calendar.MONDAY);
+            createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+        }
 		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 

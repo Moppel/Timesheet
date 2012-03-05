@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet.commands;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -12,7 +11,6 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -25,7 +23,6 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.MessageBox;
 
 public class ChangeTaskHandler extends AbstractHandler {
 
@@ -49,19 +46,11 @@ public class ChangeTaskHandler extends AbstractHandler {
 											: " (" + listDialog.getProject() + ")") + (listDialog.getSystem() == null ? "" : "\nSystem: " + listDialog.getSystem()),
 									new Date());
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId());
-				//storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
+				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
 				Task task = new Task(null, selectedTask);
 				task.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				task.setComment(listDialog.getComment());
 				storageService.createTaskEntry(task);				
-				preferenceStore.setValue(TimesheetApp.LAST_TASK,
-						TimesheetApp.buildProperty(selectedTask, listDialog.getProject(), listDialog.getSystem()));
-				try {
-					((IPersistentPreferenceStore) preferenceStore).save();
-				} catch (IOException e) {
-					MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
-				}
 	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + lastTask));
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);

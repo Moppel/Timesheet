@@ -161,7 +161,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
 		    			if (!entry.getDateTime().equals(newTime)) {
 		    				entry.setDateTime(newTime);
-		    				storageService.updateTaskEntry(entry.getDateTime(), entry.getId());
+		    				storageService.updateTaskEntry(entry.getDateTime(), entry.getId(), false);
 		    				viewer.refresh(element);
 		    			}
 		    		

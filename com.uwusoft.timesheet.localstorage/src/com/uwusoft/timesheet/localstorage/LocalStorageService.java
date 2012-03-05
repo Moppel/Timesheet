@@ -25,14 +25,7 @@ public class LocalStorageService implements StorageService {
 
 	public LocalStorageService() {
 		em = TimesheetApp.factory.createEntityManager();
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
-		for (String system : systems) {
-			if (!StringUtils.isEmpty(system))
-				submissionSystems.put(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME)),
-						system);
-		}
+		submissionSystems = TimesheetApp.getSubmissionSystems();
 	}
 
 	@Override
@@ -79,7 +72,7 @@ public class LocalStorageService implements StorageService {
 	}
 
 	@Override
-	public void updateTaskEntry(Date time, Long id) {
+	public void updateTaskEntry(Date time, Long id, boolean wholeDate) {
 		// TODO Auto-generated method stub
 		
 	}

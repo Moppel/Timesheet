@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet.commands;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 
@@ -8,7 +7,6 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
@@ -37,12 +35,6 @@ public class CheckinHandler extends AbstractHandler {
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				storageService.createTaskEntry(new Task(timeDialog.getTime(), StorageService.CHECK_IN));
 				storageService.createTaskEntry(TimesheetApp.createTask(null, TimesheetApp.DEFAULT_TASK));
-				preferenceStore.setValue(TimesheetApp.LAST_TASK, preferenceStore.getString(TimesheetApp.DEFAULT_TASK));
-				try {
-					((IPersistentPreferenceStore) preferenceStore).save();
-				} catch (IOException e) {
-					MessageBox.setError(this.getClass().getSimpleName(), e.getLocalizedMessage());
-				}
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
 			}

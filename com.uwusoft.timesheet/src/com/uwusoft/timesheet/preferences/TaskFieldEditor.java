@@ -20,7 +20,7 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
 
 	@Override
 	protected String changePressed() {
-		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(null, oldValue)); // TODO
+		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(null, oldValue));
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select task");
 		listDialog.setWidthInChars(70);

@@ -4,7 +4,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -36,10 +35,8 @@ public class CheckoutHandler extends AbstractHandler {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 					lastTask.display(), shutdownDate);
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId());
-               	//storageService.createTaskEntry(TimesheetApp.createTask(timeDialog.getTime(), TimesheetApp.LAST_TASK));
+				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
 				storageService.storeLastDailyTotal();
-				preferenceStore.setValue(TimesheetApp.LAST_TASK, StringUtils.EMPTY);
 				WholeDayTasks.getInstance().createTaskEntries();
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, preferenceStore.getString(TimesheetApp.SYSTEM_START));
 			}
