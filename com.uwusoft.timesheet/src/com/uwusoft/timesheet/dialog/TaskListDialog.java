@@ -13,6 +13,8 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
@@ -92,6 +94,11 @@ public class TaskListDialog extends ListDialog {
         (new Label(parent, SWT.NULL)).setText("Comment: ");
         commentText = new Text(parent, SWT.NONE);
         commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+        commentText.addModifyListener(new ModifyListener() {
+			public void modifyText(ModifyEvent e) {
+				comment = commentText.getText();
+			}        	
+        });
 
         if (taskSelected != null) {
         	for (int i = 0; i < systems.length; i++) {
@@ -186,7 +193,6 @@ public class TaskListDialog extends ListDialog {
 			projects.put(projectSelected, new HashSet<SubmissionTask>());
 			projects.get(projectSelected).add(tasksMap.get(selectedTask));
 			storageService.importTasks(systemSelected, projects);
-			comment = commentText.getText();
 		}
 	}
 
