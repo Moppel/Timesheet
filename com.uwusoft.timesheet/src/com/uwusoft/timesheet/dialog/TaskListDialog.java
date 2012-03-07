@@ -9,9 +9,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jface.fieldassist.AutoCompleteField;
+import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -52,7 +58,8 @@ public class TaskListDialog extends ListDialog {
 	private Map<String, SubmissionTask> tasksMap;
     private Combo systemCombo, projectCombo;
     private Text commentText;
-    private String projectSelected, systemSelected, comment;
+    private AutoCompleteField commentCompleteField;
+    private String projectSelected, systemSelected, task, comment;
     private boolean original;
 
     public TaskListDialog(Shell shell, Task taskSelected) {
@@ -93,12 +100,33 @@ public class TaskListDialog extends ListDialog {
 
         (new Label(parent, SWT.NULL)).setText("Comment: ");
         commentText = new Text(parent, SWT.NONE);
+        commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(), new String[] {StringUtils.EMPTY});
         commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         commentText.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
+				if (!StringUtils.isEmpty(task))
 				comment = commentText.getText();
 			}        	
         });
+		final Thread setProposals = new Thread(new Runnable() {
+			public void run() {
+				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
+			}
+		});
+		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
+			@Override
+			public void selectionChanged(SelectionChangedEvent event) {
+				ISelection rawSelection = getTableViewer().getSelection();
+				if (rawSelection != null
+						&& rawSelection instanceof IStructuredSelection) {
+					IStructuredSelection selection = (IStructuredSelection) rawSelection;
+					if (selection.size() == 1) {
+						task = (String) selection.getFirstElement();
+						setProposals.start();
+					}
+				}
+			}			
+		});
 
         if (taskSelected != null) {
         	for (int i = 0; i < systems.length; i++) {

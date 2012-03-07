@@ -55,6 +55,8 @@ public interface StorageService {
     
     void removePropertyChangeListener(PropertyChangeListener listener);
     
+    String[] getUsedCommentsForTask(String task, String project, String system);
+    
     /**
      * @param date
      * @return a list of {@link TaskEntry}'s for the date

@@ -265,6 +265,27 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return taskEntries;
     }
     
+    public String[] getUsedCommentsForTask(String task, String project, String system) {
+		if (StringUtils.isEmpty(task)) return new String[] {StringUtils.EMPTY};
+		Set<String> comments = new HashSet<String>();
+    	ListQuery query = new ListQuery(listFeedUrl);
+		query.setSpreadsheetQuery(TASK.toLowerCase() + " = \"" + task + "\" and "
+				+ PROJECT.toLowerCase() + " = \"" + project + "\"");
+		try {
+			ListFeed feed = service.query(query, ListFeed.class);
+			for (ListEntry entry : feed.getEntries()) {
+				if (getSystem(Integer.parseInt(entry.getCustomElements().getValue(ID))).equals(system))
+					comments.add(entry.getCustomElements().getValue(COMMENT));
+			}
+			return comments.toArray(new String[comments.size()]);
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getResponseBody());
+		}
+		return new String[comments.size()];
+    }
+    
     public void createTaskEntry(Task task) {
         try {
             if (!reloadWorksheets()) return;
