@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.fieldassist.AutoCompleteField;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -108,11 +112,12 @@ public class TaskListDialog extends ListDialog {
 				comment = commentText.getText();
 			}        	
         });
-		final Thread setProposals = new Thread(new Runnable() {
-			public void run() {
+		final Job setProposals = new Job("Search available comments") {
+			protected IStatus run(IProgressMonitor monitor) {
 				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
+		        return Status.OK_STATUS;
 			}
-		});
+		};
 		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -122,7 +127,7 @@ public class TaskListDialog extends ListDialog {
 					IStructuredSelection selection = (IStructuredSelection) rawSelection;
 					if (selection.size() == 1) {
 						task = (String) selection.getFirstElement();
-						setProposals.start();
+						setProposals.schedule();
 					}
 				}
 			}			
