@@ -139,7 +139,7 @@ public class TaskListDialog extends ListDialog {
 			}			
 		});
 
-        if (taskSelected != null) {
+        if (taskSelected.getProject().getSystem() != null) {
         	for (int i = 0; i < systems.length; i++) {
         		if (taskSelected.getProject().getSystem().equals(systems[i])) {
                 	systemCombo.select(i);
@@ -181,6 +181,7 @@ public class TaskListDialog extends ListDialog {
 		String[] projects = projectList.toArray(new String[projectList.size()]);
         projectCombo.setItems(projects);
         if (projects.length == 1) projectCombo.setEnabled(false);
+        else projectCombo.setEnabled(true);
 		if (projectSelected == null && taskSelected != null && projectList.contains(taskSelected.getProject().getName()))
 			projectSelected = taskSelected.getProject().getName();
 		if (projectSelected != null) {
@@ -215,7 +216,7 @@ public class TaskListDialog extends ListDialog {
 		}
 		else {
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-			if (taskSelected != null && taskSelected.getProject().getName().equals(projectSelected)) {
+			if (taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected)) {
 				if (taskSelected.getProject().getSystem().equals(systemSelected)) tasks.remove(this.taskSelected);
 			}
 	        getTableViewer().setInput(tasks);
