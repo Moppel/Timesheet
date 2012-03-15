@@ -10,5 +10,12 @@ Require-Bundle: org.eclipse.core.runtime,
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Import-Package: org.eclipse.jface.preference
-Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
+Bundle-ClassPath: lib/tires-kimai.jar,
+ lib/kiwisoft_utils-collections.jar,
+ lib/kiwisoft_utils-base.jar,
+ lib/htmlparser-1.6.jar,
+ lib/kiwisoft_utils-http.jar,
+ lib/json-simple-1.1.jar,
+ lib/commons/commons-lang3-3.0.1.jar,
+ lib/commons/commons-logging-1.1.1.jar,
  .

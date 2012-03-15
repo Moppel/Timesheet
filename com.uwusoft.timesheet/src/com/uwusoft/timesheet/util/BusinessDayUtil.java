@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.time.DateUtils;
 
 public class BusinessDayUtil {
 
-    //private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
+    private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
 	private static boolean isAnotherWeek = false;
 
     /*
@@ -38,9 +40,9 @@ public class BusinessDayUtil {
         Calendar baseCal = Calendar.getInstance();
         baseCal.setTime(DateUtils.truncate(dateToCheck, Calendar.DATE));
 
-        //List<Date> offlimitDates;
+        List<Date> offlimitDates;
 
-        /*Grab the list of dates for the year.  These SHOULD NOT be modified. 
+        // Grab the list of dates for the year.  These SHOULD NOT be modified. 
         synchronized (computedDates)
         {
                 int year = baseCal.get(Calendar.YEAR);
@@ -49,7 +51,7 @@ public class BusinessDayUtil {
                 if (!computedDates.containsKey(year))
                         computedDates.put(year, getOfflimitDates(year));
                 offlimitDates = computedDates.get(year);
-        }*/
+        }
 
         //Determine if the date is on a weekend. 
         int dayOfWeek = baseCal.get(Calendar.DAY_OF_WEEK);
@@ -57,7 +59,7 @@ public class BusinessDayUtil {
 
         //If it's on a holiday, increment and test again 
         //If it's on a weekend, increment necessary amount and test again
-        if (/*offlimitDates.contains(baseCal) ||*/ onWeekend)
+        if (offlimitDates.contains(baseCal) || onWeekend)
                 return false;
         else 
                 return true;
@@ -128,39 +130,38 @@ public class BusinessDayUtil {
         baseCalendar.set(year, Calendar.JANUARY, 1);
         offlimitDates.add(offsetForWeekend(baseCalendar));
 
-        //Independence Day
-        baseCalendar.set(year, Calendar.JULY, 4);
+        // Tag der deutschen Einheit
+        baseCalendar.set(year, Calendar.OCTOBER, 3);
         offlimitDates.add(offsetForWeekend(baseCalendar));
 
-        //Vetrans Day
-        baseCalendar.set(year, Calendar.NOVEMBER, 11);
+        // Reformationstag
+        baseCalendar.set(year, Calendar.OCTOBER, 31);
         offlimitDates.add(offsetForWeekend(baseCalendar));
 
         //Christmas
         baseCalendar.set(year, Calendar.DECEMBER, 25);
         offlimitDates.add(offsetForWeekend(baseCalendar));
 
+        baseCalendar.set(year, Calendar.DECEMBER, 26);
+        offlimitDates.add(offsetForWeekend(baseCalendar));
+        
         //Now deal with floating holidays.
-        //Martin Luther King Day 
-        offlimitDates.add(calculateFloatingHoliday(3, Calendar.MONDAY, year, Calendar.JANUARY));
+        // Ostersonntag
+        Date osterSonntag = getOsterSonntag(year);
+        offlimitDates.add(osterSonntag);        
+        // Karfreitag
+        offlimitDates.add(addDays(osterSonntag, -2));
+        // Ostermontag
+        offlimitDates.add(addDays(osterSonntag, 1));
+        
+        // Christi Himmelfahrt
+        offlimitDates.add(addDays(osterSonntag, 39));
 
-        //Presidents Day
-        offlimitDates.add(calculateFloatingHoliday(3, Calendar.MONDAY, year, Calendar.FEBRUARY));
-
-        //Memorial Day
-        offlimitDates.add(calculateFloatingHoliday(0, Calendar.MONDAY, year, Calendar.MAY));
-
-        //Labor Day
-        offlimitDates.add(calculateFloatingHoliday(1, Calendar.MONDAY, year, Calendar.SEPTEMBER));
-
-        //Columbus Day
-        offlimitDates.add(calculateFloatingHoliday(2, Calendar.MONDAY, year, Calendar.OCTOBER));
-
-        //Thanksgiving Day and Thanksgiving Friday
-        Date thanksgiving = calculateFloatingHoliday(4, Calendar.THURSDAY, year, Calendar.NOVEMBER);
-        offlimitDates.add(thanksgiving);
-        offlimitDates.add(addDays(thanksgiving, 1));
-
+        // Pfingstmontag
+        offlimitDates.add(addDays(osterSonntag, 50));
+        
+        // TODO: Buﬂ- und Bettag
+        // Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach Trinitatis)
 
         return offlimitDates;
     }
@@ -189,7 +190,7 @@ public class BusinessDayUtil {
         baseCal.clear();
 
         //Determine what the very earliest day this could occur.
-        //If the value was 0 for the nth parameter, incriment to the following
+        //If the value was 0 for the nth parameter, increment to the following
         //month so that it can be subtracted alter. 
         baseCal.set(year, month + ((nth <= 0) ? 1 : 0), 1);
         Date baseDate = baseCal.getTime();
@@ -202,6 +203,50 @@ public class BusinessDayUtil {
         //Based on the offset and the nth parameter, we are able to determine the offset of days and then 
         //adjust our base date. 
         return addDays(baseDate, (fwd + (nth - (fwd >= 0 ? 1 : 0)) * 7));
+    }
+    
+    private static Date getOsterSonntag(int jahr) {
+        int a, b, c, d, e, p, q, r, x, y, tag, monat;
+
+        //Es geht um die Berechnung der Grˆﬂen d und e
+        //Dazu braucht man die 9 Hilfsgrˆﬂen a, b, c, p, n, q, r, x, y !!
+
+        p = jahr/100 ;
+
+        q = p/3 ;       r = p/4 ;
+
+        x = (15+p-q-r)%30 ;     y = (4+p-r)%7 ;
+
+        a = jahr%19 ;   b = jahr%4 ;    c = jahr%7 ;
+
+        d = (19*a+x)%30 ;
+        e = (2*b+4*c+6*d+y)%7 ;
+
+        if (d==29 && e==6)
+        {
+            //=> Ostern am 19.April
+            tag=19; monat=4;
+        }
+        else if (d==28 && e==6)
+        {
+            //=> Ostern am 18.April
+            tag=18; monat=4;
+        }
+        else if (22+d+e < 32) //ansonsten gilt
+        {
+            //=>  Ostern am (22+d+e).M‰rz
+            tag=22+d+e; monat=3;
+        }
+        else
+        {
+            // =>  Ostern am (d+e-9).April
+            tag=d+e-9; monat=4;
+        }
+
+        Calendar cal = Calendar.getInstance();
+        cal.clear();
+        cal.set(jahr, monat, tag);
+        return cal.getTime();
     }
 
     /*

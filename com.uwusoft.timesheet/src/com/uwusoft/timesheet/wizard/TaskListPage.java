@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.wizard;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -7,18 +8,19 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.wizard.WizardPage;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 
 public class TaskListPage extends WizardPage {
 
 	private TableViewer viewer;
 	private String project;
-	private Set<SubmissionTask> tasks;
+	private Set<SubmissionEntry> tasks;
 
-	protected TaskListPage(String system, String project, Set<SubmissionTask> tasks) {
+	protected TaskListPage(String system, String project, Set<SubmissionEntry> tasks) {
 		super("Submission system: " + system);
 		setTitle("Project: " + project);
 		setDescription("System: " + system);
@@ -37,7 +39,8 @@ public class TaskListPage extends WizardPage {
 		setPageComplete(true);
 	}
 
-	public void addTasksToProjects(Map<String, Set<SubmissionTask>> projects) {
+	public void addTasksToProjects(Map<String, Set<SubmissionEntry>> projects) {
 		projects.put(project, tasks); // TODO
+		//projects.put(project, new HashSet<SubmissionTask>(((StructuredSelection) viewer.getSelection()).toList()));
 	}
 }

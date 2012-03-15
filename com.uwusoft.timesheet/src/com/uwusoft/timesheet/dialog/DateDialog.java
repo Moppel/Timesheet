@@ -8,7 +8,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -50,10 +49,11 @@ public class DateDialog extends Dialog {
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
         label.setLayoutData(gridData);
+        //label.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
 
 		label = new Label(composite, SWT.NONE);
         label.setText("From:");
-        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		
         label = new Label(composite, SWT.NONE);
         label.setText("" + date);
@@ -61,12 +61,14 @@ public class DateDialog extends Dialog {
         
         label = new Label(composite, SWT.NONE);
         label.setText("To:");
-        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		
 		DateTime dateEntry = new DateTime(composite, SWT.DATE);
+		dateEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         dateEntry.setDay(day);
         dateEntry.setMonth(month);
         dateEntry.setYear(year);
+        //dateEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
         dateEntry.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				day = ((DateTime) e.getSource()).getDay();
@@ -80,11 +82,6 @@ public class DateDialog extends Dialog {
         dateEntry.setLayoutData(gridData);
         return composite;
 	}
-
-    @Override
-    protected Point getInitialSize() {
-        return new Point(220, 150);
-    }
 
     @Override
     protected void configureShell(Shell newShell) {
