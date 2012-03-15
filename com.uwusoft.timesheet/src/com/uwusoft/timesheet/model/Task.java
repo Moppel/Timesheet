@@ -1,8 +1,5 @@
 package com.uwusoft.timesheet.model;
 
-import java.sql.Timestamp;
-import java.util.Date;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,13 +11,9 @@ public class Task {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	private Timestamp dateTime;
-	private String task;
-	private String comment;
+	private String name;
     @ManyToOne
 	private Project project;
-	private float total=0;
-	private boolean wholeDay=false;	
 	
 	/**
 	 * JPA requires a no-arg constructor
@@ -29,81 +22,21 @@ public class Task {
 	}	
 
 	/**
-	 * @param dateTime
-	 * @param task
+	 * @param name
 	 */
-	public Task(Date dateTime, String task) {
-		if (dateTime != null) this.dateTime = new Timestamp(dateTime.getTime());
-		this.task = task;
+	public Task(String name) {
+		this.name = name;
 	}
 	
 	/**
-	 * @param dateTime
-	 * @param task
+	 * @param name
 	 * @param project
 	 */
-	public Task(Date dateTime, String task, Project project) {
-		this(dateTime, task);
+	public Task(String name, Project project) {
+		this.name = name;
 		this.project = project;
 	}
-	
-	/**
-	 * @param id
-	 * @param task
-	 * @param comment
-	 * @param project
-	 */
-
-	public Task(Long id, String task, Project project) {
-		this.id = id;
-		this.task = task;
-		this.project = project;
-	}
-
-	/**
-	 * @param id
-	 * @param dateTime
-	 * @param task
-	 * @param project
-	 */
-	public Task(Long id, Date dateTime, String task, float total, Project project) {
-		this(dateTime, task, project);
-		this.id = id;
-		this.total = total;
-	}
-
-	/**
-	 * @param dateTime
-	 * @param task
-	 * @param total
-	 */
-	public Task(Date dateTime, String task, float total) {
-		this(dateTime, task);
-		this.total = total;
-	}
-
-	/**
-	 * @param dateTime
-	 * @param task
-	 * @param project
-	 * @param total
-	 */
-	public Task(Date dateTime, String task, Project project, float total) {
-		this(dateTime, task, project);
-		this.total = total;
-	}
-	
-	/**
-	 * @param dateTime
-	 * @param task
-	 * @param total
-	 * @param wholeDay
-	 */
-	public Task(Date dateTime, String task, float total, boolean wholeDay) {
-		this(dateTime, task, total);
-		this.wholeDay = wholeDay;
-	}	
-	
+		
 	/**
 	 * @return the id
 	 */
@@ -111,36 +44,12 @@ public class Task {
 		return id;
 	}
 
-	public Timestamp getDateTime() {
-		return dateTime;
-	}
-
-	public void setDateTime(Timestamp dateTime) {
-		this.dateTime = dateTime;
-	}
-
-	public String getTask() {
-		return task;
+	public String getName() {
+		return name;
 	}
 	
-	public void setTask(String task) {
-		this.task = task;
-	}
-
-	public String getComment() {
-		return comment;
-	}
-
-	public void setComment(String comment) {
-		this.comment = comment;
-	}
-
-	public float getTotal() {
-		return total;
-	}
-
-	public void setTotal(float total) {
-		this.total = total;
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	public Project getProject() {
@@ -151,16 +60,12 @@ public class Task {
 		this.project = project;
 	}
 
-	public boolean isWholeDay() {
-		return wholeDay;
-	}
-
 	@Override
 	public String toString() {
-		return "Task [Date=" + dateTime + ", task=" + task + (project == null ? "" : " (project: " + project.getName() + ", system: " + project.getSystem() + ")") + ", total=" + total + ", wholeDay=" + wholeDay + "]";
+		return "Task [name=" + name + (project == null ? "" : " (project: " + project.getName() + ", system: " + project.getSystem() + ")") + "]";
 	}
 	
 	public String display() {
-		return task + " (" + project.getName() + ")" + "\nSystem: " + project.getSystem(); 		
+		return name + (project == null ? "" : " (" + project.getName() + ")" + "\nSystem: " + project.getSystem()); 		
 	}
 }

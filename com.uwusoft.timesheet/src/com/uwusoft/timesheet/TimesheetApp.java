@@ -105,7 +105,7 @@ public class TimesheetApp implements IApplication {
 		else return preferenceStore.getString(propertyName);
 	}
 	
-	public static Task createTask(Date date, String propertyName) {
+	public static Task createTask(String propertyName) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
 		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);
 		if (task.length < 2) task = propertyName.split(SubmissionService.separator);
@@ -114,6 +114,6 @@ public class TimesheetApp implements IApplication {
 			project.setName(task[1]);
 			project.setSystem(task[2]);
 		}
-		return new Task(date, task[0], project);
+		return new Task(task[0], project);
 	}
 }

@@ -5,11 +5,11 @@ package com.uwusoft.timesheet.extensionpoint.model;
  * 
  * @author wunut
  */
-public class SubmissionTask {
+public class SubmissionEntry {
 	private Long id, projectId;
 	private String name, projectName, system;
 	
-	public SubmissionTask(Long projectId, Long id, String name,	String projectName, String system) {
+	public SubmissionEntry(Long projectId, Long id, String name,	String projectName, String system) {
 		this.projectId = projectId;
 		this.id = id;
 		this.name = name;

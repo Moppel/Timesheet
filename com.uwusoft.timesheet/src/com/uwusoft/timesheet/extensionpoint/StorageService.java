@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
-import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.model.TaskEntry;
 
 /**
  * todo: add class doc
@@ -42,8 +42,6 @@ public interface StorageService {
     public static final String BREAK = "Break";
 	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
-    List<String> getSystems();
-    
     List<String> getProjects(String system);
     
     /**
@@ -61,14 +59,14 @@ public interface StorageService {
      * @param date
      * @return a list of {@link TaskEntry}'s for the date
      */
-    List<Task> getTaskEntries(Date date);
+    List<TaskEntry> getTaskEntries(Date date);
     
     /**
      * store task
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task
      * @param task
      */
-    void createTaskEntry(Task task);
+    void createTaskEntry(TaskEntry task);
    
     /**
      * update date/time for task
@@ -83,15 +81,21 @@ public interface StorageService {
      * @param task
      * @param id
      */
-    void updateTaskEntry(Task task, Long id);
+    void updateTaskEntry(TaskEntry task, Long id);
 
+    /**
+     * only to be implemented for sequential storage system
+     */
     void storeLastDailyTotal();
 
+    /**
+     * only to be implemented for sequential storage system
+     */
     void storeLastWeekTotal(String weeklyWorkingHours);
     
-    Task getLastTask();
+    TaskEntry getLastTask();
     
-    void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects);
+    void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects);
     
     Set<String> submitEntries(int weekNum);
     

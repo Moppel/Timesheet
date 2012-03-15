@@ -19,7 +19,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.wizard.ImportTaskWizard;
 
@@ -43,8 +43,8 @@ public class ImportTasksHandler extends AbstractHandler {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 			if (StringUtils.isEmpty(selectedTask)) return null;
-			Map<String, Set<SubmissionTask>> projects = new HashMap<String, Set<SubmissionTask>>();
-			Set<SubmissionTask> tasks = new HashSet<SubmissionTask>();
+			Map<String, Set<SubmissionEntry>> projects = new HashMap<String, Set<SubmissionEntry>>();
+			Set<SubmissionEntry> tasks = new HashSet<SubmissionEntry>();
 			//tasks.add(new SubmissionTask(projectId, id, name, projectName));
 			projects.put(listDialog.getProject(), tasks);
 			StorageService storageService = new ExtensionManager<StorageService>(

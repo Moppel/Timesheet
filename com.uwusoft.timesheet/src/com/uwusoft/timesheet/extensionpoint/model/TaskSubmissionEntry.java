@@ -15,11 +15,11 @@ import com.uwusoft.timesheet.util.ExtensionManager;
  * @since Aug 17, 2011
  */
 public class TaskSubmissionEntry {
-    private SubmissionTask task;
+    private SubmissionEntry task;
     private double total;
     private static Map<String, String> submissionSystems = TimesheetApp.getSubmissionSystems();
 
-    public TaskSubmissionEntry(SubmissionTask task, double total) {
+    public TaskSubmissionEntry(SubmissionEntry task, double total) {
         this.task = task;
         this.total = total;
     }

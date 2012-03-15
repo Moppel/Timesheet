@@ -4,7 +4,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 
 /**
  * todo: add class doc
@@ -28,9 +28,9 @@ public interface SubmissionService {
      * @return {@link Map} of assigned tasks (value) for projects (key)<br>If there aren't any projects in the system all tasks have to be
      * assigned to an empty object
      */
-	Map<String, Set<SubmissionTask>> getAssignedProjects();
+	Map<String, Set<SubmissionEntry>> getAssignedProjects();
 
-	void submit(Date date, SubmissionTask task, Double total);
+	void submit(Date date, SubmissionEntry task, Double total);
 
     void openUrl();
 }

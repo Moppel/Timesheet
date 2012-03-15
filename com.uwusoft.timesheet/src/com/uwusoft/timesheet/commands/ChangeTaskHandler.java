@@ -21,7 +21,7 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
-import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ChangeTaskHandler extends AbstractHandler {
@@ -32,8 +32,8 @@ public class ChangeTaskHandler extends AbstractHandler {
 		ILog logger = Activator.getDefault().getLog();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		Task lastTask = storageService.getLastTask();
-		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask);
+		TaskEntry lastTask = storageService.getLastTask();
+		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask.getTask());
 		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
 		listDialog.setWidthInChars(70);
@@ -47,8 +47,8 @@ public class ChangeTaskHandler extends AbstractHandler {
 									new Date());
 			if (timeDialog.open() == Dialog.OK) {
 				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
-				Task task = new Task(null, selectedTask);
-				task.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+				TaskEntry task = new TaskEntry(null, selectedTask);
+				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				task.setComment(listDialog.getComment());
 				storageService.createTaskEntry(task);				
 	            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + lastTask));

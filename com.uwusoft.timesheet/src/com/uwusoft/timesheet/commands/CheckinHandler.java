@@ -15,6 +15,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -33,8 +34,11 @@ public class CheckinHandler extends AbstractHandler {
 			if (timeDialog.open() == Dialog.OK) {
 				if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
-				storageService.createTaskEntry(new Task(timeDialog.getTime(), StorageService.CHECK_IN));
-				storageService.createTaskEntry(TimesheetApp.createTask(null, TimesheetApp.DEFAULT_TASK));
+				storageService.createTaskEntry(new TaskEntry(timeDialog.getTime(), StorageService.CHECK_IN));
+				Task defaultTask = TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK);
+				TaskEntry defaultTaskEntry = new TaskEntry(timeDialog.getTime(), defaultTask.getName(), defaultTask.getProject());
+				defaultTaskEntry.setDateTime(null);
+				storageService.createTaskEntry(defaultTaskEntry);
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
 			}

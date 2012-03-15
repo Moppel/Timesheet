@@ -41,7 +41,7 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
-import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -126,9 +126,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	}
 
 	private void addTaskEntries() {
-		List<Task> taskEntries = new ArrayList<Task>(storageService.getTaskEntries(new Date()));
+		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(new Date()));
 		if (!taskEntries.isEmpty()) {
-			Task lastTask = storageService.getLastTask();
+			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
 		}
 		viewer.setInput(taskEntries);
@@ -143,19 +143,19 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return ((Task) element).getDateTime() != null;
+		        return ((TaskEntry) element).getDateTime() != null;
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
-		        return new TimeDialogCellEditor(viewer.getTable(), (Task) element);
+		        return new TimeDialogCellEditor(viewer.getTable(), (TaskEntry) element);
 		    }
 
 		    protected Object getValue(Object element) {
-		        return new SimpleDateFormat(timeFormat).format(((Task) element).getDateTime());
+		        return new SimpleDateFormat(timeFormat).format(((TaskEntry) element).getDateTime());
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		    	Task entry = (Task) element;
+		    	TaskEntry entry = (TaskEntry) element;
 		    	if (entry.getDateTime() != null) {
 		    		try {
 		    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
@@ -173,12 +173,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				Timestamp date = ((Task) element).getDateTime();
+				Timestamp date = ((TaskEntry) element).getDateTime();
 				if (date!= null) return new SimpleDateFormat(timeFormat).format(date);
 				return "Last task";
 			}
 			public Image getImage(Object obj) {
-				if (((Task)obj).getId() == null) return null;
+				if (((TaskEntry)obj).getId() == null) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
 			}
 		});
@@ -188,22 +188,22 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return !StorageService.CHECK_IN.equals(((Task) element).getTask());
+		        return !StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName());
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
-		        return new TaskListDialogCellEditor(viewer.getTable(), (Task) element);
+		        return new TaskListDialogCellEditor(viewer.getTable(), (TaskEntry) element);
 		    }
 
 		    protected Object getValue(Object element) {
-		        return ((Task) element).getTask();
+		        return ((TaskEntry) element).getTask().getName();
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		    	Task entry = (Task) element;
+		    	TaskEntry entry = (TaskEntry) element;
 		    	String task = String.valueOf(value);
-		    	if (!entry.getTask().equals(task)) {
-			    	entry.setTask(task);
+		    	if (!entry.getTask().getName().equals(task)) {
+			    	//TODO entry.setTask(task);
 			        storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
 		    	}
@@ -211,7 +211,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-		        return ((Task) element).getTask();
+		        return ((TaskEntry) element).getTask().getName();
 			}
 			public Image getImage(Object obj) {
 				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
@@ -233,7 +233,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 			@Override
 			protected Object getValue(Object element) {
-		        return ((Task) element).getProject().getName();
+		        return ((TaskEntry) element).getTask().getProject().getName();
 			}
 
 			@Override
@@ -243,11 +243,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				return ((Task) element).getProject().getName();
+				return ((TaskEntry) element).getTask().getProject().getName();
 			}
 			public Image getImage(Object obj) {
-				Task task = (Task) obj;
-				if (StorageService.CHECK_IN.equals(task.getTask()) || StorageService.BREAK.equals(task.getTask())) return null;
+				TaskEntry task = (TaskEntry) obj;
+				if (StorageService.CHECK_IN.equals(task.getTask().getName()) || StorageService.BREAK.equals(task.getTask().getName())) return null;
 				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
 			}
 		});
@@ -267,7 +267,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 			@Override
 			protected Object getValue(Object element) {
-		        return ((Task) element).getTotal();
+		        return ((TaskEntry) element).getTotal();
 			}
 
 			@Override
@@ -276,14 +276,14 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
 			public String getText(Object element) {
-				Task entry = (Task) element;
-				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask())) return "";
+				TaskEntry entry = (TaskEntry) element;
+				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask().getName())) return "";
 				DecimalFormat df = new DecimalFormat( "0.00" );
-		        return df.format(((Task) element).getTotal());
+		        return df.format(((TaskEntry) element).getTotal());
 			}
 			public Image getImage(Object obj) {
-				Task entry = (Task) obj;
-				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask())) return null;
+				TaskEntry entry = (TaskEntry) obj;
+				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask().getName())) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
 			}
 		});
@@ -309,12 +309,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	
 	class TimeDialogCellEditor extends DialogCellEditor {
 
-		private Task entry;
+		private TaskEntry entry;
 		
 		/**
 		 * @param parent
 		 */
-		public TimeDialogCellEditor(Composite parent, Task entry) {
+		public TimeDialogCellEditor(Composite parent, TaskEntry entry) {
 			super(parent);
 			this.entry = entry;
 		}
@@ -322,7 +322,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(),
-					entry.getTask() + (entry.getProject() == null ? "" : " (" + entry.getProject().getName() + ")"), entry.getDateTime());
+					entry.getTask().getName() + (entry.getTask().getProject() == null ? "" : " (" + entry.getTask().getProject().getName() + ")"), entry.getDateTime());
 			if (timeDialog.open() == Dialog.OK) {
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
 			}
@@ -332,19 +332,19 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	class TaskListDialogCellEditor extends DialogCellEditor {
 
-		private Task entry;
+		private TaskEntry entry;
 		
 		/**
 		 * @param parent
 		 */
-		public TaskListDialogCellEditor(Composite parent, Task entry) {
+		public TaskListDialogCellEditor(Composite parent, TaskEntry entry) {
 			super(parent);
 			this.entry = entry;
 		}
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry);
+			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry.getTask());
 			listDialog.setTitle("Tasks");
 			listDialog.setMessage("Select task");
 			listDialog.setContentProvider(ArrayContentProvider.getInstance());
@@ -354,7 +354,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 				if (StringUtils.isEmpty(selectedTask)) return null;
-				entry.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+				entry.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				return selectedTask;
 			}
 			return null;

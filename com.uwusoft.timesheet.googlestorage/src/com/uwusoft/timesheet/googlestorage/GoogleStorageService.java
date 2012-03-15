@@ -47,9 +47,10 @@ import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -135,8 +136,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    		MessageBox.setMessage("Create spreadsheet", "Please manually create a spreadsheet and copy the spreadsheet key to the Google Spreadsheet Preferences!");
 	    		return false;
 	    	}
-			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "od6", "private", "full");
-			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "od6", "private", "full"), CellFeed.class);
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
+			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
 			for (CellEntry entry : cellFeed.getEntries()) {
 				if (entry.getCell().getRow() == 1)
 					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
@@ -201,6 +202,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     public List<String> getProjects(String system) {
     	List<String> projects = new ArrayList<String>();
 		URL worksheetListFeedUrl = getListFeedUrl(system + SubmissionService.PROJECTS);
+		if (worksheetListFeedUrl == null) return projects;
 		try {
 			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			for (ListEntry entry : feed.getEntries()) {
@@ -217,6 +219,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     public List<String> findTasksBySystemAndProject(String system, String project) {
     	List<String> tasks = new ArrayList<String>();
 		URL worksheetListFeedUrl = getListFeedUrl(system);
+		if (worksheetListFeedUrl == null) return tasks;
 		ListQuery query = new ListQuery(worksheetListFeedUrl);
 		query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project + "\"");
 		try {
@@ -233,8 +236,8 @@ public class GoogleStorageService extends EventManager implements StorageService
     	return tasks;
     }
     
-    public List<Task> getTaskEntries(Date date) {
-    	List <Task> taskEntries = new ArrayList<Task>();
+    public List<TaskEntry> getTaskEntries(Date date) {
+    	List <TaskEntry> taskEntries = new ArrayList<TaskEntry>();
 		try {
             ListQuery query = new ListQuery(listFeedUrl);
     		query.setSpreadsheetQuery(DATE.toLowerCase() + " = " + new SimpleDateFormat(dateFormat).format(date));
@@ -249,10 +252,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            if (task == null || elements.getValue(TIME) == null) break;
 	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
-	            	taskEntries.add(new Task(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
 	            			task, 0, new Project()));
 	            else
-	            	taskEntries.add(new Task(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
 	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), getSystem(id.intValue()))));
 	        }
 		} catch (IOException e) {
@@ -286,7 +289,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return new String[comments.size()];
     }
     
-    public void createTaskEntry(Task task) {
+    public void createTaskEntry(TaskEntry task) {
         try {
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
@@ -304,15 +307,15 @@ public class GoogleStorageService extends EventManager implements StorageService
 			else timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
 			
 			String taskLink = null;
-			if (CHECK_IN.equals(task.getTask()) || BREAK.equals(task.getTask()))
-				timeEntry.getCustomElements().setValueLocal(TASK, task.getTask());
+			if (CHECK_IN.equals(task.getTask().getName()) || BREAK.equals(task.getTask().getName()))
+				timeEntry.getCustomElements().setValueLocal(TASK, task.getTask().getName());
 			else {
 				if (task.getTotal() != 0) {
 					timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
 					if (task.isWholeDay())
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
-				taskLink = getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
+				taskLink = getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem());
 			}
 			if (task.getComment() != null) timeEntry.getCustomElements().setValueLocal(COMMENT, task.getComment());
 			service.insert(listFeedUrl, timeEntry);
@@ -344,12 +347,12 @@ public class GoogleStorageService extends EventManager implements StorageService
     }
 
 	@Override
-	public Task getLastTask() {
+	public TaskEntry getLastTask() {
     	try {
 			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
-			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null) // if date and time isn't set yet this should be the last task
-				return new Task(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), new Project(elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1)));
+			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
+				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), new Project(elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1)));
 			return null;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -422,15 +425,15 @@ public class GoogleStorageService extends EventManager implements StorageService
 		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
-	public void updateTaskEntry(Task task, Long id) {
-		if (CHECK_IN.equals(task.getTask()) || BREAK.equals(task.getTask()))
-			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask());
+	public void updateTaskEntry(TaskEntry task, Long id) {
+		if (CHECK_IN.equals(task.getTask().getName()) || BREAK.equals(task.getTask().getName()))
+			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask().getName());
 		else
-			updateTask(getTaskLink(task.getTask(), task.getProject().getName(), task.getProject().getSystem()), id.intValue());
+			updateTask(getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem()), id.intValue());
 		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
-	public void importTasks(String submissionSystem, Map<String, Set<SubmissionTask>> projects) {
+	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
@@ -440,10 +443,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 					try {
 						ListFeed feed = service.query(query, ListFeed.class);
 						List<ListEntry> listEntries = feed.getEntries();
-						Set<SubmissionTask> tasks = new HashSet<SubmissionTask>(projects.get(project));
+						Set<SubmissionEntry> tasks = new HashSet<SubmissionEntry>(projects.get(project));
 						
 						for (ListEntry entry : listEntries) // collect available tasks
-							for (SubmissionTask task : projects.get(project))
+							for (SubmissionEntry task : projects.get(project))
 								if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
 									tasks.remove(task);							
 						projects.put(project, tasks);
@@ -466,7 +469,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				createUpdateCellEntry(worksheet, 1, 3, ID);
 			}
 			for (String project : projects.keySet()) {
-				for (SubmissionTask task : projects.get(project)) {
+				for (SubmissionEntry task : projects.get(project)) {
 					ListEntry taskEntry = new ListEntry();
 					taskEntry.getCustomElements().setValueLocal(TASK, task.getName());
 					taskEntry.getCustomElements().setValueLocal(ID, Long.toString(task.getId()));
@@ -538,7 +541,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            String project = elements.getValue(PROJECT);
 				if (submissionSystems.containsKey(system)) {
 					systems.add(system);
-					SubmissionTask submissionTask = getSubmissionTask(task, project, system);
+					SubmissionEntry submissionTask = getSubmissionTask(task, project, system);
 					if (submissionTask != null)
 						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)));
 				}
@@ -558,9 +561,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 	public void submitFillTask(Date date) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
-			Task task = TimesheetApp.createTask(date, TimesheetApp.DAILY_TASK);
+			Task task = TimesheetApp.createTask(TimesheetApp.DAILY_TASK);
 			if (submissionSystems.containsKey(task.getProject().getSystem())) {
-				SubmissionTask submissionTask = getSubmissionTask(task.getTask(), task.getProject().getName(), task.getProject().getSystem());
+				SubmissionEntry submissionTask = getSubmissionTask(task.getName(), task.getProject().getName(), task.getProject().getSystem());
 				if (submissionTask != null)
 					new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(task.getProject().getSystem()))
 							.submit(date, submissionTask, Double.parseDouble(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL)));
@@ -681,7 +684,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return null;
 	}
 	
-	private SubmissionTask getSubmissionTask(String task, String project, String system) {
+	private SubmissionEntry getSubmissionTask(String task, String project, String system) {
 		ListQuery query = new ListQuery(getWorksheet(system).getListFeedUrl());
 		query.setSpreadsheetQuery(TASK.toLowerCase() + " = \"" + task + "\" and "
 								+ PROJECT.toLowerCase() + " = \"" + project + "\"");
@@ -689,7 +692,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			ListFeed feed = service.query(query, ListFeed.class);
 			for (ListEntry entry : feed.getEntries()) {
 				if (entry.getCustomElements().getValue(PROJECT + ID) == null) return null;
-				return new SubmissionTask(Long.parseLong(entry.getCustomElements().getValue(PROJECT + ID)),
+				return new SubmissionEntry(Long.parseLong(entry.getCustomElements().getValue(PROJECT + ID)),
 						Long.parseLong(entry.getCustomElements().getValue(ID)),
 						entry.getCustomElements().getValue(TASK), entry.getCustomElements().getValue(PROJECT), system);
 			}

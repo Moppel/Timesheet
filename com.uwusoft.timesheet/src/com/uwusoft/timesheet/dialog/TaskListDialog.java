@@ -13,6 +13,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.StatusLineManager;
 import org.eclipse.jface.fieldassist.AutoCompleteField;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -42,7 +43,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionTask;
+import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -59,19 +60,24 @@ public class TaskListDialog extends ListDialog {
     private SubmissionService submissionService;
     private Task taskSelected;
 	private String[] systems;
-	private Map<String, SubmissionTask> tasksMap;
+	private Map<String, SubmissionEntry> tasksMap;
     private Combo systemCombo, projectCombo;
     private Text commentText;
     private AutoCompleteField commentCompleteField;
     private String projectSelected, systemSelected, task, comment;
     private boolean original;
+	private StatusLineManager statusLineManager = new StatusLineManager();
 
     public TaskListDialog(Shell shell, Task taskSelected) {
         super(shell);
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		storageService = new ExtensionManager<StorageService>(
                 StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		List<String> systemsList = storageService.getSystems();
+		Set<String> systemsList = TimesheetApp.getSubmissionSystems().keySet();
+		if (systemsList.isEmpty()) {
+			systemsList = new HashSet<String>();
+			systemsList.add("Local");
+		}
         systems = systemsList.toArray(new String[systemsList.size()]);
         this.taskSelected = taskSelected;
 		setContentProvider(ArrayContentProvider.getInstance());
@@ -157,6 +163,7 @@ public class TaskListDialog extends ListDialog {
                 setTasks();
             }
         });
+        statusLineManager.createControl(parent);
         return parent;
     }
 
@@ -193,15 +200,15 @@ public class TaskListDialog extends ListDialog {
 		if (original) {
 			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(
 					TimesheetApp.getSubmissionSystems().get(systemSelected));
-			Map<String, Set<SubmissionTask>> assignedProjects = submissionService.getAssignedProjects();
-			Set<SubmissionTask> submissionTasks = assignedProjects.get(projectSelected);
+			Map<String, Set<SubmissionEntry>> assignedProjects = submissionService.getAssignedProjects();
+			Set<SubmissionEntry> submissionTasks = assignedProjects.get(projectSelected);
 			if (submissionTasks == null) {
 				projectSelected = assignedProjects.keySet().iterator().next();
 				submissionTasks = assignedProjects.get(projectSelected);
 			}
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-			tasksMap = new HashMap<String, SubmissionTask>();
-			for (SubmissionTask task : submissionTasks) {
+			tasksMap = new HashMap<String, SubmissionEntry>();
+			for (SubmissionEntry task : submissionTasks) {
 				if (!tasks.contains(task.getName())) tasksMap.put(task.getName(), task);
 			}
 			getTableViewer().setInput(tasksMap.keySet());
@@ -209,7 +216,7 @@ public class TaskListDialog extends ListDialog {
 		else {
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
 			if (taskSelected != null && taskSelected.getProject().getName().equals(projectSelected)) {
-				if (taskSelected.getProject().getSystem().equals(systemSelected)) tasks.remove(this.taskSelected.getTask());
+				if (taskSelected.getProject().getSystem().equals(systemSelected)) tasks.remove(this.taskSelected);
 			}
 	        getTableViewer().setInput(tasks);
 		}
@@ -222,8 +229,8 @@ public class TaskListDialog extends ListDialog {
 		    String selectedTask = Arrays.toString(getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 			if (StringUtils.isEmpty(selectedTask)) return;
-			Map<String, Set<SubmissionTask>> projects = new HashMap<String, Set<SubmissionTask>>();
-			projects.put(projectSelected, new HashSet<SubmissionTask>());
+			Map<String, Set<SubmissionEntry>> projects = new HashMap<String, Set<SubmissionEntry>>();
+			projects.put(projectSelected, new HashSet<SubmissionEntry>());
 			projects.get(projectSelected).add(tasksMap.get(selectedTask));
 			storageService.importTasks(systemSelected, projects);
 		}

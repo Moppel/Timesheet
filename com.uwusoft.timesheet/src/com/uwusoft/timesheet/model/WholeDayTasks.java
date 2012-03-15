@@ -42,7 +42,7 @@ public class WholeDayTasks {
 		em = TimesheetApp.factory.createEntityManager();
 		
 		em.getTransaction().begin();
-		em.persist(new Task(begin, BEGIN_WDT));
+		em.persist(new TaskEntry(begin, BEGIN_WDT));
 		em.getTransaction().commit();
 	}
 
@@ -66,8 +66,8 @@ public class WholeDayTasks {
 				em.remove(iterator.next());
 		}
 		
-		Task task = new Task(to, tasks[0], total, true);
-		task.setProject(project);
+		TaskEntry task = new TaskEntry(to, tasks[0], total, true);
+		task.getTask().setProject(project);
 		em.persist(task);
 		em.getTransaction().commit();
 		
@@ -84,19 +84,19 @@ public class WholeDayTasks {
 	public void createTaskEntries() {
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
-		Query q = em.createQuery("select t from Task t where t.wholeDay=true order by t.dateTime asc");
+		Query q = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime asc");
 		@SuppressWarnings("unchecked")
-		List<Task> taskList = q.getResultList();
+		List<TaskEntry> taskList = q.getResultList();
 		if (taskList.isEmpty()) return;
 		
 		q = em.createQuery("select t from Task t where t.task='" + BEGIN_WDT + "' order by t.dateTime asc");
 		
 		em.getTransaction().begin();
 		for (Object beginTask : q.getResultList()) { // should be only a single result but who knows ...
-			begin = new Date(((Task) beginTask).getDateTime().getTime());
+			begin = new Date(((TaskEntry) beginTask).getDateTime().getTime());
 			em.remove(beginTask);
 		}		
-		for (Task task : taskList) {
+		for (TaskEntry task : taskList) {
 			Date end = new Date(task.getDateTime().getTime());
 			do {
 				if (BusinessDayUtil.isAnotherWeek())
@@ -110,7 +110,7 @@ public class WholeDayTasks {
 	                	project.setName(dailyTask[1]);
 	                	project.setSystem(dailyTask[2]);
 	                }
-                	storageService.createTaskEntry(new Task(begin, dailyTask[0], project,
+                	storageService.createTaskEntry(new TaskEntry(begin, dailyTask[0], project,
                 			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
 				}
 				MessageBox.setMessage("Set whole day task", begin + "\n" + task); // TODO create confirm dialog
