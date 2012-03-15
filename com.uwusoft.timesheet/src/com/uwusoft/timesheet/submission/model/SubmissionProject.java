@@ -1,0 +1,58 @@
+package com.uwusoft.timesheet.submission.model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
+@Entity
+public class SubmissionProject {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	private String name;
+	@OneToMany
+	private List<SubmissionTask> tasks = new ArrayList<SubmissionTask>();
+
+	/**
+	 * JPA requires a no-arg constructor
+	 */
+	public SubmissionProject() {
+	}
+
+	/**
+	 * 
+	 * @param name
+	 */
+	public SubmissionProject(String name) {
+		this.name = name;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public List<SubmissionTask> getTasks() {
+		return tasks;
+	}
+
+	public void addTask(SubmissionTask task) {
+		tasks.add(task);
+	}
+
+	public void removeTask(SubmissionTask task) {
+		tasks.remove(task);
+	}
+}
