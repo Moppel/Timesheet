@@ -1,5 +1,8 @@
 package com.uwusoft.timesheet.util;
 
+import org.eclipse.core.runtime.ILog;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
@@ -8,9 +11,12 @@ import org.eclipse.swt.widgets.ToolTip;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
+import com.uwusoft.timesheet.Activator;
+
 public class MessageBox {
 	private static ToolTip toolTip;
 	private static Shell shell;
+	private static ILog logger = Activator.getDefault().getLog();
 
 	private static ToolTip getSystemTrayToolTip() {
 		if (toolTip != null) return toolTip;
@@ -38,6 +44,7 @@ public class MessageBox {
 			toolTip.setMessage(message); 
 			toolTip.setVisible(true); 
 		}
+        logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, title + ": " + message));
 	}
 	
 	public static void setError(String title, String message) {
@@ -50,5 +57,6 @@ public class MessageBox {
 			toolTip.setMessage(message == null ? "" : message); 
 			toolTip.setVisible(true); 
 		}
+        logger.log(new Status(IStatus.ERROR, Activator.PLUGIN_ID, title + ": " + message));
 	}
 }
