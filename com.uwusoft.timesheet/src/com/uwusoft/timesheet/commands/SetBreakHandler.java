@@ -13,6 +13,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -27,7 +28,7 @@ public class SetBreakHandler extends AbstractHandler {
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), StorageService.BREAK, new Date());
 		if (timeDialog.open() == Dialog.OK) {
 			storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
-			TaskEntry task = new TaskEntry(null, StorageService.BREAK);
+			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
 			storageService.createTaskEntry(task);				
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);

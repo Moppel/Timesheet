@@ -21,6 +21,7 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -47,7 +48,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 									new Date());
 			if (timeDialog.open() == Dialog.OK) {
 				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
-				TaskEntry task = new TaskEntry(null, selectedTask);
+				TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				task.setComment(listDialog.getComment());
 				storageService.createTaskEntry(task);				

@@ -30,46 +30,11 @@ public class TaskEntry {
 
 	/**
 	 * @param dateTime
-	 * @param name
+	 * @param task
 	 */
-	public TaskEntry(Date dateTime, String name) {
+	public TaskEntry(Date dateTime, Task task) {
 		if (dateTime != null) this.dateTime = new Timestamp(dateTime.getTime());
-		task = new Task(name);
-	}
-	
-	/**
-	 * @param dateTime
-	 * @param name
-	 * @param project
-	 */
-	public TaskEntry(Date dateTime, String name, Project project) {
-		this(dateTime, name);
-		task.setProject(project);
-	}
-	
-	/**
-	 * @param id
-	 * @param name
-	 * @param comment
-	 * @param project
-	 */
-
-	public TaskEntry(Long id, String name, Project project) {
-		this.id = id;
-		task = new Task(name);
-		task.setProject(project);
-	}
-
-	/**
-	 * @param id
-	 * @param dateTime
-	 * @param task
-	 * @param project
-	 */
-	public TaskEntry(Long id, Date dateTime, String task, float total, Project project) {
-		this(dateTime, task, project);
-		this.id = id;
-		this.total = total;
+		this.task = task;
 	}
 
 	/**
@@ -77,19 +42,8 @@ public class TaskEntry {
 	 * @param task
 	 * @param total
 	 */
-	public TaskEntry(Date dateTime, String task, float total) {
+	public TaskEntry(Date dateTime, Task task, float total) {
 		this(dateTime, task);
-		this.total = total;
-	}
-
-	/**
-	 * @param dateTime
-	 * @param task
-	 * @param project
-	 * @param total
-	 */
-	public TaskEntry(Date dateTime, String task, Project project, float total) {
-		this(dateTime, task, project);
 		this.total = total;
 	}
 	
@@ -99,10 +53,35 @@ public class TaskEntry {
 	 * @param total
 	 * @param wholeDay
 	 */
-	public TaskEntry(Date dateTime, String task, float total, boolean wholeDay) {
+	public TaskEntry(Date dateTime, Task task, float total, boolean wholeDay) {
 		this(dateTime, task, total);
 		this.wholeDay = wholeDay;
 	}	
+	
+	/**
+	 * @param id
+	 * @param task
+	 * @param project
+	 * @param system
+	 */
+	public TaskEntry(Long id, String task, String project, String system) {
+		this.id = id;
+		this.task = new Task(task, new Project(project, system));
+	}
+
+	/**
+	 * @param id
+	 * @param dateTime
+	 * @param task
+	 * @param project
+	 * @param system
+	 * @param total
+	 */
+	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total) {
+		this(dateTime, new Task(task, new Project(project, system)));
+		this.id = id;
+		this.total = total;
+	}
 	
 	/**
 	 * @return the id

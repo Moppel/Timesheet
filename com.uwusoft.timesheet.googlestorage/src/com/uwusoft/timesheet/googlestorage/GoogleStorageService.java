@@ -48,7 +48,6 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
-import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.DesktopUtil;
@@ -253,10 +252,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
 	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, 0, new Project()));
+	            			task, null, null, 0));
 	            else
 	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, Float.parseFloat(elements.getValue(TOTAL)), new Project(elements.getValue(PROJECT), getSystem(id.intValue()))));
+	            			task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL))));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -352,7 +351,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
 			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
-				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), new Project(elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1)));
+				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1));
 			return null;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
