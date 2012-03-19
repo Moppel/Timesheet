@@ -78,9 +78,8 @@ public class TaskEntry {
 	 * @param total
 	 */
 	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total) {
-		this(dateTime, new Task(task, new Project(project, system)));
+		this(dateTime, new Task(task, new Project(project, system)), total);
 		this.id = id;
-		this.total = total;
 	}
 	
 	/**
