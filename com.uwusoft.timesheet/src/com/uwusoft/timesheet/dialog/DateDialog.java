@@ -28,7 +28,7 @@ public class DateDialog extends Dialog {
     
 	public DateDialog(Display display, String title, String task, Date date) {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
-		this.date = DateFormat.getDateInstance(DateFormat.SHORT).format(date);
+		this.date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(date);
 		this.title = title;
 		this.task = task;
 		Calendar calendar = Calendar.getInstance();
@@ -45,6 +45,7 @@ public class DateDialog extends Dialog {
         
         GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
 		gridData.horizontalSpan = 2;
+		gridData.grabExcessHorizontalSpace = true;
 
         Label label = new Label(composite, SWT.NONE);
         label.setText(task);
@@ -57,18 +58,13 @@ public class DateDialog extends Dialog {
 		
         label = new Label(composite, SWT.NONE);
         label.setText("" + date);
-        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         
         label = new Label(composite, SWT.NONE);
         label.setText("To:");
         label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		
-		DateTime dateEntry = new DateTime(composite, SWT.DATE);
-		dateEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-        dateEntry.setDay(day);
-        dateEntry.setMonth(month);
-        dateEntry.setYear(year);
-        //dateEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+		DateTime dateEntry = new DateTime(composite, SWT.CALENDAR);
+        dateEntry.setDate(year, month, day);
         dateEntry.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				day = ((DateTime) e.getSource()).getDay();
@@ -79,7 +75,6 @@ public class DateDialog extends Dialog {
 			}
 		});
         dateEntry.setFocus();
-        dateEntry.setLayoutData(gridData);
         return composite;
 	}
 
