@@ -4,7 +4,6 @@ import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -18,8 +17,6 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
@@ -38,9 +35,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public List<String> getProjects(String system) {
-		Query q = em.createQuery("select p from Project p where p.system ='" + system + "'");
 		@SuppressWarnings("unchecked")
-		List<Project> projectList = q.getResultList();
+		List<Project> projectList = em.createQuery(
+				"select p from Project p " +
+				"where p.system = :system")
+				.setParameter("system", system)
+				.getResultList();
 		List<String> projects = new ArrayList<String>();
 		for (Project project : projectList) projects.add(project.getName());
 		return projects;
@@ -48,9 +48,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public List<String> findTasksBySystemAndProject(String system, String project) {
-		Query q = em.createQuery("select t from Task t where t.project.name='" + project + "' and t.project.system ='" + system + "'");
-		@SuppressWarnings("unchecked")
-		List<Task> taskList = q.getResultList();
+		List<Task> taskList = findTasksByProjectAndSystem(project, system);
 		List<String> tasks = new ArrayList<String>();
 		for (Task task : taskList) tasks.add(task.getName());
 		return tasks;
@@ -99,9 +97,11 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public TaskEntry getLastTask() {
-		Query q = em.createQuery("select t from TaskEntry t where t.dateTime is null order by t.id desc");
-		if (q.getResultList().isEmpty()) return null;
-		return (TaskEntry) q.getResultList().iterator().next();
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t where t.dateTime is null order by t.id desc")
+				.getResultList();
+		if (taskEntries.isEmpty()) return null;
+		return taskEntries.iterator().next();
 	}
 
 	@Override
@@ -115,19 +115,17 @@ public class LocalStorageService extends EventManager implements StorageService 
 	@Override
 	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
 		for (String project : projects.keySet()) {
-			Query q = em.createQuery("select t from Task t where t.project.name = '" + project + "' and t.project.system = '" + submissionSystem + "'");
-			@SuppressWarnings("unchecked")
-			List<Task> taskList = q.getResultList();
-			Set<SubmissionEntry> tasks = new HashSet<SubmissionEntry>(projects.get(project));
-			for (Task task : taskList) // collect available tasks
-				for (SubmissionEntry submissionTask : projects.get(project))
-					if (submissionTask.getName().equals(task.getName()))
-						tasks.remove(submissionTask);							
-			projects.put(project, tasks);
+			for (SubmissionEntry submissionTask : projects.get(project)) {
+				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProjectName(), submissionTask.getSystem());
+				if (foundTask == null) {
+					em.getTransaction().begin();
+					Project foundProject = findProjectByNameAndSystem(submissionTask.getProjectName(), submissionTask.getSystem());
+					if (foundProject == null) foundProject = new Project(submissionTask.getProjectName(), submissionTask.getSystem());
+					em.persist(new Task(submissionTask.getName(), foundProject));
+					em.getTransaction().commit();
+				}
+			}
 		}		
-		em.getTransaction().begin();
-		//em.persist(task);
-		em.getTransaction().commit();
 	}
 
 	@Override
@@ -151,13 +149,55 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 	
 	private SubmissionEntry getSubmissionTask(String task, String project, String system) {
-		Query q = em.createQuery("select t from Task t where t.name = '" + task + "' and t.project.name = '" + project + "' and t.project.system = '" + system + "'");
-		if (q.getResultList().isEmpty()) return null;
-		Task defaultTask = (Task) q.getResultList().iterator().next();
-		return new SubmissionEntry(defaultTask.getProject().getId(), defaultTask.getId(), defaultTask.getName(), defaultTask.getProject().getName(), system);
+		try {
+			Task defaultTask = findTaskByNameProjectAndSystem(task, project, system);
+			return new SubmissionEntry(defaultTask.getProject().getId(), defaultTask.getId(), defaultTask.getName(), defaultTask.getProject().getName(), system);
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override
 	public void openUrl(String openBrowser) {
+	}
+	
+	public Project findProjectByNameAndSystem(String name, String system) {
+		try {	
+			return (Project) em.createQuery(
+				"select p from Project p where p.name = :name "
+				+ "and p.system = :system")
+				.setParameter("name", name)
+				.setParameter("system", system)
+				.getSingleResult();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Task> findTasksByProjectAndSystem(String project, String system) {
+		return em.createQuery(
+				"select t from Task t " +
+				"where t.project.name = :project " +
+				"and t.project.system = :system")
+				.setParameter("project", project)
+				.setParameter("system", system)
+				.getResultList();
+	}
+	
+	public Task findTaskByNameProjectAndSystem(String name, String project, String system) {
+		try {
+			return (Task) em.createQuery(
+				"select t from Task t " +
+				"where t.name = :name " +
+				"and t.project.name = :project " +
+				"and t.project.system = :system")
+				.setParameter("name", name)
+				.setParameter("project", project)
+				.setParameter("system", system)
+				.getSingleResult();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

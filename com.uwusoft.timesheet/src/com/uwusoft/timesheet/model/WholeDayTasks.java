@@ -7,23 +7,22 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class WholeDayTasks {
-	public static final String BEGIN_WDT="BEGIN_WDT";
 	private static WholeDayTasks instance;
-	private Date begin, nextBegin;
+	private static String BEGIN_WDT = "BEGIN_WDT";
+	private static LocalStorageService localStorageService;
+	private Date nextBegin;
 	private float total;
-	private IPreferenceStore preferenceStore;
 	private EntityManager em;
 	
 	public static WholeDayTasks getInstance() {
@@ -32,57 +31,51 @@ public class WholeDayTasks {
 	}
 	
 	private WholeDayTasks() {
-		begin = BusinessDayUtil.getNextBusinessDay(new Date()); // TODO date of last task entry
+		em = TimesheetApp.factory.createEntityManager();
+		Query q = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime desc");
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> taskEntryList = q.getResultList();
+		Date begin;
+		if (taskEntryList.isEmpty()) {
+			begin = BusinessDayUtil.getNextBusinessDay(new Date());
+			em.getTransaction().begin();
+			@SuppressWarnings("unchecked")
+			List<Task> beginTasks = em.createQuery("select t from Task t where t.name = :name")
+				.setParameter("name", BEGIN_WDT)
+				.getResultList();
+			Task beginTask;
+			if (beginTasks.isEmpty()) {
+				beginTask = new Task(BEGIN_WDT);
+				em.persist(beginTask);
+			}
+			else
+				beginTask = beginTasks.iterator().next();
+			em.persist(new TaskEntry(begin, beginTask));
+			em.getTransaction().commit();
+		}
+		else
+			begin = BusinessDayUtil.getNextBusinessDay(taskEntryList.iterator().next().getDateTime());
 		nextBegin = begin;
 		
-		preferenceStore = Activator.getDefault().getPreferenceStore(); 
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore(); 
 		total = new Float(preferenceStore.getInt(TimesheetApp.WORKING_HOURS) / 5); // TODO define non working days
 		
-		em = TimesheetApp.factory.createEntityManager();
-		
-		em.getTransaction().begin();
-		Query q = em.createQuery("select t from Task t where t.name='" + BEGIN_WDT + "'");
-		Task task = new Task(BEGIN_WDT);
-		@SuppressWarnings("unchecked")
-		List<Task> taskList = q.getResultList();
-		if (taskList.isEmpty()) em.persist(task);
-		else task = taskList.iterator().next();
-		
-		em.persist(new TaskEntry(begin, task));
-		em.getTransaction().commit();
+		localStorageService = new LocalStorageService();
 	}
 
 	public void addNextTask(Date to, String name) {
 		em.getTransaction().begin();
-		String[] tasks = name.split(SubmissionService.separator);
-		Project project = new Project();
-        if (tasks.length > 2) {
-        	project.setName(tasks[1]);
-        	project.setSystem(tasks[2]);
-        }
-		Query q = em.createQuery("select p from Project p where p.name='" + project.getName()
-				+ "' and p.system ='" + project.getSystem() + "'");
-		@SuppressWarnings("unchecked")
-		List<Project> projectList = q.getResultList();
-		if (projectList.isEmpty()) em.persist(project);
-		else project = projectList.iterator().next();
-		/*else {
-			Iterator<Project> iterator = projectList.iterator();
-			project = iterator.next();
-			while (iterator.hasNext())
-				em.remove(iterator.next());
-		}*/
+		Task task = TimesheetApp.createTask(name);
+		Project project = localStorageService.findProjectByNameAndSystem(task.getProject().getName(), task.getProject().getSystem());
+		if (project == null) em.persist(task.getProject());
+		else task.setProject(project);
 		
-		q = em.createQuery("select t from Task t where t.name='" + tasks[0]
-				+ "' and t.project.name ='" + project.getName() + "' and t.project.system ='" + project.getSystem() + "'");
-		Task task = new Task(tasks[0], project);
-		@SuppressWarnings("unchecked")
-		List<Task> taskList = q.getResultList();
-		if (taskList.isEmpty()) em.persist(task);
-		else task = taskList.iterator().next();
+		Task foundTask = localStorageService.findTaskByNameProjectAndSystem(
+				task.getName(), task.getProject().getName(), task.getProject().getSystem());
+		if (foundTask == null) em.persist(task);
+		else task = foundTask;
 		
 		TaskEntry taskEntry = new TaskEntry(to, task, total, true);
-		taskEntry.getTask().setProject(project);
 		em.persist(taskEntry);
 		em.getTransaction().commit();
 		
@@ -97,53 +90,32 @@ public class WholeDayTasks {
 	}
 
 	public void createTaskEntries() {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
-		Query q = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime asc");
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = q.getResultList();
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime asc")
+				.getResultList();
 		if (taskEntryList.isEmpty()) return;
 		
-		q = em.createQuery("select t from TaskEntry t where t.task.name='" + BEGIN_WDT + "' order by t.dateTime asc");
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> beginTaskEntryList = em.createQuery("select t from TaskEntry t where t.task.name = :name")
+				.setParameter("name", BEGIN_WDT)
+				.getResultList();
+		if (beginTaskEntryList.isEmpty()) return;
 		
 		em.getTransaction().begin();
-		for (Object beginTask : q.getResultList()) { // should be only a single result but who knows ...
-			begin = new Date(((TaskEntry) beginTask).getDateTime().getTime());
-			em.remove(beginTask);
-		}		
+		TaskEntry beginTaskEntry = beginTaskEntryList.iterator().next();
+		Date begin = beginTaskEntry.getDateTime();
+		em.remove(beginTaskEntry);
+		
 		for (TaskEntry taskEntry : taskEntryList) {
 			Date end = new Date(taskEntry.getDateTime().getTime());
 			do {
-				if (BusinessDayUtil.isAnotherWeek())
+				if (BusinessDayUtil.isAnotherWeek(begin, end))
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				taskEntry.setDateTime(new Timestamp(begin.getTime()));
 				storageService.createTaskEntry(taskEntry);
-				if (!StringUtils.isEmpty(preferenceStore.getString(TimesheetApp.DAILY_TASK))) {
-					String[] dailyTask = preferenceStore.getString(TimesheetApp.DAILY_TASK).split(SubmissionService.separator);
-					Project project = new Project();
-	                if (dailyTask.length > 2) {
-	                	project.setName(dailyTask[1]);
-	                	project.setSystem(dailyTask[2]);
-	                }
-	        		
-	                q = em.createQuery("select p from Project p where p.name='" + project.getName()
-	        				+ "' and p.system ='" + project.getSystem() + "'");
-	        		@SuppressWarnings("unchecked")
-	        		List<Project> projectList = q.getResultList();
-	        		if (projectList.isEmpty()) em.persist(project);
-	        		else project = projectList.iterator().next();
-	        		
-	        		q = em.createQuery("select t from Task t where t.name='" + dailyTask[0]
-	        				+ "' and t.project.name ='" + project.getName() + "' and t.project.system ='" + project.getSystem() + "'");
-	        		Task task = new Task(dailyTask[0], project);
-	        		@SuppressWarnings("unchecked")
-	        		List<Task> taskList = q.getResultList();
-	        		if (taskList.isEmpty()) em.persist(task);
-	        		else task = taskList.iterator().next();
-                	
-	        		storageService.createTaskEntry(new TaskEntry(begin, task,
-                			Float.parseFloat(preferenceStore.getString(TimesheetApp.DAILY_TASK_TOTAL))));
-				}
 				MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin)).after(end));
 			em.remove(taskEntry);
