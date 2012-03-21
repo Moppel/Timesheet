@@ -36,7 +36,7 @@ public class CheckinHandler extends AbstractHandler {
 					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				storageService.createTaskEntry(new TaskEntry(timeDialog.getTime(), new Task(StorageService.CHECK_IN)));
 				Task defaultTask = TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK);
-				TaskEntry defaultTaskEntry = new TaskEntry(timeDialog.getTime(), new Task(defaultTask.getName()));
+				TaskEntry defaultTaskEntry = new TaskEntry(timeDialog.getTime(), defaultTask);
 				defaultTaskEntry.setDateTime(null);
 				storageService.createTaskEntry(defaultTaskEntry);
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
