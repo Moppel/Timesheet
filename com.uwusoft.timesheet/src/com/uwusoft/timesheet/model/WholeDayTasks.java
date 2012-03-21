@@ -112,10 +112,10 @@ public class WholeDayTasks {
 		for (TaskEntry taskEntry : taskEntryList) {
 			Date end = new Date(taskEntry.getDateTime().getTime());
 			do {
-				if (BusinessDayUtil.isAnotherWeek(begin, end))
-					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				taskEntry.setDateTime(new Timestamp(begin.getTime()));
 				storageService.createTaskEntry(taskEntry);
+				if (BusinessDayUtil.isAnotherWeek(begin, BusinessDayUtil.getNextBusinessDay(begin)))
+					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 				MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin)).after(end));
 			em.remove(taskEntry);
