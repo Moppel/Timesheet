@@ -15,7 +15,6 @@ import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.MessageBox;
 
 public class WholeDayTasks {
 	private static WholeDayTasks instance;
@@ -37,7 +36,7 @@ public class WholeDayTasks {
 		List<TaskEntry> taskEntryList = q.getResultList();
 		Date begin;
 		if (taskEntryList.isEmpty()) {
-			begin = BusinessDayUtil.getNextBusinessDay(new Date());
+			begin = BusinessDayUtil.getNextBusinessDay(new Date(), false);
 			em.getTransaction().begin();
 			@SuppressWarnings("unchecked")
 			List<Task> beginTasks = em.createQuery("select t from Task t where t.name = :name")
@@ -54,7 +53,7 @@ public class WholeDayTasks {
 			em.getTransaction().commit();
 		}
 		else
-			begin = BusinessDayUtil.getNextBusinessDay(taskEntryList.iterator().next().getDateTime());
+			begin = BusinessDayUtil.getNextBusinessDay(taskEntryList.iterator().next().getDateTime(), false);
 		nextBegin = begin;
 		
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore(); 
@@ -79,7 +78,7 @@ public class WholeDayTasks {
 		em.persist(taskEntry);
 		em.getTransaction().commit();
 		
-		nextBegin = BusinessDayUtil.getNextBusinessDay(to);
+		nextBegin = BusinessDayUtil.getNextBusinessDay(to, false);
 	}	
 	
 	/**
@@ -114,12 +113,14 @@ public class WholeDayTasks {
 			do {
 				taskEntry.setDateTime(new Timestamp(begin.getTime()));
 				storageService.createTaskEntry(taskEntry);
-				if (BusinessDayUtil.isAnotherWeek(begin, BusinessDayUtil.getNextBusinessDay(begin)))
-					storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
-				MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
-			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin)).after(end));
+				// MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
+			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin, true)).after(end));
 			em.remove(taskEntry);
 		}
 		em.getTransaction().commit();
 	}
+
+	public float getTotal() {
+		return total;
+	}	
 }
