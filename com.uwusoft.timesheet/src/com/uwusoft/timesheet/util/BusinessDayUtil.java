@@ -106,6 +106,7 @@ public class BusinessDayUtil {
 	 */
 	public static void handleWeekChange(Date startDate, Date endDate) {
 		Calendar calWeek = new GregorianCalendar();
+		calWeek.setFirstDayOfWeek(Calendar.MONDAY);
 		calWeek.setTime(startDate);
 		int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
 		calWeek.setTime(endDate);

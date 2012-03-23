@@ -88,7 +88,7 @@ public class WholeDayTasks {
 		return nextBegin;
 	}
 
-	public void createTaskEntries() {
+	public void createTaskEntries(Date lastDate) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
@@ -107,6 +107,7 @@ public class WholeDayTasks {
 		TaskEntry beginTaskEntry = beginTaskEntryList.iterator().next();
 		Date begin = beginTaskEntry.getDateTime();
 		em.remove(beginTaskEntry);
+		BusinessDayUtil.handleWeekChange(lastDate, begin);
 		
 		for (TaskEntry taskEntry : taskEntryList) {
 			Date end = new Date(taskEntry.getDateTime().getTime());
