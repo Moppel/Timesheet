@@ -361,6 +361,24 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return null;
 	}
 
+	public Date getLastTaskEntryDate() {
+    	try {
+			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+			for (int i = feed.getEntries().size() - 1; i > 2; i--) {
+				CustomElementCollection elements = feed.getEntries().get(i).getCustomElements();
+				if (elements.getValue(DATE) != null)
+					return new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
+			}
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getResponseBody());
+		} catch (ParseException e) {
+			MessageBox.setError(title, e.getLocalizedMessage());
+		}		
+		return null;
+	}
+	
 	private void updateTask(String taskLink, int row) {
 		createUpdateCellEntry(defaultWorksheet,	row,
 				headingIndex.get(TASK), "=" + taskLink);

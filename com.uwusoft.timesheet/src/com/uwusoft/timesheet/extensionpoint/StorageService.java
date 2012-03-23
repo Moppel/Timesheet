@@ -95,6 +95,8 @@ public interface StorageService {
     
     TaskEntry getLastTask();
     
+    Date getLastTaskEntryDate();
+    
     void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects);
     
     Set<String> submitEntries(int weekNum);

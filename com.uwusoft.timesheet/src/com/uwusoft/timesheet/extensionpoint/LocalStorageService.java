@@ -105,6 +105,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
+	public Date getLastTaskEntryDate() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
 	public void storeLastDailyTotal() {
 	}
 

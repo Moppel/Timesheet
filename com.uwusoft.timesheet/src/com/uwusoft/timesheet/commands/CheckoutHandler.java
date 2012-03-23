@@ -38,7 +38,7 @@ public class CheckoutHandler extends AbstractHandler {
 				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
 				storageService.storeLastDailyTotal();
 				WholeDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
-				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, preferenceStore.getString(TimesheetApp.SYSTEM_START));
+				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check out", e.getLocalizedMessage());

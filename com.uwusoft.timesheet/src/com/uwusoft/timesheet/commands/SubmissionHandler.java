@@ -1,5 +1,7 @@
 package com.uwusoft.timesheet.commands;
 
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,12 +25,16 @@ public class SubmissionHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+				.getService(preferenceStore.getString(StorageService.PROPERTY));
 		int weekNum = Integer.parseInt(event.getParameter("Timesheet.commands.weekNum"));
-		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum);
+		Calendar cal = new GregorianCalendar();
+    	cal.setTime(storageService.getLastTaskEntryDate());
+		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum, cal.get(Calendar.WEEK_OF_YEAR));
 		if (submissionDialog.open() == Dialog.OK) {
 			Set<String> systems = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
 					.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());
-			MessageBox.setMessage("Submission", "Submission of week " + weekNum + " successful!");
+			MessageBox.setMessage("Submission", "Submission of week " + submissionDialog.getWeekNum() + " successful!");
 			Map<String, String> submissionSystems = TimesheetApp.getSubmissionSystems();
 			for (String system : systems) {
 			    new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)).openUrl();
