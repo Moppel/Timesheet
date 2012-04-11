@@ -30,6 +30,7 @@ public class TimesheetApp implements IApplication {
 	public static EntityManagerFactory factory;
 
 	public static final String WORKING_HOURS = "weekly.workinghours";
+	public static final String NON_WORKING_DAYS = "weekly.nonworkingdays";
     public static final String HOLIDAY_TASK = "task.holiday";
     public static final String VACATION_TASK = "task.vacation";
     public static final String SICK_TASK = "task.sick";

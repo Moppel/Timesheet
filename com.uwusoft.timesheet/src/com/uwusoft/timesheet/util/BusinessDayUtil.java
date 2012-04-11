@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -14,6 +15,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.model.WholeDayTasks;
@@ -49,19 +51,21 @@ public class BusinessDayUtil {
 
 		// If it's on a holiday, increment and test again
 		// If it's on a weekend, increment necessary amount and test again
-		if (offlimitDates.contains(baseCal.getTime()) || isWeekend(dateToCheck))
+		if (offlimitDates.contains(baseCal.getTime()) || isNonBusinessDay(dateToCheck))
 			return false;
 		else
 			return true;
 	}
 
-	private static boolean isWeekend(Date dateToCheck) {
+	private static boolean isNonBusinessDay(Date dateToCheck) {
 		// Setup the calendar to have the start date truncated
 		Calendar baseCal = Calendar.getInstance();
 		baseCal.setTime(DateUtils.truncate(dateToCheck, Calendar.DATE));
 		// Determine if the date is on a weekend.
 		int dayOfWeek = baseCal.get(Calendar.DAY_OF_WEEK);
-		return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
+		return Arrays.asList(Activator.getDefault().getPreferenceStore().getString(TimesheetApp.NON_WORKING_DAYS)
+				.split(SubmissionService.separator)).contains(dayOfWeek);
+		//return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
 	}
 
 	/**
@@ -90,7 +94,7 @@ public class BusinessDayUtil {
 		}
 		// Else we recursively call our function until we find one.
 		else {
-			if (createHoliday && !isWeekend(nextDay)) { // store holiday entry
+			if (createHoliday && !isNonBusinessDay(nextDay)) { // store holiday entry
 				IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 				StorageService storageService = new ExtensionManager<StorageService>(
 						StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
@@ -135,6 +139,10 @@ public class BusinessDayUtil {
 		baseCalendar.set(year, Calendar.JANUARY, 1);
 		offlimitDates.add(baseCalendar.getTime());
 
+		// Tag der Arbeit
+		baseCalendar.set(year, Calendar.MAY, 1);
+		offlimitDates.add(baseCalendar.getTime());
+
 		// Tag der deutschen Einheit
 		baseCalendar.set(year, Calendar.OCTOBER, 3);
 		offlimitDates.add(baseCalendar.getTime());
@@ -168,6 +176,9 @@ public class BusinessDayUtil {
 		// TODO: Buﬂ- und Bettag
 		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach
 		// Trinitatis)
+		// Gets 3rd Wednesday in November
+		offlimitDates.add(calculateFloatingHoliday(3, Calendar.WEDNESDAY, year,
+				Calendar.NOVEMBER));
 
 		return offlimitDates;
 	}
@@ -177,7 +188,7 @@ public class BusinessDayUtil {
 	 * that represents that value.
 	 * 
 	 * Ex. To get Martin Luther Kings BDay, which is the 3rd Monday of January,
-	 * the method call woudl be:
+	 * the method call would be:
 	 * 
 	 * calculateFloatingHoliday(3, Calendar.MONDAY, year, Calendar.JANUARY);
 	 * 
@@ -187,33 +198,34 @@ public class BusinessDayUtil {
 	 * @param nth
 	 *            0 for Last, 1 for 1st, 2 for 2nd, etc.
 	 * @param dayOfWeek
-	 *            Use Calendar.MODAY, Calendar.TUESDAY, etc.
+	 *            Use Calendar.MONDAY, Calendar.TUESDAY, etc.
 	 * @param year
 	 * @param month
 	 *            Use Calendar.JANUARY, etc.
 	 * @return
-	 * 
-	 *         private static Date calculateFloatingHoliday(int nth, int
-	 *         dayOfWeek, int year, int month) { Calendar baseCal =
-	 *         Calendar.getInstance(); baseCal.clear();
-	 * 
-	 *         //Determine what the very earliest day this could occur. //If the
-	 *         value was 0 for the nth parameter, increment to the following
-	 *         //month so that it can be subtracted alter. baseCal.set(year,
-	 *         month + ((nth <= 0) ? 1 : 0), 1); Date baseDate =
-	 *         baseCal.getTime();
-	 * 
-	 *         //Figure out which day of the week that this "earliest" could
-	 *         occur on //and then determine what the offset is for our day that
-	 *         we actually need. int baseDayOfWeek =
-	 *         baseCal.get(Calendar.DAY_OF_WEEK); int fwd = dayOfWeek -
-	 *         baseDayOfWeek;
-	 * 
-	 *         //Based on the offset and the nth parameter, we are able to
-	 *         determine the offset of days and then //adjust our base date.
-	 *         return addDays(baseDate, (fwd + (nth - (fwd >= 0 ? 1 : 0)) * 7));
-	 *         }
 	 */
+	private static Date calculateFloatingHoliday(int nth, int dayOfWeek,
+			int year, int month) {
+		Calendar baseCal = Calendar.getInstance();
+		baseCal.clear();
+
+		// Determine what the very earliest day this could occur.
+		// If the value was 0 for the nth parameter, increment to the following
+		// month so that it can be subtracted alter.
+		baseCal.set(year, month + ((nth <= 0) ? 1 : 0), 1);
+		Date baseDate = baseCal.getTime();
+
+		// Figure out which day of the week that this "earliest" could occur on
+		// and then determine what the offset is for our day that we actually
+		// need.
+		int baseDayOfWeek = baseCal.get(Calendar.DAY_OF_WEEK);
+		int fwd = dayOfWeek - baseDayOfWeek;
+
+		// Based on the offset and the nth parameter, we are able to determine
+		// the offset of days and then
+		// adjust our base date.
+		return addDays(baseDate, (fwd + (nth - (fwd >= 0 ? 1 : 0)) * 7));
+	}
 
 	private static Date getOsterSonntag(int jahr) {
 		int a, b, c, d, e, p, q, r, x, y, tag, monat;

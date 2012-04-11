@@ -39,6 +39,7 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID,
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
+		addField(new WeekdayListEditor(TimesheetApp.NON_WORKING_DAYS, "Non Working Days:",	getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.HOLIDAY_TASK, "Statutory holiday task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.VACATION_TASK, "Vacation task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.SICK_TASK, "Sick task:", getFieldEditorParent()));
