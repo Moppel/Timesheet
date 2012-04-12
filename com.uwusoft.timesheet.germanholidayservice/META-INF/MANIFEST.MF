@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Germanholidayservice
+Bundle-SymbolicName: com.uwusoft.timesheet.germanholidayservice;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Bundle-Vendor: UWUSOFT
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Require-Bundle: com.uwusoft.timesheet;bundle-version="1.0.0"

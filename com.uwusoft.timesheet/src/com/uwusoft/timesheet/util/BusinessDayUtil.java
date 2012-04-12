@@ -14,6 +14,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Task;
@@ -24,6 +25,8 @@ public class BusinessDayUtil {
 
 	private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
 	private static transient Task task = TimesheetApp.createTask(TimesheetApp.HOLIDAY_TASK);
+	private static transient HolidayService holidayService = new ExtensionManager<HolidayService>(
+			HolidayService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(HolidayService.PROPERTY));
 
 	/*
 	 * This method will calculate the next business day after the one input.
@@ -45,7 +48,7 @@ public class BusinessDayUtil {
 
 			// If the map doesn't already have the dates computed, create them.
 			if (!computedDates.containsKey(year))
-				computedDates.put(year, getOfflimitDates(year));
+				computedDates.put(year, holidayService.getOfflimitDates(year));
 			offlimitDates = computedDates.get(year);
 		}
 
@@ -204,7 +207,7 @@ public class BusinessDayUtil {
 	 *            Use Calendar.JANUARY, etc.
 	 * @return
 	 */
-	private static Date calculateFloatingHoliday(int nth, int dayOfWeek,
+	public static Date calculateFloatingHoliday(int nth, int dayOfWeek,
 			int year, int month) {
 		Calendar baseCal = Calendar.getInstance();
 		baseCal.clear();
@@ -227,7 +230,7 @@ public class BusinessDayUtil {
 		return addDays(baseDate, (fwd + (nth - (fwd >= 0 ? 1 : 0)) * 7));
 	}
 
-	private static Date getOsterSonntag(int jahr) {
+	public static Date getOsterSonntag(int jahr) {
 		int a, b, c, d, e, p, q, r, x, y, tag, monat;
 
 		// Es geht um die Berechnung der Größen d und e
@@ -295,7 +298,7 @@ public class BusinessDayUtil {
 	 * 
 	 * @return
 	 */
-	private static Date addDays(Date dateToAdd, int numberOfDay) {
+	public static Date addDays(Date dateToAdd, int numberOfDay) {
 		if (dateToAdd == null)
 			throw new IllegalArgumentException("Date can't be null!");
 		Calendar tempCal = Calendar.getInstance();

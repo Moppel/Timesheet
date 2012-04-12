@@ -15,6 +15,7 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
@@ -36,6 +37,8 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 	protected void createFieldEditors() {
 		addField(new ComboFieldEditor(StorageService.PROPERTY, "Storage System:", getSystemArray(StorageService.SERVICE_ID,
 				StorageService.SERVICE_NAME), getFieldEditorParent()));
+		addField(new ComboFieldEditor(HolidayService.PROPERTY, "Holiday System:", getSystemArray(HolidayService.SERVICE_ID,
+				HolidayService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID,
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
