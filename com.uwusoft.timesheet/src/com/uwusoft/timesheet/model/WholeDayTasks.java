@@ -109,8 +109,9 @@ public class WholeDayTasks {
 		em.remove(beginTaskEntry);
 		BusinessDayUtil.handleWeekChange(lastDate, begin);
 		
+		Date end = begin;
 		for (TaskEntry taskEntry : taskEntryList) {
-			Date end = new Date(taskEntry.getDateTime().getTime());
+			end = new Date(taskEntry.getDateTime().getTime());
 			do {
 				taskEntry.setDateTime(new Timestamp(begin.getTime()));
 				storageService.createTaskEntry(taskEntry);
@@ -119,6 +120,7 @@ public class WholeDayTasks {
 			em.remove(taskEntry);
 		}
 		em.getTransaction().commit();
+		preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(end));
 	}
 
 	public float getTotal() {

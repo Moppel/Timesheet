@@ -36,6 +36,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
@@ -77,6 +78,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		if (trayItem != null) {
 			window.getShell().setVisible(false);
 
+			StorageService storageService = new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+			
 			Date startDate = TimesheetApp.startDate;
 			Date shutdownDate = startDate;
 			try {
@@ -87,7 +91,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				}
 
 				String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
-				if (!StringUtils.isEmpty(shutdownTime))
+				if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(storageService.getLastTaskEntryDate()))
+					shutdownDate = storageService.getLastTaskEntryDate();
+				else
 					shutdownDate = StorageService.formatter.parse(shutdownTime);				
 			} catch (ParseException e) {
 				MessageBox.setError("Shutdown date", e.getLocalizedMessage());
@@ -109,23 +115,23 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 			IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 			ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
-			StorageService storageService = new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 				
-			if (startDay != shutdownDay) { // don't automatically check in/out if program is restarted
-				if (storageService.getLastTask() != null) {						
-					try { // automatic check out
-						Map<String, String> parameters = new HashMap<String, String>();
-						parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
-						handlerService.executeCommand(ParameterizedCommand.generateCommand(
-								commandService.getCommand("Timesheet.checkout"), parameters), null);
-					} catch (Exception ex) {
-						MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
-					}
+			if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
+				try { // automatic check out
+					Map<String, String> parameters = new HashMap<String, String>();
+					parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
+				} catch (Exception ex) {
+					MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
 				}
 			}
 			if (storageService.getLastTask() == null) {					
 				try { // automatic check in
+					Date end = shutdownDate;
+					do
+						end = BusinessDayUtil.getNextBusinessDay(end, true); // create missing holidays
+					while (!end.after(startDate));
+					
 					Map<String, String> parameters = new HashMap<String, String>();
 					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
 					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));

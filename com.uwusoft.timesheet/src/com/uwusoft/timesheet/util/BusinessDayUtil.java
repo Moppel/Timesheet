@@ -77,7 +77,7 @@ public class BusinessDayUtil {
 	 * @param startDate
 	 *            the Date of which you need the next business day.
 	 * @param createHoliday
-	 *            TODO
+	 *            <code>true</code>: if next day is a holiday, store it
 	 * @return The next business day. I.E. it doesn't fall on a weekend, a
 	 *         holiday or the official observance of that holiday if it fell on
 	 *         a weekend.
