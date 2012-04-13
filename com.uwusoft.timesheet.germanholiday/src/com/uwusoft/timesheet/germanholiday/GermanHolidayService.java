@@ -12,7 +12,7 @@ import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class GermanHolidayService implements HolidayService {
-	private static Map<Date, String> holidays = new HashMap<Date, String>();
+	private static Map<Date, Holiday> holidays = new HashMap<Date, Holiday>();
 	
 	public GermanHolidayService() {
 	}
@@ -23,50 +23,71 @@ public class GermanHolidayService implements HolidayService {
 		baseCalendar.clear();
 
 		// Add in the static dates for the year.
-		// New years day
 		baseCalendar.set(year, Calendar.JANUARY, 1);
-		holidays.put(baseCalendar.getTime(), "newYearsDay");
+		holidays.put(baseCalendar.getTime(), new Holiday("newYearsDay", true));
 
-		// Tag der Arbeit
+		baseCalendar.set(year, Calendar.JANUARY, 6);
+		holidays.put(baseCalendar.getTime(), new Holiday("epiphany", false));
+		
 		baseCalendar.set(year, Calendar.MAY, 1);
-		holidays.put(baseCalendar.getTime(), "dayOfWork");
+		holidays.put(baseCalendar.getTime(), new Holiday("dayOfWork", true));
 
-		// Tag der deutschen Einheit
+		baseCalendar.set(year, Calendar.AUGUST, 15);
+		holidays.put(baseCalendar.getTime(), new Holiday("mariaAscension", false));
+
 		baseCalendar.set(year, Calendar.OCTOBER, 3);
-		holidays.put(baseCalendar.getTime(), "germanUnificationDay");
+		holidays.put(baseCalendar.getTime(), new Holiday("germanUnificationDay", true));
 
-		// Reformationstag
 		baseCalendar.set(year, Calendar.OCTOBER, 31);
-		holidays.put(baseCalendar.getTime(), "reformationDay");
+		holidays.put(baseCalendar.getTime(), new Holiday("reformationDay", true));
 
-		// Christmas
+		baseCalendar.set(year, Calendar.NOVEMBER, 1);
+		holidays.put(baseCalendar.getTime(), new Holiday("allSaintsDay", false));
+
 		baseCalendar.set(year, Calendar.DECEMBER, 25);
-		holidays.put(baseCalendar.getTime(), "xmasDay");
+		holidays.put(baseCalendar.getTime(), new Holiday("xmasDay", true));
 
 		baseCalendar.set(year, Calendar.DECEMBER, 26);
-		holidays.put(baseCalendar.getTime(), "boxingDay");
+		holidays.put(baseCalendar.getTime(), new Holiday("boxingDay", true));
 
 		// Now deal with floating holidays.
 		// Ostersonntag
 		Date osterSonntag = BusinessDayUtil.getOsterSonntag(year);
 		//holidays.put(osterSonntag, "easter");
-		// Karfreitag
-		holidays.put(BusinessDayUtil.addDays(osterSonntag, -2), "goodFriday");
-		// Ostermontag
-		holidays.put(BusinessDayUtil.addDays(osterSonntag, 1), "easterMonday");
-
-		// Christi Himmelfahrt
-		holidays.put(BusinessDayUtil.addDays(osterSonntag, 39), "ascensionDay");
-
-		// Pfingstmontag
-		holidays.put(BusinessDayUtil.addDays(osterSonntag, 50), "whitMonday");
+		holidays.put(BusinessDayUtil.addDays(osterSonntag, -2), new Holiday("goodFriday", true));
+		holidays.put(BusinessDayUtil.addDays(osterSonntag, 1), new Holiday("easterMonday", true));
+		holidays.put(BusinessDayUtil.addDays(osterSonntag, 39), new Holiday("ascensionDay", true));
+		holidays.put(BusinessDayUtil.addDays(osterSonntag, 50), new Holiday("whitMonday", true));
+		holidays.put(BusinessDayUtil.addDays(osterSonntag, 60), new Holiday("corpusChristi", false));
 
 		// TODO: Buﬂ- und Bettag
-		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach
-		// Trinitatis)
+		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach Trinitatis)
 		// Gets 3rd Wednesday in November
-		holidays.put(BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year,
-				Calendar.NOVEMBER), "dayOfRepentance");		
+		holidays.put(BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year, Calendar.NOVEMBER),
+				new Holiday("dayOfRepentance", false));		
 		return new ArrayList<Date>(holidays.keySet());
+	}
+	
+	@Override
+	public boolean isValid(Date date) {
+		return holidays.get(date).isValid();
+	}
+	
+	private class Holiday {
+		private String name;
+		private boolean valid;
+		
+		public Holiday(String name, boolean valid) {
+			this.name = name;
+			this.valid = valid;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public boolean isValid() {
+			return valid;
+		}		
 	}
 }

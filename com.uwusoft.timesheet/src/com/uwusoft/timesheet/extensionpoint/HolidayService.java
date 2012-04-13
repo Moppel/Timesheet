@@ -14,4 +14,10 @@ public interface HolidayService {
 	 * @return list of actual dates of Holidays
 	 */
 	public List<Date> getOfflimitDates(int year);
+
+	/**
+	 * @param date
+	 * @return <code>true</code> if date is valid holiday for the region
+	 */
+	boolean isValid(Date date);
 }
