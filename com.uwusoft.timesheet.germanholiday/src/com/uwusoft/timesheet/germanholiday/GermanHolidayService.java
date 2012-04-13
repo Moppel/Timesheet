@@ -19,15 +19,8 @@ public class GermanHolidayService implements HolidayService {
 	public static final String PROPERTY = "holiday.german.valid";
 	private static Map<Date, String> holidays = new HashMap<Date, String>();
 	private static Map<Date, String> invalidHolidays = new HashMap<Date, String>();
-	
-	static {
-		Date invalidDate = new Date();
-		invalidHolidays.put(invalidDate, "epiphany");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -1), "mariaAscension");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -2), "allSaintsDay");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -3), "dayOfRepentance");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -4), "corpusChristi");
-	}
+	private static List<String> invalidHolidaysList 
+						= Arrays.asList(new String[] {"epiphany", "mariaAscension", "allSaintsDay", "dayOfRepentance", "corpusChristi"});
 	
 	public GermanHolidayService() {
 	}
@@ -103,6 +96,6 @@ public class GermanHolidayService implements HolidayService {
 	
 	@Override
 	public Collection<String> getInvalidHolidays() {
-		return invalidHolidays.values();
+		return invalidHolidaysList;
 	}
 }
