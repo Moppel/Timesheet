@@ -20,4 +20,10 @@ public interface HolidayService {
 	 * @return <code>true</code> if date is valid holiday for the region
 	 */
 	boolean isValid(Date date);
+
+	/**
+	 * @param date
+	 * @return localized name of holiday
+	 */
+	String getName(Date date);
 }

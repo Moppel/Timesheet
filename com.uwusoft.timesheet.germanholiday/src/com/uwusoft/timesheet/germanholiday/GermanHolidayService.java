@@ -44,6 +44,12 @@ public class GermanHolidayService implements HolidayService {
 		baseCalendar.set(year, Calendar.NOVEMBER, 1);
 		holidays.put(baseCalendar.getTime(), new Holiday("allSaintsDay", false));
 
+		// TODO: Buﬂ- und Bettag
+		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach Trinitatis)
+		// Gets 3rd Wednesday in November
+		holidays.put(BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year, Calendar.NOVEMBER),
+				new Holiday("dayOfRepentance", false));		
+
 		baseCalendar.set(year, Calendar.DECEMBER, 25);
 		holidays.put(baseCalendar.getTime(), new Holiday("xmasDay", true));
 
@@ -60,17 +66,17 @@ public class GermanHolidayService implements HolidayService {
 		holidays.put(BusinessDayUtil.addDays(osterSonntag, 50), new Holiday("whitMonday", true));
 		holidays.put(BusinessDayUtil.addDays(osterSonntag, 60), new Holiday("corpusChristi", false));
 
-		// TODO: Buﬂ- und Bettag
-		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach Trinitatis)
-		// Gets 3rd Wednesday in November
-		holidays.put(BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year, Calendar.NOVEMBER),
-				new Holiday("dayOfRepentance", false));		
 		return new ArrayList<Date>(holidays.keySet());
 	}
 	
 	@Override
 	public boolean isValid(Date date) {
 		return holidays.get(date).isValid();
+	}
+	
+	@Override
+	public String getName(Date date) {
+		return holidays.get(date).getName();
 	}
 	
 	private class Holiday {
@@ -83,7 +89,7 @@ public class GermanHolidayService implements HolidayService {
 		}
 
 		public String getName() {
-			return name;
+			return Messages.getString(name);
 		}
 
 		public boolean isValid() {

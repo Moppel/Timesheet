@@ -1,6 +1,5 @@
 package com.uwusoft.timesheet.util;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -97,12 +96,13 @@ public class BusinessDayUtil {
 		}
 		// Else we recursively call our function until we find one.
 		else {
-			if (createHoliday && !isNonBusinessDay(nextDay)) { // store holiday entry
+			if (createHoliday && !isNonBusinessDay(nextDay) && holidayService.isValid(nextDay)) { // store holiday entry
 				IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 				StorageService storageService = new ExtensionManager<StorageService>(
 						StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 				handleWeekChange(startDate, nextDay);
 				TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
+				taskEntry.setComment(holidayService.getName(nextDay));
 				storageService.createTaskEntry(taskEntry);
 			}
 			return getNextBusinessDay(nextDay, createHoliday);
@@ -124,66 +124,6 @@ public class BusinessDayUtil {
 					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 			storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS));
 		}
-	}
-
-	/*
-	 * Based on a year, this will compute the actual dates of
-	 * 
-	 * Holidays Accounted For: New Year's Day Christmas Day
-	 */
-	private static List<Date> getOfflimitDates(int year) {
-		List<Date> offlimitDates = new ArrayList<Date>();
-
-		Calendar baseCalendar = GregorianCalendar.getInstance();
-		baseCalendar.clear();
-
-		// Add in the static dates for the year.
-		// New years day
-		baseCalendar.set(year, Calendar.JANUARY, 1);
-		offlimitDates.add(baseCalendar.getTime());
-
-		// Tag der Arbeit
-		baseCalendar.set(year, Calendar.MAY, 1);
-		offlimitDates.add(baseCalendar.getTime());
-
-		// Tag der deutschen Einheit
-		baseCalendar.set(year, Calendar.OCTOBER, 3);
-		offlimitDates.add(baseCalendar.getTime());
-
-		// Reformationstag
-		baseCalendar.set(year, Calendar.OCTOBER, 31);
-		offlimitDates.add(baseCalendar.getTime());
-
-		// Christmas
-		baseCalendar.set(year, Calendar.DECEMBER, 25);
-		offlimitDates.add(baseCalendar.getTime());
-
-		baseCalendar.set(year, Calendar.DECEMBER, 26);
-		offlimitDates.add(baseCalendar.getTime());
-
-		// Now deal with floating holidays.
-		// Ostersonntag
-		Date osterSonntag = getOsterSonntag(year);
-		offlimitDates.add(osterSonntag);
-		// Karfreitag
-		offlimitDates.add(addDays(osterSonntag, -2));
-		// Ostermontag
-		offlimitDates.add(addDays(osterSonntag, 1));
-
-		// Christi Himmelfahrt
-		offlimitDates.add(addDays(osterSonntag, 39));
-
-		// Pfingstmontag
-		offlimitDates.add(addDays(osterSonntag, 50));
-
-		// TODO: Buﬂ- und Bettag
-		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach
-		// Trinitatis)
-		// Gets 3rd Wednesday in November
-		offlimitDates.add(calculateFloatingHoliday(3, Calendar.WEDNESDAY, year,
-				Calendar.NOVEMBER));
-
-		return offlimitDates;
 	}
 
 	/**
