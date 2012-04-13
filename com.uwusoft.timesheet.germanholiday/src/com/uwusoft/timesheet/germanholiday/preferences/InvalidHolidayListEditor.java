@@ -41,7 +41,7 @@ public class InvalidHolidayListEditor extends AbstractListEditor {
 
 	@Override
 	protected String getStringForToken(String token) {
-		return holidayService.getName(token);
+		return holidays.get(token);
 	}
 
 }
