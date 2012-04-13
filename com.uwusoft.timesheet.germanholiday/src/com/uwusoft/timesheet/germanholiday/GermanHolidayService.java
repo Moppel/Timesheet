@@ -1,4 +1,4 @@
-package com.uwusoft.timesheet.germanholidayservice;
+package com.uwusoft.timesheet.germanholiday;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -49,7 +49,7 @@ public class GermanHolidayService implements HolidayService {
 		// Now deal with floating holidays.
 		// Ostersonntag
 		Date osterSonntag = BusinessDayUtil.getOsterSonntag(year);
-		holidays.put(osterSonntag, "easter");
+		//holidays.put(osterSonntag, "easter");
 		// Karfreitag
 		holidays.put(BusinessDayUtil.addDays(osterSonntag, -2), "goodFriday");
 		// Ostermontag

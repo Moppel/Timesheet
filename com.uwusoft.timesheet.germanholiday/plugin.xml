@@ -4,7 +4,7 @@
    <extension
          point="com.uwusoft.timesheet.holidayservice">
       <client
-            class="com.uwusoft.timesheet.germanholidayservice.GermanHolidayService"></client>
+            class="com.uwusoft.timesheet.germanholiday.GermanHolidayService"></client>
    </extension>
 
 </plugin>
