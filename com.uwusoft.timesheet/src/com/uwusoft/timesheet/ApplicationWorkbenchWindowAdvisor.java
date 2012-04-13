@@ -128,9 +128,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			if (storageService.getLastTask() == null) {					
 				try { // automatic check in
 					Date end = shutdownDate;
-					do
+					while (end.before(startDate))
 						end = BusinessDayUtil.getNextBusinessDay(end, true); // create missing holidays
-					while (!end.after(startDate));
 					
 					Map<String, String> parameters = new HashMap<String, String>();
 					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
