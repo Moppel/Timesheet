@@ -23,10 +23,10 @@ public class GermanHolidayService implements HolidayService {
 	static {
 		Date invalidDate = new Date();
 		invalidHolidays.put(invalidDate, "epiphany");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, 1), "mariaAscension");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, 2), "allSaintsDay");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, 3), "dayOfRepentance");
-		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, 4), "corpusChristi");
+		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -1), "mariaAscension");
+		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -2), "allSaintsDay");
+		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -3), "dayOfRepentance");
+		invalidHolidays.put(BusinessDayUtil.addDays(invalidDate, -4), "corpusChristi");
 	}
 	
 	public GermanHolidayService() {
@@ -42,14 +42,12 @@ public class GermanHolidayService implements HolidayService {
 		holidays.put(baseCalendar.getTime(), "newYearsDay");
 
 		baseCalendar.set(year, Calendar.JANUARY, 6);
-		holidays.put(baseCalendar.getTime(), "epiphany");
 		invalidHolidays.put(baseCalendar.getTime(), "epiphany");
 		
 		baseCalendar.set(year, Calendar.MAY, 1);
 		holidays.put(baseCalendar.getTime(), "dayOfWork");
 
 		baseCalendar.set(year, Calendar.AUGUST, 15);
-		holidays.put(baseCalendar.getTime(), "mariaAscension");
 		invalidHolidays.put(baseCalendar.getTime(), "mariaAscension");
 
 		baseCalendar.set(year, Calendar.OCTOBER, 3);
@@ -59,15 +57,12 @@ public class GermanHolidayService implements HolidayService {
 		holidays.put(baseCalendar.getTime(), "reformationDay");
 
 		baseCalendar.set(year, Calendar.NOVEMBER, 1);
-		holidays.put(baseCalendar.getTime(), "allSaintsDay");
 		invalidHolidays.put(baseCalendar.getTime(), "allSaintsDay");
 
 		// TODO: Buﬂ- und Bettag
 		// Der letzte Mittwoch vor dem 23. November (letzter Sonntag nach Trinitatis)
 		// Gets 3rd Wednesday in November
-		Date dayOfRepentance = BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year, Calendar.NOVEMBER);
-		holidays.put(dayOfRepentance, "dayOfRepentance");		
-		invalidHolidays.put(dayOfRepentance, "dayOfRepentance");		
+		invalidHolidays.put(BusinessDayUtil.calculateFloatingHoliday(3, Calendar.WEDNESDAY, year, Calendar.NOVEMBER), "dayOfRepentance");		
 
 		baseCalendar.set(year, Calendar.DECEMBER, 25);
 		holidays.put(baseCalendar.getTime(), "xmasDay");
@@ -83,21 +78,21 @@ public class GermanHolidayService implements HolidayService {
 		holidays.put(BusinessDayUtil.addDays(osterSonntag, 39), "ascensionDay");
 		holidays.put(BusinessDayUtil.addDays(osterSonntag, 50), "whitMonday");
 		
-		Date corpusChristi = BusinessDayUtil.addDays(osterSonntag, 60);
-		holidays.put(corpusChristi, "corpusChristi");
-		invalidHolidays.put(corpusChristi, "corpusChristi");
+		invalidHolidays.put(BusinessDayUtil.addDays(osterSonntag, 60), "corpusChristi");
 
 		return new ArrayList<Date>(holidays.keySet());
 	}
 	
 	@Override
 	public boolean isValid(Date date) {
-		return !invalidHolidays.containsKey(date) || Arrays.asList(Activator.getDefault().getPreferenceStore().getString(PROPERTY)
-				.split(SubmissionService.separator)).contains(holidays.get(date));
+		return holidays.containsKey(date) || Arrays.asList(Activator.getDefault().getPreferenceStore().getString(PROPERTY)
+				.split(SubmissionService.separator)).contains(invalidHolidays.get(date));
 	}
 	
 	@Override
 	public String getName(Date date) {
+		if (holidays.get(date) == null)
+			return Messages.getString(invalidHolidays.get(date));
 		return Messages.getString(holidays.get(date));
 	}
 	
