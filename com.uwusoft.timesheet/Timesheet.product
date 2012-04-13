@@ -38,7 +38,7 @@
    <plugins>
       <plugin id="com.ibm.icu"/>
       <plugin id="com.uwusoft.timesheet"/>
-      <plugin id="com.uwusoft.timesheet.localstorage"/>
+      <plugin id="com.uwusoft.timesheet.germanholiday"/>
       <plugin id="com.uwusoft.timesheet.googlestorage"/>
       <plugin id="com.uwusoft.timesheet.kimaisubmission"/>
       <plugin id="javax.servlet"/>
