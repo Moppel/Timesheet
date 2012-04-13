@@ -34,6 +34,7 @@ public class TimesheetApp implements IApplication {
     public static final String HOLIDAY_TASK = "task.holiday";
     public static final String VACATION_TASK = "task.vacation";
     public static final String SICK_TASK = "task.sick";
+    public static final String TIL_TASK = "task.til";
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";

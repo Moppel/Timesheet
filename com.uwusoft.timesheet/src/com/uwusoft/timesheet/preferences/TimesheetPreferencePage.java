@@ -46,6 +46,7 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		addField(new TaskFieldEditor(TimesheetApp.HOLIDAY_TASK, "Statutory holiday task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.VACATION_TASK, "Vacation task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.SICK_TASK, "Sick task:", getFieldEditorParent()));
+		addField(new TaskFieldEditor(TimesheetApp.TIL_TASK, "Day off in lieu task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getFieldEditorParent()));
 		addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:", getFieldEditorParent()));
