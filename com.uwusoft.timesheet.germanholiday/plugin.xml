@@ -6,5 +6,20 @@
       <client
             class="com.uwusoft.timesheet.germanholiday.GermanHolidayService"></client>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
+            class="com.uwusoft.timesheet.germanholiday.preferences.GermanHolidayPreferencePage"
+            id="com.uwusoft.timesheet.germanholiday.preferences.GermanHolidayPreferencePage"
+            name="German Holiday Preferences">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="com.uwusoft.timesheet.germanholiday.preferences.PreferenceInitializer">
+      </initializer>
+   </extension>
 
 </plugin>

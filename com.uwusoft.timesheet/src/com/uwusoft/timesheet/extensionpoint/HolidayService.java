@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.extensionpoint;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -13,7 +14,7 @@ public interface HolidayService {
 	 * @param year
 	 * @return list of actual dates of Holidays
 	 */
-	public List<Date> getOfflimitDates(int year);
+	List<Date> getOfflimitDates(int year);
 
 	/**
 	 * @param date
@@ -26,4 +27,15 @@ public interface HolidayService {
 	 * @return localized name of holiday
 	 */
 	String getName(Date date);
+
+	/**
+	 * @return a collection of holidays that possibly are valid for a special region of the country
+	 */
+	Collection<String> getInvalidHolidays();
+
+	/**
+	 * @param name
+	 * @return the localized name for the holiday
+	 */
+	String getName(String name);
 }

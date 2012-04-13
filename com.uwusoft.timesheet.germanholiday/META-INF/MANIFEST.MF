@@ -5,4 +5,6 @@ Bundle-SymbolicName: com.uwusoft.timesheet.germanholiday;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: UWUSOFT
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Require-Bundle: com.uwusoft.timesheet;bundle-version="1.0.0"
+Require-Bundle: com.uwusoft.timesheet;bundle-version="1.0.0",
+ org.eclipse.core.runtime,
+ org.eclipse.ui
