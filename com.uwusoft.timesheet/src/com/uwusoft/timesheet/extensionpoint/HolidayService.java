@@ -31,7 +31,7 @@ public interface HolidayService {
 	/**
 	 * @return a collection of holidays that possibly are valid for a special region of the country
 	 */
-	Collection<String> getInvalidHolidays();
+	Collection<String> getRegionValidHolidays();
 
 	/**
 	 * @param name

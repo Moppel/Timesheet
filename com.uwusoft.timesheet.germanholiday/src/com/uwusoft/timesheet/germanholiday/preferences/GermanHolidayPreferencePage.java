@@ -42,6 +42,6 @@ public class GermanHolidayPreferencePage extends FieldEditorPreferencePage imple
 	 * restore itself.
 	 */
 	public void createFieldEditors() {
-		addField(new InvalidHolidayListEditor(GermanHolidayService.PROPERTY, "Valid holidays for your region:", getFieldEditorParent()));
+		addField(new RegionValidHolidayListEditor(GermanHolidayService.PROPERTY, "Valid holidays for your region:", getFieldEditorParent()));
 	}
 }
