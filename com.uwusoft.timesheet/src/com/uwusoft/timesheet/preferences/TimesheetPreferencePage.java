@@ -14,10 +14,12 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.Messages;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.model.WholeDayTasks;
 
 public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		implements IWorkbenchPreferencePage {
@@ -43,10 +45,8 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
 		addField(new WeekdayListEditor(TimesheetApp.NON_WORKING_DAYS, "Non Working Days:",	getFieldEditorParent()));
-		addField(new TaskFieldEditor(TimesheetApp.HOLIDAY_TASK, "Statutory holiday task:", getFieldEditorParent()));
-		addField(new TaskFieldEditor(TimesheetApp.VACATION_TASK, "Vacation task:", getFieldEditorParent()));
-		addField(new TaskFieldEditor(TimesheetApp.SICK_TASK, "Sick task:", getFieldEditorParent()));
-		addField(new TaskFieldEditor(TimesheetApp.TIL_TASK, "Day off in lieu task:", getFieldEditorParent()));
+        for (String task : WholeDayTasks.wholeDayTasks)
+    		addField(new TaskFieldEditor(task, Messages.getString(task) + " task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getFieldEditorParent()));
 		addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:", getFieldEditorParent()));
