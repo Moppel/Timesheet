@@ -36,6 +36,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -98,20 +99,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			} catch (ParseException e) {
 				MessageBox.setError("Shutdown date", e.getLocalizedMessage());
 			}
-			Calendar calDay = Calendar.getInstance();
-			Calendar calWeek = new GregorianCalendar();
-			int shutdownDay = 0;
-			int shutdownWeek = 0;
 			
-			calDay.setTime(startDate);
-			calWeek.setTime(startDate);
-			int startDay = calDay.get(Calendar.DAY_OF_YEAR);
-			int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+			int startDay = getDay(startDate);
+			int startWeek = getWeek(startDate);
 
-			calDay.setTime(shutdownDate);
-			calWeek.setTime(shutdownDate);
-			shutdownDay = calDay.get(Calendar.DAY_OF_YEAR);
-			shutdownWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
+			int shutdownDay = getDay(shutdownDate);
+			int shutdownWeek = getWeek(shutdownDate);
 
 			IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 			ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
@@ -129,18 +122,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				try { // automatic check in
 					Date end = shutdownDate;
 					while (end.before(startDate))
-						end = BusinessDayUtil.getNextBusinessDay(end, true); // create missing holidays
+						end = BusinessDayUtil.getNextBusinessDay(end, true); // create missing holidays and handle week change
 					
 					Map<String, String> parameters = new HashMap<String, String>();
 					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-					parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+					//parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(
 							commandService.getCommand("Timesheet.checkin"), parameters), null);
-					if (startWeek > shutdownWeek) {
+					for (int week = shutdownWeek; week < startWeek; week++) {
 						parameters.clear();
-						parameters.put("Timesheet.commands.weekNum", Integer.toString(shutdownWeek));
-						handlerService.executeCommand(ParameterizedCommand.generateCommand(
-								commandService.getCommand("Timesheet.submit"), parameters), null);
+						parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"),
+										parameters), null);
 					}
 				} catch (Exception ex) {
 					MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
@@ -148,6 +141,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			}
 			hookPopupMenu();
 		}
+	}
+
+	private int getDay(Date date) {
+		Calendar calDay = Calendar.getInstance();
+		calDay.setTime(date);
+		return calDay.get(Calendar.DAY_OF_YEAR);
+	}
+
+	private int getWeek(Date date) {
+		Calendar calWeek = new GregorianCalendar();
+		calWeek.setTime(date);
+		return calWeek.get(Calendar.WEEK_OF_YEAR);
 	}
 
 	public boolean preWindowShellClose() {
@@ -180,29 +185,20 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
                     
                     Map <String, String> parameters = new HashMap<String, String>();
-                    parameters.put("Timesheet.commands.task", "task.holiday");
-                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
-                    p.label = "Holiday";
-                    p.parameters = parameters;         
-                    wholeDayTask.add(new CommandContributionItem(p));
 
-                    parameters.put("Timesheet.commands.task", "task.vacation");
-                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
-                    p.label = "Vacation";
-                    p.parameters = parameters;         
-                    wholeDayTask.add(new CommandContributionItem(p));
-
-                    parameters.put("Timesheet.commands.task", "task.sick");
-                    p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
-                    p.label = "Sick Leave";
-                    p.parameters = parameters;         
-                    wholeDayTask.add(new CommandContributionItem(p));
+                    for (String task : WholeDayTasks.wholeDayTasks) {
+                    	parameters.put("Timesheet.commands.task", task);
+                    	CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
+                    	p.label = Messages.getString(task);
+                    	p.parameters = parameters;         
+                    	wholeDayTask.add(new CommandContributionItem(p));
+                    }
 
                     trayMenu.add(wholeDayTask);
 
                     parameters.clear();
                     parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
-                    p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
+                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
                     trayMenu.add(new CommandContributionItem(p));
                 }
