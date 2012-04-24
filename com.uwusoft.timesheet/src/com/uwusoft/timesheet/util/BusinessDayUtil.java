@@ -96,14 +96,19 @@ public class BusinessDayUtil {
 		}
 		// Else we recursively call our function until we find one.
 		else {
-			if (createHoliday && !isNonBusinessDay(nextDay) && holidayService.isValid(nextDay)) { // store holiday entry
+			if (createHoliday && !isNonBusinessDay(nextDay)) {
 				IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-				StorageService storageService = new ExtensionManager<StorageService>(
-						StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+				StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+						.getService(preferenceStore.getString(StorageService.PROPERTY));
 				handleWeekChange(startDate, nextDay);
-				TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
-				taskEntry.setComment(holidayService.getName(nextDay));
-				storageService.createTaskEntry(taskEntry);
+				if (holidayService.isValid(nextDay)) { // store holiday entry
+					TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
+					taskEntry.setComment(holidayService.getName(nextDay));
+					storageService.createTaskEntry(taskEntry);
+				}
+				else {
+					// TODO create dialog with WDT: Sick, Vacation, TIL
+				}
 			}
 			return getNextBusinessDay(nextDay, createHoliday);
 		}
