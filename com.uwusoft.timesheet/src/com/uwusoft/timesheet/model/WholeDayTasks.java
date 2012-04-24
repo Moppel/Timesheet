@@ -1,18 +1,22 @@
 package com.uwusoft.timesheet.model;
 
 import java.sql.Timestamp;
+import java.text.DateFormatSymbols;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
@@ -57,8 +61,10 @@ public class WholeDayTasks {
 			begin = BusinessDayUtil.getNextBusinessDay(taskEntryList.iterator().next().getDateTime(), false);
 		nextBegin = begin;
 		
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore(); 
-		total = new Float(preferenceStore.getInt(TimesheetApp.WORKING_HOURS) / 5); // TODO define non working days
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		total = new Float(preferenceStore.getInt(TimesheetApp.WORKING_HOURS) /
+				(new DateFormatSymbols().getWeekdays().length - 1
+				- preferenceStore.getString(TimesheetApp.NON_WORKING_DAYS).split(SubmissionService.separator).length));
 		
 		localStorageService = new LocalStorageService();
 	}
