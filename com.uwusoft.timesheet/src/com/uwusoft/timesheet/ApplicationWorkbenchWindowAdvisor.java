@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -18,6 +19,7 @@ import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -35,7 +37,9 @@ import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -120,9 +124,16 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			}
 			if (storageService.getLastTask() == null) {					
 				try { // automatic check in
-					Date end = shutdownDate;
-					while (end.before(startDate))
-						end = BusinessDayUtil.getNextBusinessDay(end, true); // create missing holidays and handle week change
+					Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate, true); // create missing holidays and handle week change
+					while (end.before(startDate)) { // create missing whole day tasks until start date						
+						DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
+								preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
+						if (dateDialog.open() == Dialog.OK) {
+							do {
+								storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()), WholeDayTasks.getInstance().getTotal(), true));
+							} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));	
+						}
+					}
 					
 					Map<String, String> parameters = new HashMap<String, String>();
 					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
