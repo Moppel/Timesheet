@@ -38,7 +38,7 @@ public class GermanHolidayService implements HolidayService {
 		regionValidHolidays.put(baseCalendar.getTime(), "epiphany");
 		
 		baseCalendar.set(year, Calendar.MAY, 1);
-		holidays.put(baseCalendar.getTime(), "dayOfWork");
+		holidays.put(baseCalendar.getTime(), "labourDay");
 
 		baseCalendar.set(year, Calendar.AUGUST, 15);
 		regionValidHolidays.put(baseCalendar.getTime(), "mariaAscension");
