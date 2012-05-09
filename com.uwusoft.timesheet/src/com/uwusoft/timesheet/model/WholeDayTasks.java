@@ -2,14 +2,11 @@ package com.uwusoft.timesheet.model;
 
 import java.sql.Timestamp;
 import java.text.DateFormatSymbols;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
@@ -36,13 +33,20 @@ public class WholeDayTasks {
 	
 	private WholeDayTasks() {
 		em = TimesheetApp.factory.createEntityManager();
-		Query q = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime desc");
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = q.getResultList();
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime desc")
+			.getResultList();
 		Date begin;
 		if (taskEntryList.isEmpty()) {
 			begin = BusinessDayUtil.getNextBusinessDay(new Date(), false);
 			em.getTransaction().begin();
+			@SuppressWarnings("unchecked")
+			List<TaskEntry> beginTaskEntries = em.createQuery("select t from TaskEntry t where t.task.name=:name")
+					.setParameter("name", BEGIN_WDT)
+					.getResultList();
+			for (TaskEntry beginTask : beginTaskEntries) {
+				em.remove(beginTask);
+			}
 			@SuppressWarnings("unchecked")
 			List<Task> beginTasks = em.createQuery("select t from Task t where t.name = :name")
 				.setParameter("name", BEGIN_WDT)
