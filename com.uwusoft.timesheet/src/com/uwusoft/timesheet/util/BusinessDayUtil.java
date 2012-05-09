@@ -66,8 +66,7 @@ public class BusinessDayUtil {
 		// Determine if the date is on a weekend.
 		int dayOfWeek = baseCal.get(Calendar.DAY_OF_WEEK);
 		return Arrays.asList(Activator.getDefault().getPreferenceStore().getString(TimesheetApp.NON_WORKING_DAYS)
-				.split(SubmissionService.separator)).contains(dayOfWeek);
-		//return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
+				.split(SubmissionService.separator)).contains(Integer.toString(dayOfWeek));
 	}
 
 	/**
@@ -105,9 +104,6 @@ public class BusinessDayUtil {
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
 					taskEntry.setComment(holidayService.getName(nextDay));
 					storageService.createTaskEntry(taskEntry);
-				}
-				else {
-					// TODO create dialog with WDT: Sick, Vacation, TIL
 				}
 			}
 			return getNextBusinessDay(nextDay, createHoliday);
