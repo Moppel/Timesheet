@@ -139,6 +139,6 @@ public class TaskEntry {
 	}
 	
 	public String display() {
-		return task.getName() + (task.getProject() == null ? "" : " (" + task.getProject().getName() + ")" + "\nSystem: " + task.getProject().getSystem()); 		
+		return task.getName() + (task.getProject() == null ? "" : "\nProject: " + task.getProject().getName() + "\nSystem: " + task.getProject().getSystem()); 		
 	}
 }
