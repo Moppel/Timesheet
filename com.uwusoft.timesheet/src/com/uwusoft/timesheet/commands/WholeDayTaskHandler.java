@@ -31,7 +31,7 @@ public class WholeDayTaskHandler extends AbstractHandler {
 			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),
 					preferenceStore.getString(task), startDate);
 			if (dateDialog.open() == Dialog.OK) {
-				wholeDayTasks.addNextTask(dateDialog.getTime(), task);
+				wholeDayTasks.addNextTask(dateDialog.getTime(), dateDialog.getTask());
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(System.currentTimeMillis()));
 			}
 		} catch (NotDefinedException e) {

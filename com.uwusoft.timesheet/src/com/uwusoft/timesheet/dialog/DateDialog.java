@@ -1,15 +1,19 @@
 package com.uwusoft.timesheet.dialog;
 
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
@@ -17,10 +21,14 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
+import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.model.WholeDayTasks;
+
 public class DateDialog extends Dialog {
 
 	private String title, task, date;
     private int day, month, year;
+    private Combo taskCombo;
 
 	public DateDialog(Display display, String task, Date date) {
 		this(display, "Date", task, date);
@@ -40,29 +48,31 @@ public class DateDialog extends Dialog {
 
 	@Override
     protected Control createDialogArea(Composite parent) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(2, false));
         
-        GridData gridData = new GridData(GridData.HORIZONTAL_ALIGN_FILL);
-		gridData.horizontalSpan = 2;
-		gridData.grabExcessHorizontalSpace = true;
-
-        Label label = new Label(composite, SWT.NONE);
-        label.setText(task);
-        label.setLayoutData(gridData);
-        //label.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
-
-		label = new Label(composite, SWT.NONE);
-        label.setText("From:");
-        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+        (new Label(composite, SWT.NULL)).setText("Task: ");
+        taskCombo = new Combo(composite, SWT.READ_ONLY);
+        List<String> wholeDayTasks = new ArrayList<String>();
+        for (String wholeDayTask : WholeDayTasks.wholeDayTasks)
+        	wholeDayTasks.add(preferenceStore.getString(wholeDayTask));
+        taskCombo.setItems(wholeDayTasks.toArray(new String[wholeDayTasks.size()]));
+		for (int i = 0; i < wholeDayTasks.size(); i++) {
+			if (task.equals(wholeDayTasks.get(i))) {
+				taskCombo.select(i);
+				break;
+			}
+		}
+		taskCombo.addSelectionListener(new SelectionAdapter() {
+            public void widgetSelected(SelectionEvent e) {
+                task = taskCombo.getText();
+            }
+        });
 		
-        label = new Label(composite, SWT.NONE);
-        label.setText("" + date);
-        
-        label = new Label(composite, SWT.NONE);
-        label.setText("To:");
-        label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
-		
+		(new Label(composite, SWT.NULL)).setText("From: ");
+        (new Label(composite, SWT.NULL)).setText("" + date);       
+        (new Label(composite, SWT.NULL)).setText("To: ");
 		DateTime dateEntry = new DateTime(composite, SWT.CALENDAR);
         dateEntry.setDate(year, month, day);
         dateEntry.addSelectionListener(new SelectionListener() {			
@@ -83,6 +93,10 @@ public class DateDialog extends Dialog {
         super.configureShell(newShell);
         newShell.setText(title);
     }
+
+	public String getTask() {
+		return task;
+	}
     
     public Date getTime() {
 		Calendar calendar = Calendar.getInstance();
