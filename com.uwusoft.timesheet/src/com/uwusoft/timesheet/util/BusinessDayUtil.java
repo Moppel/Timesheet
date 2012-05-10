@@ -109,6 +109,14 @@ public class BusinessDayUtil {
 			return getNextBusinessDay(nextDay, createHoliday);
 		}
 	}
+	
+	public static Date getLastBusinessDay(Date startDate) {
+		Date lastDay = DateUtils.truncate(addDays(startDate, -1), Calendar.DATE);
+		if (isBusinessDay(lastDay))
+			return lastDay;
+		else
+			return getLastBusinessDay(lastDay);
+	}
 
 	/**
 	 */

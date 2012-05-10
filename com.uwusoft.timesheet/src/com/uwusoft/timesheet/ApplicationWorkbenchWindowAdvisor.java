@@ -125,7 +125,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			if (storageService.getLastTask() == null) {					
 				try { // automatic check in
 					Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate, true); // create missing holidays and handle week change
-					while (end.before(startDate)) { // create missing whole day tasks until start date						
+					Date start = BusinessDayUtil.getLastBusinessDay(startDate);
+					while (end.before(start)) { // create missing whole day tasks until last business day						
 						DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
 								preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
 						if (dateDialog.open() == Dialog.OK) {
