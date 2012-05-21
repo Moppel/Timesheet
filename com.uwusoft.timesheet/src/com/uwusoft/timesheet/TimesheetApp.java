@@ -1,9 +1,14 @@
 package com.uwusoft.timesheet;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManagerFactory;
@@ -21,6 +26,7 @@ import org.eclipse.ui.PlatformUI;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.util.MessageBox;
 
 /**
  * This class controls all aspects of the application's execution
@@ -56,11 +62,28 @@ public class TimesheetApp implements IApplication {
 		startDate = new Date(mx.getStartTime());
 
 		Display display = PlatformUI.createDisplay();
-		/*try {
-			Runtime.getRuntime().exec("java -jar Timesheet.jar");
+		
+		// see http://stackoverflow.com/a/4194224:
+		try {
+			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
+			final File currentJar = new File(SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			String path = Activator.getDefault().getStateLocation().toPortableString()
+					.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/") // how to get path of settings?
+					+ Activator.PLUGIN_ID + ".prefs";
+			final List<String> command = new ArrayList<String>();
+			command.add(javaBin);
+			command.add("-jar");
+			command.add(currentJar.getPath());
+			command.add(path);
+
+			final ProcessBuilder builder = new ProcessBuilder(command);
+			builder.start();
 		} catch (IOException e) {
 			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
-		}*/
+		} catch (URISyntaxException e) {
+			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
+		}
+		
 		int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
 		if (returnCode == PlatformUI.RETURN_RESTART) {
 			return IApplication.EXIT_RESTART;

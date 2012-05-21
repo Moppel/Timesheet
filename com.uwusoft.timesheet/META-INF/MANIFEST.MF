@@ -36,6 +36,7 @@ Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  lib/persistence/javax.persistence_1.0.0.jar,
  lib/persistence/derby.jar,
  lib/persistence/eclipselink.jar,
+ lib/SystemShutdownTimeCapture.jar,
  .
 Import-Package: com.uwusoft.timesheet,
  org.apache.commons.lang.time;version="2.4.0"

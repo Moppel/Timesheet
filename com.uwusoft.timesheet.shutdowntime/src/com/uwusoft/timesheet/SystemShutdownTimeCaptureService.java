@@ -67,9 +67,10 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
         transferProps = new Properties();
-        String prefsPath = "/.eclipse/com.uwusoft.timesheet/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.uwusoft.timesheet.prefs";
+        String prefsPath = System.getProperty("user.home")
+        		+ "/.eclipse/com.uwusoft.timesheet/.metadata/.plugins/org.eclipse.core.runtime/.settings/com.uwusoft.timesheet.prefs";
         if (args.length > 0) prefsPath = args[0];
-        props = new File(System.getProperty("user.home") + prefsPath);
+        props = new File(prefsPath);
         tmp = new File(System.getProperty("user.home") + "/shutdownTime.tmp");
 		try {
 			if (tmp.exists()) {
