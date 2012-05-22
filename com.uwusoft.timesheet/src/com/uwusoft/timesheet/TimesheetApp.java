@@ -52,17 +52,6 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
-		System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
-		Map<String, Object> configOverrides = new HashMap<String, Object>();
-		configOverrides.put("javax.persistence.jdbc.url",
-				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
-		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
-		
-		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
-		startDate = new Date(mx.getStartTime());
-
-		Display display = PlatformUI.createDisplay();
-		
 		// see http://stackoverflow.com/a/4194224:
 		try {
 			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
@@ -83,6 +72,17 @@ public class TimesheetApp implements IApplication {
 		} catch (URISyntaxException e) {
 			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
 		}
+		
+		System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
+		Map<String, Object> configOverrides = new HashMap<String, Object>();
+		configOverrides.put("javax.persistence.jdbc.url",
+				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
+		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
+		
+		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
+		startDate = new Date(mx.getStartTime());
+
+		Display display = PlatformUI.createDisplay();
 		
 		int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
 		if (returnCode == PlatformUI.RETURN_RESTART) {

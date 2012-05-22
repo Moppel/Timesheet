@@ -3,6 +3,8 @@ package com.uwusoft.timesheet;
 import java.io.*;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -58,8 +60,15 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         while (true);
     }
 
-    public static void main(String[] args) {
-		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
+    public static void main(String[] args) throws IOException {
+		RandomAccessFile lockFile = new RandomAccessFile(new File(System.getProperty("user.home") + "/shutdownTime.lck"), "rw");
+        FileChannel channel = lockFile.getChannel();
+        FileLock lock = channel.tryLock();
+        if (lock == null) {
+            System.exit(0);
+        }
+		
+        RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		Date startDate = new Date(mx.getStartTime());
 
 		SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
