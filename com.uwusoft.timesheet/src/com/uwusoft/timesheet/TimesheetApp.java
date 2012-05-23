@@ -2,9 +2,12 @@ package com.uwusoft.timesheet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.net.URISyntaxException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,18 +55,18 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
+		String settingsPath = Activator.getDefault().getStateLocation().toPortableString()
+				.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/"); // how to get path of settings?
 		// see http://stackoverflow.com/a/4194224:
 		try {
 			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 			final File currentJar = new File(SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-			String path = Activator.getDefault().getStateLocation().toPortableString()
-					.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/") // how to get path of settings?
-					+ Activator.PLUGIN_ID + ".prefs";
 			final List<String> command = new ArrayList<String>();
 			command.add(javaBin);
 			command.add("-jar");
 			command.add(currentJar.getPath());
-			command.add(path);
+			command.add(settingsPath);
+			command.add(Activator.PLUGIN_ID + ".prefs");
 
 			final ProcessBuilder builder = new ProcessBuilder(command);
 			builder.start();
@@ -73,7 +76,19 @@ public class TimesheetApp implements IApplication {
 			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
 		}
 		
-		System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
+		try {
+			RandomAccessFile lockFile = new RandomAccessFile(new File(settingsPath + "timesheet.lck"), "rw");
+	        FileChannel channel = lockFile.getChannel();
+	        FileLock lock = channel.tryLock();
+	        if (lock == null) {
+	        	MessageBox.setError("Error", "Another instance of " + Activator.PLUGIN_ID + " is already running.");
+	        	stop();
+	            System.exit(0);
+	        }
+		} catch (IOException e) {
+		}
+		
+        System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		configOverrides.put("javax.persistence.jdbc.url",
 				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");

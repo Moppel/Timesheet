@@ -61,7 +61,17 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
     }
 
     public static void main(String[] args) throws IOException {
-		RandomAccessFile lockFile = new RandomAccessFile(new File(System.getProperty("user.home") + "/shutdownTime.lck"), "rw");
+        String prefsPath = System.getProperty("user.home");
+        if (args.length > 0) prefsPath = args[0];
+        String dir;
+        if (args.length > 1) {
+        	dir = args[0];
+        	prefsPath = args[0] + args[1];
+        }
+        else
+        	dir = prefsPath.substring(0, prefsPath.lastIndexOf("/"));
+		
+        RandomAccessFile lockFile = new RandomAccessFile(new File(dir + "/shutdownTime.lck"), "rw");
         FileChannel channel = lockFile.getChannel();
         FileLock lock = channel.tryLock();
         if (lock == null) {
@@ -76,10 +86,8 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
 
         transferProps = new Properties();
-        String prefsPath = System.getProperty("user.home");
-        if (args.length > 0) prefsPath = args[0];
         props = new File(prefsPath);
-        tmp = new File(System.getProperty("user.home") + "/shutdownTime.tmp");
+        tmp = new File(dir + "/shutdownTime.tmp");
 		try {
 			if (tmp.exists()) {
 				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));				
