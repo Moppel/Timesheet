@@ -71,7 +71,8 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<TaskEntry> getTaskEntries(Date date) {
+	public List<TaskEntry> getTaskEntries(int weekNum) {
+		Date date = new Date(); // TODO 
 		Query q = em.createNativeQuery("select t from TaskEntry t where {fn TIMESTAMPDIFF(SQL_TSI_DAY, t.dateTime, " + new Timestamp(date.getTime()) + ")} = 0");
 		return q.getResultList();
 	}

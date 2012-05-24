@@ -27,7 +27,7 @@
       <view
             class="com.uwusoft.timesheet.TasksView"
             id="com.uwusoft.timesheet.tasksview"
-            name="Today&apos;s Tasks">
+            name="Weekly Tasks">
       </view>
    </extension>
    <extension

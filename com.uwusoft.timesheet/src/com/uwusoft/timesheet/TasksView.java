@@ -8,7 +8,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -139,7 +141,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	}
 
 	private void addTaskEntries() {
-		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(new Date()));
+        Calendar cal = new GregorianCalendar();
+    	cal.setTime(new Date());        
+		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(cal.get(Calendar.WEEK_OF_YEAR)));
 		if (!taskEntries.isEmpty()) {
 			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
