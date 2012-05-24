@@ -126,10 +126,8 @@ public class GoogleStorageService extends EventManager implements StorageService
    }
 
     private boolean reloadSpreadsheetKey() {
-    	if (StringUtils.isEmpty(spreadsheetKey)) {
-			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
-    	}
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+        spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
 	    	if (StringUtils.isEmpty(spreadsheetKey)) {
 	    		MessageBox.setMessage("Create spreadsheet", "Please manually create a spreadsheet and copy the spreadsheet key to the Google Spreadsheet Preferences!");
@@ -145,10 +143,13 @@ public class GoogleStorageService extends EventManager implements StorageService
 			}
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
+    		return false;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
+    		return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
+    		return false;
 		}
     	return true;
     }
@@ -159,7 +160,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			WorksheetFeed feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
 	        worksheets = feed.getEntries();
 	        defaultWorksheet = worksheets.get(0);
-	        worksheets.remove(defaultWorksheet); // only task sheets remaining
+	        worksheets.remove(defaultWorksheet); // only task and project sheets remaining
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (IOException e) {
@@ -186,6 +187,11 @@ public class GoogleStorageService extends EventManager implements StorageService
 		for (Object listener : getListeners()) {
 			((PropertyChangeListener) listener).propertyChange(event);
 		}    	
+    }
+    
+    public void reload() {
+    	if (!reloadWorksheets()) return;
+		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
     }
     
     public List<String> getSystems() {

@@ -44,6 +44,8 @@ public interface StorageService {
 
     List<String> getProjects(String system);
     
+    void reload();
+    
     /**
      * @return a list of tasks assigned to name of special time management system
      */

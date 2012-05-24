@@ -34,6 +34,11 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
+	public void reload() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public List<String> getProjects(String system) {
 		@SuppressWarnings("unchecked")
 		List<Project> projectList = em.createQuery(
