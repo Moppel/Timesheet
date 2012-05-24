@@ -25,13 +25,16 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
@@ -97,7 +100,17 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	 * it.
 	 */
 	public void createPartControl(Composite parent) {
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		/*Composite composite = new Composite(parent, SWT.NONE);
+        RowLayout layout = new RowLayout();
+        layout.center = true;
+        layout.wrap = false;
+        composite.setLayout(layout);
+        
+        Button leftButton = new Button(composite, SWT.PUSH);
+        leftButton.setText("<<");
+        //leftButton.setEnabled(currentWeekNum > 1);*/
+		
+        viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		createColumns(parent, viewer);
 		final Table table = viewer.getTable();
 		table.setHeaderVisible(true);
@@ -136,7 +149,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
 		String[] titles = { "Time", "Task", "Project", "Total" };
-		int[] bounds = { 70, 300, 100, 60 };
+		int[] bounds = { 80, 300, 300, 60 };
+        
+		final OptimizedIndexSearcher searcher = new OptimizedIndexSearcher();
 
 		// First column is for the time
 		TableViewerColumn col = createTableViewerColumn(titles[0], bounds[0], 0);
@@ -172,6 +187,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
+            boolean even = true;
+			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
 				if (date!= null) return new SimpleDateFormat(timeFormat).format(date);
@@ -180,6 +197,16 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			public Image getImage(Object obj) {
 				if (((TaskEntry)obj).getId() == null) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
+			}
+            @Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+                if( even ) return null;
+				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
 			}
 		});
 
@@ -210,11 +237,23 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
-			public String getText(Object element) {
+            boolean even = true;
+
+            public String getText(Object element) {
 		        return ((TaskEntry) element).getTask().getName();
 			}
 			public Image getImage(Object obj) {
 				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+			}
+            @Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+                if( even ) return null;
+				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
 			}
 		});
 		// Third column is for the project
@@ -242,13 +281,25 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
-			public String getText(Object element) {
+            boolean even = true;
+
+            public String getText(Object element) {
 				return ((TaskEntry) element).getTask().getProject().getName();
 			}
 			public Image getImage(Object obj) {
 				TaskEntry task = (TaskEntry) obj;
 				if (StorageService.CHECK_IN.equals(task.getTask().getName()) || StorageService.BREAK.equals(task.getTask().getName())) return null;
 				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+			}
+            @Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+                if( even ) return null;
+				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
 			}
 		});
 		// Fourth column is for the total
@@ -275,7 +326,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			}			
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
-			public String getText(Object element) {
+            boolean even = true;
+
+            public String getText(Object element) {
 				TaskEntry entry = (TaskEntry) element;
 				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask().getName())) return "";
 				DecimalFormat df = new DecimalFormat( "0.00" );
@@ -285,6 +338,16 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				TaskEntry entry = (TaskEntry) obj;
 				if (entry.getId() == null || StorageService.CHECK_IN.equals(entry.getTask().getName())) return null;
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
+			}
+            @Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+                if( even ) return null;
+				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
 			}
 		});
 	}
@@ -300,7 +363,42 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	}
 
-	/**
+	// see http://dev.eclipse.org/viewcvs/viewvc.cgi/org.eclipse.jface.snippets/Eclipse%20JFace%20Snippets/org/eclipse/jface/snippets/viewers/Snippet041TableViewerAlternatingColors.java?view=markup
+	private class OptimizedIndexSearcher {
+		private int lastIndex = 0;
+
+		public boolean isEven(TableItem item) {
+			TableItem[] items = item.getParent().getItems();
+
+			// 1. Search the next ten items
+			for (int i = lastIndex; i < items.length && lastIndex + 10 > i; i++) {
+				if (items[i] == item) {
+					lastIndex = i;
+					return lastIndex % 2 == 0;
+				}
+			}
+
+			// 2. Search the previous ten items
+			for (int i = lastIndex; i < items.length && lastIndex - 10 > i; i--) {
+				if (items[i] == item) {
+					lastIndex = i;
+					return lastIndex % 2 == 0;
+				}
+			}
+
+			// 3. Start from the beginning
+			for (int i = 0; i < items.length; i++) {
+				if (items[i] == item) {
+					lastIndex = i;
+					return lastIndex % 2 == 0;
+				}
+			}
+
+			return false;
+		}
+	}
+
+    /**
 	 * Passing the focus request to the viewer's control.
 	 */
 	public void setFocus() {
