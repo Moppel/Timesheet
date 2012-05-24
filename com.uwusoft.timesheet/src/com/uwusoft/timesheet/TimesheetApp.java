@@ -81,7 +81,7 @@ public class TimesheetApp implements IApplication {
 	        FileChannel channel = lockFile.getChannel();
 	        FileLock lock = channel.tryLock();
 	        if (lock == null) {
-	        	MessageBox.setError("Error", "Another instance of " + Activator.PLUGIN_ID + " is already running.");
+	        	MessageBox.setMessage("Error", "Another instance of " + Activator.PLUGIN_ID + " is already running.");
 	        	stop();
 	            System.exit(0);
 	        }
