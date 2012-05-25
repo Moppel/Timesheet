@@ -300,10 +300,10 @@ public class GoogleStorageService extends EventManager implements StorageService
             if (!reloadWorksheets()) return;
 			ListEntry timeEntry = new ListEntry();
 			
+	        Calendar cal = new GregorianCalendar();
+	        cal.setTime(task.getDateTime());
+	        //cal.setFirstDayOfWeek(Calendar.MONDAY);
 			if (task.getDateTime() != null) {
-		        Calendar cal = new GregorianCalendar();
-		        cal.setTime(task.getDateTime());
-		        //cal.setFirstDayOfWeek(Calendar.MONDAY);
 				timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
 				timeEntry.getCustomElements().setValueLocal(DATE,
 						new SimpleDateFormat(dateFormat).format(task.getDateTime()));			
@@ -344,7 +344,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
-			firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
+			firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, cal.get(Calendar.WEEK_OF_YEAR)));
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
 		} catch (ServiceException e) {
@@ -357,7 +357,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     	try {
 			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
-			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
+			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && elements.getValue(TASK) != null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
 				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1));
 			return null;
 		} catch (IOException e) {
@@ -439,14 +439,15 @@ public class GoogleStorageService extends EventManager implements StorageService
 
 	public void updateTaskEntry(Date time, Long id, boolean wholeDate) {
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(time);
+        int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
         if (wholeDate) {
     		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
-            Calendar cal = new GregorianCalendar();
-            cal.setTime(time);
             //cal.setFirstDayOfWeek(Calendar.MONDAY);
-            createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
+            createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
         }
-		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
+		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, weekNum));
 	}
 
 	public void updateTaskEntry(TaskEntry task, Long id) {

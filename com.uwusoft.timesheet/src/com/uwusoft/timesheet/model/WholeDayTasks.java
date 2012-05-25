@@ -118,9 +118,8 @@ public class WholeDayTasks {
 		TaskEntry beginTaskEntry = beginTaskEntryList.iterator().next();
 		Date begin = beginTaskEntry.getDateTime();
 		em.remove(beginTaskEntry);
-		BusinessDayUtil.handleWeekChange(lastDate, begin);
+		Date end = BusinessDayUtil.getNextBusinessDay(lastDate, true); // create missing holidays and handle week change
 		
-		Date end = begin;
 		for (TaskEntry taskEntry : taskEntryList) {
 			end = new Date(taskEntry.getDateTime().getTime());
 			do {
