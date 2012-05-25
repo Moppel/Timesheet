@@ -255,14 +255,14 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;*/
 	            
 	            String task = elements.getValue(TASK);
-	            if (task == null || elements.getValue(TIME) == null) break;
+	            if (task == null) break;
 	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
 	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, null, null, 0));
+	            			task, null, null, 0, false));
 	            else
-	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL))));
+	            	taskEntries.add(new TaskEntry(id, elements.getValue(TIME) == null ? null : new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
+	            			task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL)), elements.getValue(TIME) == null ? true : false));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());

@@ -76,10 +76,12 @@ public class TaskEntry {
 	 * @param project
 	 * @param system
 	 * @param total
+	 * @param isWholeDay TODO
 	 */
-	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total) {
+	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total, boolean wholeDay) {
 		this(dateTime, new Task(task, new Project(project, system)), total);
 		this.id = id;
+		this.wholeDay = wholeDay;
 	}
 	
 	/**

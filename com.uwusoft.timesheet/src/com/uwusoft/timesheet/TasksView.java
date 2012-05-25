@@ -32,6 +32,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
@@ -49,6 +50,7 @@ import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
+import com.uwusoft.timesheet.util.WeekComposite;
 
 public class TasksView extends ViewPart implements PropertyChangeListener {
 	public static final String ID = "com.uwusoft.timesheet.tasksview";
@@ -58,6 +60,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	private StorageService storageService;
 	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 	private TableViewer viewer;
+	private WeekComposite weekComposite;
 	
 	/**
 	 * The content provider class is responsible for providing objects to the
@@ -102,15 +105,23 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	 * it.
 	 */
 	public void createPartControl(Composite parent) {
-		/*Composite composite = new Composite(parent, SWT.NONE);
-        RowLayout layout = new RowLayout();
-        layout.center = true;
-        layout.wrap = false;
-        composite.setLayout(layout);
-        
-        Button leftButton = new Button(composite, SWT.PUSH);
-        leftButton.setText("<<");
-        //leftButton.setEnabled(currentWeekNum > 1);*/
+		parent.setLayout(new GridLayout(1, false));
+		
+		if((storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
+			return;
+		
+		storageService.addPropertyChangeListener(this);
+		
+        Calendar cal = new GregorianCalendar();
+    	cal.setTime(new Date());        
+    	int currentWeekNum = cal.get(Calendar.WEEK_OF_YEAR);
+		
+    	cal = new GregorianCalendar();
+    	cal.setTime(storageService.getLastTaskEntryDate());
+    	
+    	weekComposite = new WeekComposite(this, currentWeekNum, cal.get(Calendar.WEEK_OF_YEAR));
+    	weekComposite.createComposite(new Composite(parent, SWT.NONE));
 		
         viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
 		createColumns(parent, viewer);
@@ -120,13 +131,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		viewer.setContentProvider(new ArrayContentProvider());
 
-		if((storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
-			return;
-		
-		storageService.addPropertyChangeListener(this);
-
-		addTaskEntries();
+		addTaskEntries(currentWeekNum);
 		// Make the selection available to other views
 		getSite().setSelectionProvider(viewer);
 
@@ -140,15 +145,17 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		viewer.getControl().setLayoutData(gridData);
 	}
 
-	private void addTaskEntries() {
+	private boolean addTaskEntries(Integer weekNum) {
+		if (viewer == null) return false;
+		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(weekNum));
         Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());        
-		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(cal.get(Calendar.WEEK_OF_YEAR)));
-		if (!taskEntries.isEmpty()) {
+		if (!taskEntries.isEmpty() && weekNum == cal.get(Calendar.WEEK_OF_YEAR)) {
 			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
 		}
 		viewer.setInput(taskEntries);
+		return true;
 	}
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
@@ -196,6 +203,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
 				if (date!= null) return new SimpleDateFormat(timeFormat).format(date);
+				if (((TaskEntry) element).isWholeDay()) return "";
 				return "Last task";
 			}
 			public Image getImage(Object obj) {
@@ -207,7 +215,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
 					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
                 if( even ) return null;
 				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
@@ -254,7 +262,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
 					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
                 if( even ) return null;
 				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
@@ -300,7 +308,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
 					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
                 if( even ) return null;
 				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
@@ -348,7 +356,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()))
+				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
 					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
                 if( even ) return null;
 				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
@@ -465,7 +473,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		addTaskEntries();
-		viewer.refresh();
+		if (addTaskEntries((Integer) evt.getNewValue())) viewer.refresh();
 	}
 }
