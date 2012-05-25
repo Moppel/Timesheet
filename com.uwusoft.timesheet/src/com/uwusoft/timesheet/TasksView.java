@@ -473,6 +473,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (addTaskEntries((Integer) evt.getNewValue())) viewer.refresh();
+		if (addTaskEntries((Integer) evt.getNewValue())) {
+			weekComposite.setCurrentWeekNum((Integer) evt.getNewValue());
+			viewer.refresh();
+		}
 	}
 }
