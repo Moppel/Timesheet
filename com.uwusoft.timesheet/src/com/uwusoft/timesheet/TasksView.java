@@ -3,6 +3,7 @@ package com.uwusoft.timesheet;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -148,9 +149,10 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	private boolean addTaskEntries(Integer weekNum) {
 		if (viewer == null) return false;
         Calendar cal = new GregorianCalendar();
-    	cal.setTime(new Date());        
-		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(weekNum == null ? cal.get(Calendar.WEEK_OF_YEAR) : weekNum));
-		if (!taskEntries.isEmpty() && weekNum == cal.get(Calendar.WEEK_OF_YEAR)) {
+    	cal.setTime(new Date());
+    	weekNum = weekNum == null ? weekComposite.getWeekNum() : weekNum;
+		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(weekNum));
+		if (!taskEntries.isEmpty() && cal.get(Calendar.WEEK_OF_YEAR) == weekNum) {
 			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
 		}
@@ -159,17 +161,59 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	}
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
-		String[] titles = { "Time", "Task", "Project", "Total" };
-		int[] bounds = { 80, 300, 300, 60 };
+		String[] titles = { "Date", "Time", "Task", "Project", "Total" };
+		int[] bounds = { 80, 80, 300, 300, 60 };
         
 		final OptimizedIndexSearcher searcher = new OptimizedIndexSearcher();
 
-		// First column is for the time
-		TableViewerColumn col = createTableViewerColumn(titles[0], bounds[0], 0);
+		int colNum = 0;
+		// First column is for the date
+		TableViewerColumn col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return ((TaskEntry) element).getDateTime() != null;
+		        return false;
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return null;
+		    }
+
+		    protected Object getValue(Object element) {
+		        return DateFormat.getDateInstance(DateFormat.SHORT).format(((TaskEntry) element).getDateTime());
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		    }
+		});
+		col.setLabelProvider(new ColumnLabelProvider() {
+            boolean even = true;
+			
+			public String getText(Object element) {
+				Timestamp date = ((TaskEntry) element).getDateTime();
+				if (date!= null) return DateFormat.getDateInstance(DateFormat.SHORT).format(date);
+				if (((TaskEntry) element).isWholeDay()) return "";
+				return "Last task";
+			}
+			public Image getImage(Object obj) {
+				if (((TaskEntry)obj).getId() == null) return null;
+				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/date.png").createImage();				
+			}
+            @Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				return getColor(viewer, element, even);
+			}
+		});
+		
+		// Second column is for the time
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return !((TaskEntry) element).isStatus() && ((TaskEntry) element).getDateTime() != null;
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
@@ -177,16 +221,24 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 
 		    protected Object getValue(Object element) {
-		        return new SimpleDateFormat(timeFormat).format(((TaskEntry) element).getDateTime());
+		        return DateFormat.getTimeInstance(DateFormat.SHORT).format(((TaskEntry) element).getDateTime());
 		    }
 
 		    protected void setValue(Object element, Object value) {
 		    	TaskEntry entry = (TaskEntry) element;
 		    	if (entry.getDateTime() != null) {
 		    		try {
-		    			Timestamp newTime = new Timestamp(new SimpleDateFormat(timeFormat).parse((String) value).getTime());
-		    			if (!entry.getDateTime().equals(newTime)) {
-		    				entry.setDateTime(newTime);
+		    			Calendar oldCal = Calendar.getInstance();
+		    			oldCal.setTime(entry.getDateTime());
+		    			Calendar newCal = Calendar.getInstance();
+		    			newCal.setTime(new SimpleDateFormat(timeFormat).parse((String) value));
+		    			if (oldCal.get(Calendar.HOUR) != newCal.get(Calendar.HOUR)
+		    					|| oldCal.get(Calendar.MINUTE) != newCal.get(Calendar.MINUTE)
+		    					|| oldCal.get(Calendar.AM_PM) != newCal.get(Calendar.AM_PM)) {
+		    				newCal.set(Calendar.YEAR, oldCal.get(Calendar.YEAR));
+		    				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
+		    				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
+		    				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
 		    				storageService.updateTaskEntry(entry.getDateTime(), entry.getId(), false);
 		    				viewer.refresh(element);
 		    			}
@@ -202,9 +254,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
-				if (date!= null) return new SimpleDateFormat(timeFormat).format(date);
-				if (((TaskEntry) element).isWholeDay()) return "";
-				return "Last task";
+				if (!((TaskEntry) element).isWholeDay() && date!= null) return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+				return "";
 			}
 			public Image getImage(Object obj) {
 				if (((TaskEntry)obj).getId() == null) return null;
@@ -215,19 +266,16 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
-					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
-                if( even ) return null;
-				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
+				return getColor(viewer, element, even);
 			}
 		});
 
-		// Second column is for the task
-		col = createTableViewerColumn(titles[1], bounds[1], 1);
+		// Third column is for the task
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return !StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName());
+		        return !((TaskEntry) element).isStatus() && !StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName());
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
@@ -262,14 +310,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
-					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
-                if( even ) return null;
-				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
+				return getColor(viewer, element, even);
 			}
 		});
-		// Third column is for the project
-		col = createTableViewerColumn(titles[2], bounds[2], 2);
+		// Fourth column is for the project
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 			@Override
@@ -308,14 +353,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
-					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
-                if( even ) return null;
-				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
+				return getColor(viewer, element, even);
 			}
 		});
-		// Fourth column is for the total
-		col = createTableViewerColumn(titles[3], bounds[3], 3);
+		// Fifth column is for the total
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 			@Override
@@ -356,10 +398,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
                 super.update(cell);
 			}
 			@Override public Color getBackground(Object element) {
-				if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).getDateTime() == null)
-					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
-                if( even ) return null;
-				return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
+				return getColor(viewer, element, even);
 			}
 		});
 	}
@@ -474,8 +513,15 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (addTaskEntries((Integer) evt.getNewValue())) {
-			weekComposite.setCurrentWeekNum((Integer) evt.getNewValue());
+			if (evt.getNewValue() != null) weekComposite.setCurrentWeekNum((Integer) evt.getNewValue());
 			viewer.refresh();
 		}
+	}
+
+	private Color getColor(final TableViewer viewer, Object element, boolean even) {
+		if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isWholeDay())
+			return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
+		if( even ) return null;
+		return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);
 	}
 }
