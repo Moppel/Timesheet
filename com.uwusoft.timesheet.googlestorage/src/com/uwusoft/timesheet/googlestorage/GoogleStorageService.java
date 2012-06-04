@@ -69,6 +69,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
+    
+    private static final String SUBMISSION_STATUS_TRUE = "Submitted";
+    
     private String spreadsheetKey;
     private SpreadsheetService service;
     private FeedURLFactory factory;
@@ -253,16 +256,24 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            if (elements.getValue(DATE) == null) continue;
 	            /*if (!new SimpleDateFormat(dateFormat).format(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)))
 	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;*/
+	            Calendar date = Calendar.getInstance();
+	            date.setTime(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)));
+	            
+	            if (elements.getValue(TIME) != null) {
+		            Calendar time = Calendar.getInstance();
+		            time.setTime(new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)));
+		            date.set(Calendar.HOUR, time.get(Calendar.HOUR));
+		            date.set(Calendar.MINUTE, time.get(Calendar.MINUTE));
+	            }
 	            
 	            String task = elements.getValue(TASK);
 	            if (task == null) break;
 	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
-	            	taskEntries.add(new TaskEntry(id, new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, null, null, 0, false));
+	            	taskEntries.add(new TaskEntry(id, date.getTime(), task, null, null, 0, false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
 	            else
-	            	taskEntries.add(new TaskEntry(id, elements.getValue(TIME) == null ? null : new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)),
-	            			task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL)), elements.getValue(TIME) == null ? true : false));
+	            	taskEntries.add(new TaskEntry(id, date.getTime(), task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL)),
+	            			elements.getValue(TIME) == null ? true : false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -301,7 +312,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			ListEntry timeEntry = new ListEntry();
 			
 	        Calendar cal = new GregorianCalendar();
-	        cal.setTime(task.getDateTime());
+	        cal.setTime(task.getDateTime() == null ? new Date() : task.getDateTime());
 	        //cal.setFirstDayOfWeek(Calendar.MONDAY);
 			if (task.getDateTime() != null) {
 				timeEntry.getCustomElements().setValueLocal(WEEK, Integer.toString(cal.get(Calendar.WEEK_OF_YEAR)));
@@ -540,7 +551,7 @@ public class GoogleStorageService extends EventManager implements StorageService
             if (!reloadWorksheets()) return systems;
     		
             ListQuery query = new ListQuery(listFeedUrl);
-    		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"Submitted\" and "
+    		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"" + SUBMISSION_STATUS_TRUE + "\" and "
     								+ WEEK.toLowerCase() + " = \"" + weekNum + "\"");
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
             
@@ -551,7 +562,7 @@ public class GoogleStorageService extends EventManager implements StorageService
             for (ListEntry listEntry : listEntries) {
             	CustomElementCollection elements = listEntry.getCustomElements();
 	            String task = elements.getValue(TASK);
-	            if ("Submitted".equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task)) {
+	            if (SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task)) {
 	            	continue;
 	            }
 	            if (elements.getValue(DATE) == null) continue;
@@ -570,7 +581,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 					if (submissionTask != null)
 						entry.addSubmissionEntry(submissionTask, Double.valueOf(elements.getValue(TOTAL)));
 				}
-            	createUpdateCellEntry(defaultWorksheet,	Integer.parseInt(elements.getValue(ID)), headingIndex.get(SUBMISSION_STATUS), "Submitted");
+            	createUpdateCellEntry(defaultWorksheet,	Integer.parseInt(elements.getValue(ID)), headingIndex.get(SUBMISSION_STATUS), SUBMISSION_STATUS_TRUE);
     		}
             entry.submitEntries();
 		} catch (IOException e) {
