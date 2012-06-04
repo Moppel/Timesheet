@@ -77,11 +77,13 @@ public class TaskEntry {
 	 * @param system
 	 * @param total
 	 * @param wholeDay
+	 * @param status
 	 */
-	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total, boolean wholeDay) {
+	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total, boolean wholeDay, boolean status) {
 		this(dateTime, new Task(task, new Project(project, system)), total);
 		this.id = id;
 		this.wholeDay = wholeDay;
+		this.status = status;
 	}
 	
 	/**
