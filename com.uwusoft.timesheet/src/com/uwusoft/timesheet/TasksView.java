@@ -471,7 +471,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(),
-					entry.getTask().getName() + (entry.getTask().getProject() == null ? "" : " (" + entry.getTask().getProject().getName() + ")"), entry.getDateTime());
+					entry.getTask().getName() + (entry.getTask().getProject().getName() == null ? "" : " (" + entry.getTask().getProject().getName() + ")"), entry.getDateTime());
 			if (timeDialog.open() == Dialog.OK) {
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
 			}
