@@ -4,11 +4,14 @@ import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
@@ -25,14 +28,24 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class LocalStorageService extends EventManager implements StorageService {
 
-	private EntityManager em;
+	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
+	public static EntityManagerFactory factory;
+	
+	private static EntityManager em;
     private Map<String,String> submissionSystems;
 
-	public LocalStorageService() {
-		em = TimesheetApp.factory.createEntityManager();
+	static {
+		Map<String, Object> configOverrides = new HashMap<String, Object>();
+		configOverrides.put("javax.persistence.jdbc.url",
+				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
+		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
+	}
+    
+    public LocalStorageService() {
+		em = factory.createEntityManager();
 		submissionSystems = TimesheetApp.getSubmissionSystems();
 	}
-
+	
 	@Override
 	public void reload() {
 		// TODO Auto-generated method stub

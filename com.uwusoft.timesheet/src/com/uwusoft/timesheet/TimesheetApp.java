@@ -14,9 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
@@ -35,8 +32,6 @@ import com.uwusoft.timesheet.util.MessageBox;
  * This class controls all aspects of the application's execution
  */
 public class TimesheetApp implements IApplication {
-	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
-	public static EntityManagerFactory factory;
 
 	public static final String WORKING_HOURS = "weekly.workinghours";
 	public static final String NON_WORKING_DAYS = "weekly.nonworkingdays";
@@ -89,10 +84,6 @@ public class TimesheetApp implements IApplication {
 		}
 		
         System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
-		Map<String, Object> configOverrides = new HashMap<String, Object>();
-		configOverrides.put("javax.persistence.jdbc.url",
-				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
-		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		startDate = new Date(mx.getStartTime());

@@ -12,9 +12,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 
-import org.eclipse.persistence.config.SystemProperties;
-
-import com.uwusoft.timesheet.MyArchiveFactoryImpl;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -26,7 +23,6 @@ public class LocalSubmissionService implements SubmissionService {
 	private static EntityManagerFactory factory;
 	
 	static {
-		System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		configOverrides.put("javax.persistence.jdbc.url",
 				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/submission;create=true");
@@ -62,7 +58,8 @@ public class LocalSubmissionService implements SubmissionService {
 		Query q = em.createQuery("select p from SubmissionProject p");
 		for (SubmissionProject project : (List<SubmissionProject>)q.getResultList()) {
 			assignedProjects.put(project.getName(), new HashSet<SubmissionEntry>());
-			q = em.createQuery("select t from SubmissionTask t where t.project.id='" + project.getId() + "'");
+			q = em.createQuery("select t from SubmissionTask t where t.project.id = :id")
+					.setParameter("id", project.getId());
 			for (SubmissionTask task : (List<SubmissionTask>)q.getResultList()) {
 				assignedProjects.get(project.getName()).add(new SubmissionEntry(project.getId(), task.getId(), task.getName(), project.getName(), "Local"));
 			}

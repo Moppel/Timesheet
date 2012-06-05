@@ -32,7 +32,7 @@ public class WholeDayTasks {
 	}
 	
 	private WholeDayTasks() {
-		em = TimesheetApp.factory.createEntityManager();
+		em = LocalStorageService.factory.createEntityManager();
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime desc")
 			.getResultList();
