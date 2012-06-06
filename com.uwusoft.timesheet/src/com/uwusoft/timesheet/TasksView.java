@@ -191,13 +191,16 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
-				if (date!= null) return DateFormat.getDateInstance(DateFormat.SHORT).format(date);
-				if (((TaskEntry) element).isWholeDay()) return "";
-				return "Last task";
+				if (date == null) return "Last task";
+		    	if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isWholeDay()) {
+		    		return DateFormat.getDateInstance(DateFormat.SHORT).format(date);
+		    	}
+				return "";				
 			}
 			public Image getImage(Object obj) {
-				if (((TaskEntry)obj).getId() == null) return null;
-				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/date.png").createImage();				
+		    	if (StorageService.CHECK_IN.equals(((TaskEntry) obj).getTask().getName()) || ((TaskEntry) obj).isWholeDay())
+		    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/date.png").createImage();
+		    	return null;
 			}
             @Override public void update(ViewerCell cell) {
                 even = searcher.isEven((TableItem)cell.getItem());
@@ -258,8 +261,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				return "";
 			}
 			public Image getImage(Object obj) {
-				if (((TaskEntry)obj).getId() == null) return null;
-				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();				
+				if (!((TaskEntry) obj).isWholeDay() && ((TaskEntry) obj).getDateTime()!= null) return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();
+				return null;
 			}
             @Override public void update(ViewerCell cell) {
                 even = searcher.isEven((TableItem)cell.getItem());
