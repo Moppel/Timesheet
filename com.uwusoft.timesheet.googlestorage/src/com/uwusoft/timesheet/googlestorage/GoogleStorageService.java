@@ -74,6 +74,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     private String spreadsheetKey;
     private SpreadsheetService service;
+    //private DocsService docsService;
     private FeedURLFactory factory;
     private URL listFeedUrl;
 	private Map<String, Integer> headingIndex;
@@ -86,6 +87,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     public GoogleStorageService() throws CoreException {
         service = new SpreadsheetService("Timesheet");
+        //docsService = new DocsService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
         boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
@@ -105,6 +107,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	String password = secureProps.getProperty(PREFIX + PASSWORD);
 	    	if (lastSuccess && !StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
+	        	//docsService.setUserCredentials(userName, password);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
 	    	}
@@ -113,6 +116,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+	        	//docsService.setUserCredentials(userName, password);
 	        	preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
 	        	if (loginDialog.isStorePassword())
 	        		secureProps.storeProperty(PREFIX + PASSWORD, loginDialog.getPassword());
@@ -133,6 +137,13 @@ public class GoogleStorageService extends EventManager implements StorageService
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
 	    	if (StringUtils.isEmpty(spreadsheetKey)) {
+	    		/*File file = new File("F:/My Documents/Downloads/Timesheet Template.ods");
+	    		DocumentListEntry newDocument = new DocumentListEntry();
+	    		String mimeType = DocumentListEntry.MediaType.fromFileName(file.getName()).getMimeType();
+	    		newDocument.setFile(file, mimeType);
+	    		newDocument.setTitle(new PlainTextConstruct("Timesheet Test"));
+
+	    		docsService.insert(new URL("https://docs.google.com/feeds/documents/private/full/"), newDocument);*/
 	    		MessageBox.setMessage("Create spreadsheet", "Please manually create a spreadsheet and copy the spreadsheet key to the Google Spreadsheet Preferences!");
 	    		return false;
 	    	}
@@ -270,10 +281,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            if (task == null) break;
 	            Long id = Long.parseLong(elements.getValue(ID));
 	            if (CHECK_IN.equals(task) || BREAK.equals(task))
-	            	taskEntries.add(new TaskEntry(id, date.getTime(), task, null, null, 0, false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
+	            	taskEntries.add(new TaskEntry(id, date.getTime(), task, null, null, 0, elements.getValue(COMMENT), false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
 	            else
 	            	taskEntries.add(new TaskEntry(id, date.getTime(), task, elements.getValue(PROJECT), getSystem(id.intValue()), Float.parseFloat(elements.getValue(TOTAL)),
-	            			elements.getValue(TIME) == null ? true : false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
+	            			elements.getValue(COMMENT), elements.getValue(TIME) == null ? true : false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
 	        }
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -369,7 +380,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
 			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
 			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && elements.getValue(TASK) != null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
-				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1));
+				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1), elements.getValue(COMMENT));
 			return null;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getLocalizedMessage());
@@ -466,6 +477,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask().getName());
 		else
 			updateTask(getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem()), id.intValue());
+		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), task.getComment());
 		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 

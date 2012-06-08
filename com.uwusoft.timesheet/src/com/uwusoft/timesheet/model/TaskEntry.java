@@ -64,8 +64,9 @@ public class TaskEntry {
 	 * @param project
 	 * @param system
 	 */
-	public TaskEntry(Long id, String task, String project, String system) {
+	public TaskEntry(Long id, String task, String project, String system, String comment) {
 		this.id = id;
+		this.comment = comment;
 		this.task = new Task(task, new Project(project, system));
 	}
 
@@ -76,12 +77,14 @@ public class TaskEntry {
 	 * @param project
 	 * @param system
 	 * @param total
+	 * @param comment
 	 * @param wholeDay
 	 * @param status
 	 */
-	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total, boolean wholeDay, boolean status) {
+	public TaskEntry(Long id, Date dateTime, String task, String project, String system, float total, String comment, boolean wholeDay, boolean status) {
 		this(dateTime, new Task(task, new Project(project, system)), total);
 		this.id = id;
+		this.comment = comment;
 		this.wholeDay = wholeDay;
 		this.status = status;
 	}

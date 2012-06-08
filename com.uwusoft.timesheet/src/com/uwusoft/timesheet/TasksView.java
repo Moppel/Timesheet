@@ -496,7 +496,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry.getTask());
+			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry.getTask(), entry.getComment());
 			listDialog.setTitle("Tasks");
 			listDialog.setMessage("Select task");
 			listDialog.setContentProvider(ArrayContentProvider.getInstance());
@@ -507,6 +507,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 				if (StringUtils.isEmpty(selectedTask)) return null;
 				entry.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+				entry.setComment(listDialog.getComment());
 				return selectedTask;
 			}
 			return null;
@@ -515,9 +516,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (addTaskEntries((Integer) evt.getNewValue())) {
-			if (evt.getNewValue() != null) weekComposite.setCurrentWeekNum((Integer) evt.getNewValue());
-			viewer.refresh();
+		if (evt.getNewValue() != null) {
+			Integer weekNum = (Integer) evt.getNewValue();
+			if (!weekNum.equals(weekComposite.getWeekNum()) && addTaskEntries(weekNum)) {
+				weekComposite.setCurrentWeekNum(weekNum);
+				viewer.refresh();
+			}
 		}
 	}
 

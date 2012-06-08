@@ -23,6 +23,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -80,8 +81,14 @@ public class TaskListDialog extends ListDialog {
 		}
         systems = systemsList.toArray(new String[systemsList.size()]);
         this.taskSelected = taskSelected;
+        task = taskSelected.getName();
 		setContentProvider(ArrayContentProvider.getInstance());
 		setLabelProvider(new LabelProvider());
+    }
+    
+    public TaskListDialog(Shell shell, Task taskSelected, String comment) {
+    	this(shell, taskSelected);
+    	this.comment = comment;
     }
     
     @Override
@@ -112,6 +119,7 @@ public class TaskListDialog extends ListDialog {
         commentText = new Text(parent, SWT.NONE);
         commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(), new String[] {StringUtils.EMPTY});
         commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+        commentText.setText(comment == null ? "" : comment);
         commentText.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				if (!StringUtils.isEmpty(task))
@@ -216,10 +224,17 @@ public class TaskListDialog extends ListDialog {
 		}
 		else {
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-			if (taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected)) {
-				if (taskSelected.getProject().getSystem().equals(systemSelected)) tasks.remove(this.taskSelected);
-			}
 	        getTableViewer().setInput(tasks);
+			if (taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
+				for (int i = 0; i < tasks.size(); i++) {
+					if (tasks.get(i).equals(this.taskSelected.getName())) {
+						ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
+						getTableViewer().setSelection(selection);
+				        getTableViewer().getTable().setFocus();
+				        break;
+					}
+				}
+			}
 		}
 	}
 	
