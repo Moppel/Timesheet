@@ -213,6 +213,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		
 		// Second column is for the time
 		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.getColumn().setAlignment(SWT.RIGHT);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
@@ -361,6 +362,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		});
 		// Fifth column is for the total
 		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.getColumn().setAlignment(SWT.RIGHT);
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 			@Override
