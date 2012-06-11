@@ -520,7 +520,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (evt.getNewValue() != null) {
 			Integer weekNum = (Integer) evt.getNewValue();
-			if (!weekNum.equals(weekComposite.getWeekNum()) && addTaskEntries(weekNum)) {
+			if (addTaskEntries(weekNum)) {
 				weekComposite.setCurrentWeekNum(weekNum);
 				viewer.refresh();
 			}
