@@ -83,13 +83,11 @@ public class WeekComposite {
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime()));
-		startDateLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
         endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime()));        
-        endDateLabel.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
         leftButton.setEnabled(currentWeekNum > 1);
     	rightButton.setEnabled(currentWeekNum < lastWeekNum);
-    	composite.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+    	composite.pack();
     	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, "weekNum", null, currentWeekNum));
 	}
     
