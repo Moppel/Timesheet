@@ -50,13 +50,61 @@
          <menu
                label="Main">
             <command
+                  commandId="Timesheet.checkin"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="DISABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
                   commandId="Timesheet.changeTask"
                   style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="Timesheet.setBreak"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
             </command>
             <command
                   commandId="Timesheet.checkout"
                   style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
             </command>
+            <separator
+                  name="com.uwusoft.timesheet.separator"
+                  visible="true">
+            </separator>
             <command
                   commandId="org.eclipse.ui.window.preferences"
                   label="Preferences"
@@ -159,7 +207,7 @@
       </command>
       <command
             defaultHandler="com.uwusoft.timesheet.commands.WholeDayTaskHandler"
-            id="Timesheet.commands.wholeDayTask"
+            id="Timesheet.wholeDayTask"
             name="Whole day">
          <commandParameter
                id="Timesheet.commands.task"
@@ -182,6 +230,16 @@
                optional="true">
          </commandParameter>
       </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.services">
+      <sourceProvider
+            provider="com.uwusoft.timesheet.commands.CommandState">
+         <variable
+               name="com.uwusoft.timesheet.commands.sourceprovider.active"
+               priorityLevel="workbench">
+         </variable>
+      </sourceProvider>
    </extension>
 
 </plugin>

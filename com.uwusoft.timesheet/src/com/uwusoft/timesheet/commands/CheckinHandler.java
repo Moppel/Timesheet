@@ -9,6 +9,8 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
@@ -27,6 +29,8 @@ public class CheckinHandler extends AbstractHandler {
 		String startTime = event.getParameter("Timesheet.commands.startTime");
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
+		ISourceProviderService sourceProviderService = (ISourceProviderService) HandlerUtil.getActiveWorkbenchWindow(event).getService(ISourceProviderService.class);
+		CommandState commandStateService = (CommandState) sourceProviderService.getSourceProvider(CommandState.MY_STATE);
 		try {
 			TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check in at "
 					+ DateFormat.getDateInstance(DateFormat.SHORT).format(StorageService.formatter.parse(startTime)),
@@ -45,6 +49,7 @@ public class CheckinHandler extends AbstractHandler {
 		} catch (ParseException e) {
 			MessageBox.setError("Check in", e.getLocalizedMessage());
 		}
+		commandStateService.setEnabled(true);
 		return null;
 	}
 }

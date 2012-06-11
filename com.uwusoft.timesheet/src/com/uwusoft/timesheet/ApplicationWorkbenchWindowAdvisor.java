@@ -36,7 +36,9 @@ import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.services.ISourceProviderService;
 
+import com.uwusoft.timesheet.commands.CommandState;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
@@ -177,9 +179,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			public void handleEvent(Event event) {
 				MenuManager trayMenu = new MenuManager();
                 
-				StorageService storageService = new ExtensionManager<StorageService>(
-						StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-				if (storageService.getLastTask() == null) {					
+				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
+				CommandState commandStateService = (CommandState) sourceProviderService.getSourceProvider(CommandState.MY_STATE);
+				String state = (String) commandStateService.getCurrentState().get(CommandState.MY_STATE);
+				
+				if (CommandState.DISABLED.equals(state)) {					
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
@@ -194,7 +198,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     		new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH)));
 
                     MenuManager wholeDayTask = new MenuManager("Set whole day task");
-                    String wholeDayTaskCommandId = "Timesheet.commands.wholeDayTask";
+                    String wholeDayTaskCommandId = "Timesheet.wholeDayTask";
                     
                     Map <String, String> parameters = new HashMap<String, String>();
 

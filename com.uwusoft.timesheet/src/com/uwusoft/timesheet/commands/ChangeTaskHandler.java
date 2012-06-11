@@ -14,6 +14,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
@@ -33,6 +34,8 @@ public class ChangeTaskHandler extends AbstractHandler {
 		ILog logger = Activator.getDefault().getLog();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		ISourceProviderService sourceProviderService = (ISourceProviderService) HandlerUtil.getActiveWorkbenchWindow(event).getService(ISourceProviderService.class);
+		CommandState commandStateService = (CommandState) sourceProviderService.getSourceProvider(CommandState.MY_STATE);
 		TaskEntry lastTask = storageService.getLastTask();
 		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask.getTask());
 		listDialog.setTitle("Tasks");
@@ -57,6 +60,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			}
 		}						
+		commandStateService.setEnabled(true);
 		return null;
 	}
 }
