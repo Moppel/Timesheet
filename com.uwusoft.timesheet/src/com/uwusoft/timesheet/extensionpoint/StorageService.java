@@ -58,10 +58,11 @@ public interface StorageService {
     String[] getUsedCommentsForTask(String task, String project, String system);
     
     /**
-     * @param weekNum the week number
+     * @param startDate TODO
+     * @param endDate TODO
      * @return a list of {@link TaskEntry}'s for the week
      */
-    List<TaskEntry> getTaskEntries(int weekNum);
+    List<TaskEntry> getTaskEntries(Date startDate, Date endDate);
     
     /**
      * store task

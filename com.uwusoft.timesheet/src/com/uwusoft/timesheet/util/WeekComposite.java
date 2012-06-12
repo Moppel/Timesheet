@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Label;
 
 public class WeekComposite {
 	private int currentWeekNum, lastWeekNum;
+	private Date startDate, endDate;
 	private Label startDateLabel, endDateLabel;
 	private Button leftButton, rightButton;
 	private PropertyChangeListener listener;
@@ -82,15 +83,25 @@ public class WeekComposite {
     	cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime()));
+    	startDate = cal.getTime();
+		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(startDate));
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-        endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(cal.getTime()));        
+    	endDate = cal.getTime();
+        endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(endDate));        
         leftButton.setEnabled(currentWeekNum > 1);
     	rightButton.setEnabled(currentWeekNum < lastWeekNum);
     	composite.pack();
     	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, "weekNum", null, currentWeekNum));
 	}
     
+	public Date getStartDate() {
+		return startDate;
+	}
+
+	public Date getEndDate() {
+		return endDate;
+	}
+
 	public int getWeekNum() {
 		return currentWeekNum;
 	}

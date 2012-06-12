@@ -255,18 +255,15 @@ public class GoogleStorageService extends EventManager implements StorageService
     	return tasks;
     }
     
-    public List<TaskEntry> getTaskEntries(int weekNum) {
+    public List<TaskEntry> getTaskEntries(Date startDate, Date endDate) {
     	List <TaskEntry> taskEntries = new ArrayList<TaskEntry>();
 		try {
             ListQuery query = new ListQuery(listFeedUrl);
-    		//query.setSpreadsheetQuery(DATE.toLowerCase() + " = " + new SimpleDateFormat(dateFormat).format(date));
-            query.setSpreadsheetQuery(WEEK.toLowerCase() + " = " + weekNum);
+            query.setSpreadsheetQuery(DATE.toLowerCase() + " >= " + new SimpleDateFormat(dateFormat).format(startDate)
+            		+ " and " + DATE.toLowerCase() + " <= " + new SimpleDateFormat(dateFormat).format(endDate));
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
 	        for (ListEntry listEntry : listEntries) {
 	            CustomElementCollection elements = listEntry.getCustomElements();
-	            if (elements.getValue(DATE) == null) continue;
-	            /*if (!new SimpleDateFormat(dateFormat).format(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)))
-	            		.equals(new SimpleDateFormat(dateFormat).format(date))) break;*/
 	            Calendar date = Calendar.getInstance();
 	            date.setTime(new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE)));
 	            
