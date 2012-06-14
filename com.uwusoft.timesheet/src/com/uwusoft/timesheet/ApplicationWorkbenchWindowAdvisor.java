@@ -67,7 +67,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
 		configurer.setInitialSize(new Point(400, 300));
-		configurer.setShowCoolBar(false);
+		configurer.setShowCoolBar(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setTitle("Timesheet");
 	}
@@ -187,15 +187,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                 	Map <String, String> parameters = new HashMap<String, String>();
                     parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
-                    p.parameters = parameters;         
+                    p.parameters = parameters;
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_in_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 else {
-                    trayMenu.add(new CommandContributionItem(
-            				new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH)));
-                    
-                    trayMenu.add(new CommandContributionItem(
-                    		new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH)));
+                	CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH);
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png");
+                    trayMenu.add(new CommandContributionItem(p));
+            				
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH);
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
+                    trayMenu.add(new CommandContributionItem(p));
 
                     MenuManager wholeDayTask = new MenuManager("Set whole day task");
                     String wholeDayTaskCommandId = "Timesheet.wholeDayTask";
@@ -204,7 +207,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
                     for (String task : WholeDayTasks.wholeDayTasks) {
                     	parameters.put("Timesheet.commands.task", task);
-                    	CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
+                    	p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
                     	p.label = Messages.getString(task);
                     	p.parameters = parameters;         
                     	wholeDayTask.add(new CommandContributionItem(p));
@@ -214,8 +217,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
                     parameters.clear();
                     parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
-                    CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
+                    p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.parameters = parameters;         
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_out_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 trayMenu.add(new Separator());

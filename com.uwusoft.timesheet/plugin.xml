@@ -51,6 +51,7 @@
                label="Main">
             <command
                   commandId="Timesheet.checkin"
+                  icon="icons/check_in_16.png"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -64,6 +65,7 @@
             </command>
             <command
                   commandId="Timesheet.changeTask"
+                  icon="icons/task_16.png"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -77,6 +79,7 @@
             </command>
             <command
                   commandId="Timesheet.setBreak"
+                  icon="icons/pause_16.png"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -90,6 +93,7 @@
             </command>
             <command
                   commandId="Timesheet.checkout"
+                  icon="icons/check_out_16.png"
                   style="push">
                <visibleWhen
                      checkEnabled="false">
@@ -120,6 +124,68 @@
                label="About"
                style="push">
          </command>
+      </menuContribution>
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar">
+         <toolbar
+               id="com.uwusoft.timesheet.toolbar">
+            <command
+                  commandId="Timesheet.checkin"
+                  icon="icons/check_in_32.png"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="DISABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="Timesheet.changeTask"
+                  icon="icons/task_32.png"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="Timesheet.setBreak"
+                  icon="icons/pause_32.png"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="Timesheet.checkout"
+                  icon="icons/check_out_32.png"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
+            </command>
+         </toolbar>
       </menuContribution>
    </extension>
    <extension
