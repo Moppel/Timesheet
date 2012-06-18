@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.commands;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.Set;
@@ -27,9 +28,15 @@ public class SubmissionHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
-		int weekNum = Integer.parseInt(event.getParameter("Timesheet.commands.weekNum"));
+        
 		Calendar cal = new GregorianCalendar();
-    	cal.setTime(storageService.getLastTaskEntryDate());
+    	cal.setTime(new Date());
+		int weekNum = cal.get(Calendar.WEEK_OF_YEAR) - 1;
+		
+		String parameter = event.getParameter("Timesheet.commands.weekNum");
+		if (parameter != null) weekNum = Integer.parseInt(parameter);
+    	
+		cal.setTime(storageService.getLastTaskEntryDate());
 		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum, cal.get(Calendar.WEEK_OF_YEAR));
 		if (submissionDialog.open() == Dialog.OK) {
 			Set<String> systems = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore

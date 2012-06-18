@@ -6,6 +6,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 /**
  * An action bar advisor is responsible for creating, adding, and disposing of
@@ -32,8 +33,10 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	@Override
 	protected void makeActions(IWorkbenchWindow window) {
 	      preferencesAction = ActionFactory.PREFERENCES.create(window);
+	      preferencesAction.setImageDescriptor(AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/preferences_16.png"));
 	      register(preferencesAction);
 	      exitAction = ActionFactory.QUIT.create(window);
+	      exitAction.setImageDescriptor(AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/exit_16.png"));
 	      register(exitAction);
 	}
 

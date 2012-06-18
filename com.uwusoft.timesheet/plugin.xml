@@ -106,16 +106,28 @@
                </visibleWhen>
             </command>
             <separator
-                  name="com.uwusoft.timesheet.separator"
+                  name="com.uwusoft.timesheet.separator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="Timesheet.submit"
+                  icon="icons/signs_16.png"
+                  style="push">
+            </command>
+            <separator
+                  name="com.uwusoft.timesheet.separator2"
                   visible="true">
             </separator>
             <command
                   commandId="org.eclipse.ui.window.preferences"
+                  icon="icons/preferences_16.png"
                   label="Preferences"
                   style="push">
             </command>
             <command
                   commandId="org.eclipse.ui.file.exit"
+                  icon="icons/exit_16.png"
+                  label="Exit"
                   style="push">
             </command>
          </menu>
@@ -184,6 +196,31 @@
                      </equals>
                   </with>
                </visibleWhen>
+            </command>
+            <separator
+                  name="com.uwusoft.timesheet.separator1"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="Timesheet.submit"
+                  icon="icons/signs_32.png"
+                  style="push">
+            </command>
+            <separator
+                  name="com.uwusoft.timesheet.separator2"
+                  visible="true">
+            </separator>
+            <command
+                  commandId="org.eclipse.ui.window.preferences"
+                  icon="icons/preferences_32.png"
+                  label="Preferences"
+                  style="push">
+            </command>
+            <command
+                  commandId="org.eclipse.ui.file.exit"
+                  icon="icons/exit_32.png"
+                  label="Exit"
+                  style="push">
             </command>
          </toolbar>
       </menuContribution>

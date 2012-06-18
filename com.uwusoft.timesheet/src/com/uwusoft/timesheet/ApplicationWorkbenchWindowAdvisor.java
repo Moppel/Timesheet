@@ -184,10 +184,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				String state = (String) commandStateService.getCurrentState().get(CommandState.MY_STATE);
 				
 				if (CommandState.DISABLED.equals(state)) {					
-                	Map <String, String> parameters = new HashMap<String, String>();
-                    parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(new Date()));
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
-                    p.parameters = parameters;
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_in_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
@@ -215,25 +212,17 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
                     trayMenu.add(wholeDayTask);
 
-                    parameters.clear();
-                    parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(new Date()));
                     p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
-                    p.parameters = parameters;         
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_out_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 trayMenu.add(new Separator());
                 
-                trayMenu.add(new CommandContributionItem(
-        				new CommandContributionItemParameter(window, null, "Timesheet.importTasks", CommandContributionItem.STYLE_PUSH)));
+                /*trayMenu.add(new CommandContributionItem(
+        				new CommandContributionItemParameter(window, null, "Timesheet.importTasks", CommandContributionItem.STYLE_PUSH)));*/
 
-                Calendar cal = new GregorianCalendar();
-            	cal.setTime(new Date());
-            	//cal.setFirstDayOfWeek(Calendar.MONDAY);
-				Map<String, String> parameters = new HashMap<String, String>();
-				parameters.put("Timesheet.commands.weekNum", Integer.toString(cal.get(Calendar.WEEK_OF_YEAR) - 1));
 				CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.submit", CommandContributionItem.STYLE_PUSH);
-                p.parameters = parameters;         
+                p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/signs_16.png");
                 trayMenu.add(new CommandContributionItem(p));
                 
                 trayMenu.add(new Separator());
