@@ -371,7 +371,7 @@
    <extension
          point="org.eclipse.ui.services">
       <sourceProvider
-            provider="com.uwusoft.timesheet.commands.CommandState">
+            provider="com.uwusoft.timesheet.commands.SessionSourceProvider">
          <variable
                name="com.uwusoft.timesheet.commands.sourceprovider.active"
                priorityLevel="workbench">

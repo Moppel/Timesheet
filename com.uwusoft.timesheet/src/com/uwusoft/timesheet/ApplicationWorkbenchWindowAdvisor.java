@@ -42,7 +42,7 @@ import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.services.ISourceProviderService;
 
-import com.uwusoft.timesheet.commands.CommandState;
+import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.commands.WholeDayTaskFactory;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
@@ -121,13 +121,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			try { // automatic check out
 				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
 			} catch (ExecutionException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotDefinedException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotEnabledException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotHandledException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
 			}
 		}
 		if (storageService.getLastTask() == null) { // automatic check in								 
@@ -155,13 +155,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
 				}
 			} catch (ExecutionException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotDefinedException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotEnabledException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			} catch (NotHandledException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			}
 		}
 		trayItem = initTaskItem();
@@ -195,10 +195,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				MenuManager trayMenu = new MenuManager();
                 
 				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
-				CommandState commandStateService = (CommandState) sourceProviderService.getSourceProvider(CommandState.MY_STATE);
-				String state = (String) commandStateService.getCurrentState().get(CommandState.MY_STATE);
+				SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
+				String sessionState = (String) commandStateService.getCurrentState().get(SessionSourceProvider.SESSION_STATE);
 				
-				if (CommandState.DISABLED.equals(state)) {					
+				if (SessionSourceProvider.DISABLED.equals(sessionState)) {					
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_in_16.png");
                     trayMenu.add(new CommandContributionItem(p));

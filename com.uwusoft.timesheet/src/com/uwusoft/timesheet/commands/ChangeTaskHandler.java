@@ -35,7 +35,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		ISourceProviderService sourceProviderService = (ISourceProviderService) HandlerUtil.getActiveWorkbenchWindow(event).getService(ISourceProviderService.class);
-		CommandState commandStateService = (CommandState) sourceProviderService.getSourceProvider(CommandState.MY_STATE);
+		SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 		TaskEntry lastTask = storageService.getLastTask();
 		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask.getTask());
 		listDialog.setTitle("Tasks");
