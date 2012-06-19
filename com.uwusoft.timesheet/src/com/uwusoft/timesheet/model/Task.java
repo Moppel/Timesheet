@@ -66,6 +66,6 @@ public class Task {
 	}
 	
 	public String display() {
-		return name + (project == null ? "" : " (" + project.getName() + ")" + "\nSystem: " + project.getSystem()); 		
+		return name + (project == null ? "" : "\nProject: " + project.getName() + "\nSystem: " + project.getSystem()); 		
 	}
 }

@@ -52,7 +52,7 @@ public class CheckinHandler extends AbstractHandler {
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
 			}
 		} catch (ParseException e) {
-			MessageBox.setError("Check in", e.getLocalizedMessage());
+			MessageBox.setError("Check in", e.getMessage());
 		}
 		commandStateService.setEnabled(true);
 		return null;

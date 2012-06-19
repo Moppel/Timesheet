@@ -131,7 +131,7 @@ public class TimesheetApp implements IApplication {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
 		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);
 		if (task.length > 2) {
-			return task[0] + " (" + task[1] + ")" + "\nSystem: " + task[2]; 
+			return task[0] + (task[1] == null ? "" : "\nProject: " + task[1]) + "\nSystem: " + task[2]; 
 		}
 		else return preferenceStore.getString(propertyName);
 	}
