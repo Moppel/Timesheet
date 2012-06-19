@@ -20,11 +20,6 @@ public class ExtensionManager<T> {
 	private static Map<String, Map<String, Object>> services = new HashMap<String, Map<String, Object>>();
 	private static Map<String, Object> fallbackServices = new HashMap<String, Object>();
 	
-	static {
-		fallbackServices.put(StorageService.SERVICE_ID, new LocalStorageService());
-		fallbackServices.put(SubmissionService.SERVICE_ID, new LocalSubmissionService());
-	}
-
 	/**
 	 * @param serviceId
 	 */
@@ -34,7 +29,11 @@ public class ExtensionManager<T> {
 	
 	@SuppressWarnings("unchecked")
 	public T getService(String contributorName) {
-		if (contributorName == null) return (T) fallbackServices.get(serviceId);
+		if (contributorName == null) {
+			if (fallbackServices.get(serviceId) == null)
+				createFallbackService();
+			return (T) fallbackServices.get(serviceId);
+		}
 		if (services.get(serviceId) == null) {
 			services.put(serviceId, new HashMap<String, Object>());
 			for (IConfigurationElement e : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
@@ -49,17 +48,29 @@ public class ExtensionManager<T> {
 									try {
 										return (T) e2.createExecutableExtension("class");
 									} catch (CoreException e3) {
-										MessageBox.setError(this.getClass().getSimpleName(), e3.getLocalizedMessage());
+										MessageBox.setError(this.getClass().getSimpleName(), e3.getMessage());
 									}
 							}
 						}
-						MessageBox.setError(this.getClass().getSimpleName(), e1.getLocalizedMessage());
+						MessageBox.setError(this.getClass().getSimpleName(), e1.getMessage());
 					}
 			}
 		}
 		else if (services.get(serviceId).get(contributorName) == null) {
+			if (fallbackServices.get(serviceId) == null)
+				createFallbackService();
 			return (T) fallbackServices.get(serviceId);
 		}
 		return (T) services.get(serviceId).get(contributorName);
+	}
+	
+	/**
+	 * lazy load fall back service
+	 */
+	private void createFallbackService() {
+		if (StorageService.SERVICE_ID.equals(serviceId))
+			fallbackServices.put(serviceId, new LocalStorageService());
+		else if (SubmissionService.SERVICE_ID.equals(serviceId))
+			fallbackServices.put(serviceId, new LocalSubmissionService());
 	}
 }
