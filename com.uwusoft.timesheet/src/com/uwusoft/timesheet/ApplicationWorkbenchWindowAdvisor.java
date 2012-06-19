@@ -197,6 +197,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				ISourceProviderService sourceProviderService = (ISourceProviderService) window.getService(ISourceProviderService.class);
 				SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 				String sessionState = (String) commandStateService.getCurrentState().get(SessionSourceProvider.SESSION_STATE);
+				String breakState = (String) commandStateService.getCurrentState().get(SessionSourceProvider.BREAK_STATE);
 				
 				if (SessionSourceProvider.DISABLED.equals(sessionState)) {					
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
@@ -208,9 +209,11 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png");
                     trayMenu.add(new CommandContributionItem(p));
             				
-                    p = new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH);
-                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
-                    trayMenu.add(new CommandContributionItem(p));
+                    if (SessionSourceProvider.DISABLED.equals(breakState)) {
+                        p = new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH);
+                        p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
+                        trayMenu.add(new CommandContributionItem(p));
+                    }
 
                     MenuManager wholeDayTask = new MenuManager("Set whole day task",
                     		AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/day_16.png"), "Timesheet.wholeDayTask");

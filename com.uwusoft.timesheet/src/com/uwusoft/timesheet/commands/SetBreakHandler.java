@@ -38,6 +38,7 @@ public class SetBreakHandler extends AbstractHandler {
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 		}
 		commandStateService.setEnabled(true);
+		commandStateService.setBreak(true);
 		return null;
 	}
 }

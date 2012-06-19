@@ -55,6 +55,7 @@ public class CheckinHandler extends AbstractHandler {
 			MessageBox.setError("Check in", e.getMessage());
 		}
 		commandStateService.setEnabled(true);
+		commandStateService.setBreak(false);
 		return null;
 	}
 }

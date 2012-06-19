@@ -12,15 +12,18 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class SessionSourceProvider extends AbstractSourceProvider {
 	public final static String SESSION_STATE = "com.uwusoft.timesheet.commands.sourceprovider.active";
+	public final static String BREAK_STATE = "com.uwusoft.timesheet.commands.sourceprovider.break";
 	public final static String ENABLED = "ENABLED";
 	public final static String DISABLED = "DISABLED";
 	private boolean enabled;
+	private boolean breakSet;
 
 	public SessionSourceProvider() {
 		super();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-		enabled = storageService.getLastTask() != null;  					
+		enabled = storageService.getLastTask() != null;
+		breakSet = false;
 	}
 
 	@Override
@@ -30,20 +33,28 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 	@SuppressWarnings({ "rawtypes" })
 	@Override
 	public Map getCurrentState() {
-		Map<String, String> map = new HashMap<String, String>(1);
+		Map<String, String> map = new HashMap<String, String>(2);
 		String value = enabled ? ENABLED : DISABLED;
 		map.put(SESSION_STATE, value);
+		value = breakSet ? ENABLED : DISABLED;
+		map.put(BREAK_STATE, value);
 		return map;
 	}
 
 	@Override
 	public String[] getProvidedSourceNames() {
-		return new String[] { SESSION_STATE };
+		return new String[] { SESSION_STATE, BREAK_STATE };
 	}
 
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled ;
 		String value = enabled ? ENABLED : DISABLED;
 		fireSourceChanged(ISources.WORKBENCH, SESSION_STATE, value);
+	}
+
+	public void setBreak(boolean breakSet) {
+		this.breakSet = breakSet;
+		String value = breakSet ? ENABLED : DISABLED;
+		fireSourceChanged(ISources.WORKBENCH, BREAK_STATE, value);
 	}
 }

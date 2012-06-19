@@ -52,6 +52,7 @@ public class CheckoutHandler extends AbstractHandler {
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 		}
 		commandStateService.setEnabled(false);
+		commandStateService.setBreak(false);
 		return null;
 	}
 }

@@ -61,6 +61,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 			}
 		}						
 		commandStateService.setEnabled(true);
+		commandStateService.setBreak(false);
 		return null;
 	}
 }

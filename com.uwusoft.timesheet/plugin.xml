@@ -83,12 +83,20 @@
                   style="push">
                <visibleWhen
                      checkEnabled="false">
-                  <with
-                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
-                     <equals
-                           value="ENABLED">
-                     </equals>
-                  </with>
+                  <and>
+                     <with
+                           variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                        <equals
+                              value="ENABLED">
+                        </equals>
+                     </with>
+                     <with
+                           variable="com.uwusoft.timesheet.commands.sourceprovider.break">
+                        <equals
+                              value="DISABLED">
+                        </equals>
+                     </with>
+                  </and>
                </visibleWhen>
             </command>
             <menu
@@ -189,12 +197,20 @@
                   style="push">
                <visibleWhen
                      checkEnabled="false">
-                  <with
-                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
-                     <equals
-                           value="ENABLED">
-                     </equals>
-                  </with>
+                  <and>
+                     <with
+                           variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                        <equals
+                              value="ENABLED">
+                        </equals>
+                     </with>
+                     <with
+                           variable="com.uwusoft.timesheet.commands.sourceprovider.break">
+                        <equals
+                              value="DISABLED">
+                        </equals>
+                     </with>
+                  </and>
                </visibleWhen>
             </command>
             <command
@@ -374,6 +390,10 @@
             provider="com.uwusoft.timesheet.commands.SessionSourceProvider">
          <variable
                name="com.uwusoft.timesheet.commands.sourceprovider.active"
+               priorityLevel="workbench">
+         </variable>
+         <variable
+               name="com.uwusoft.timesheet.commands.sourceprovider.break"
                priorityLevel="workbench">
          </variable>
       </sourceProvider>
