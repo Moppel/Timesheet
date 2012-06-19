@@ -50,12 +50,12 @@ public class CheckinHandler extends AbstractHandler {
 				storageService.createTaskEntry(defaultTaskEntry);
 				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
+				commandStateService.setEnabled(true);
+				commandStateService.setBreak(false);
 			}
 		} catch (ParseException e) {
 			MessageBox.setError("Check in", e.getMessage());
 		}
-		commandStateService.setEnabled(true);
-		commandStateService.setBreak(false);
 		return null;
 	}
 }

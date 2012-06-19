@@ -50,9 +50,9 @@ public class CheckoutHandler extends AbstractHandler {
 			storageService.storeLastDailyTotal();
 			WholeDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
+			commandStateService.setEnabled(false);
+			commandStateService.setBreak(false);
 		}
-		commandStateService.setEnabled(false);
-		commandStateService.setBreak(false);
 		return null;
 	}
 }
