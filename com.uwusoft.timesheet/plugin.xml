@@ -95,6 +95,15 @@
                   commandId="Timesheet.wholeDayTask"
                   icon="icons/day_16.png"
                   label="Set whole day task">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
             </menu>
             <command
                   commandId="Timesheet.checkout"
@@ -193,6 +202,15 @@
                   icon="icons/day_32.png"
                   label="Set whole day task"
                   style="pulldown">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="com.uwusoft.timesheet.commands.sourceprovider.active">
+                     <equals
+                           value="ENABLED">
+                     </equals>
+                  </with>
+               </visibleWhen>
             </command>
             <command
                   commandId="Timesheet.checkout"
