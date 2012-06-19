@@ -6,9 +6,7 @@ import java.util.Map;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.preference.IPreferenceStore;
 
-import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -29,11 +27,7 @@ public class ExtensionManager<T> {
 	
 	@SuppressWarnings("unchecked")
 	public T getService(String contributorName) {
-		if (contributorName == null) {
-			if (fallbackServices.get(serviceId) == null)
-				createFallbackService();
-			return (T) fallbackServices.get(serviceId);
-		}
+		if (contributorName == null) return getFallbackService();
 		if (services.get(serviceId) == null) {
 			services.put(serviceId, new HashMap<String, Object>());
 			for (IConfigurationElement e : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
@@ -41,25 +35,13 @@ public class ExtensionManager<T> {
 					try {
 						services.get(serviceId).put(contributorName, e.createExecutableExtension("class"));
 					} catch (CoreException e1) {
-						IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-						if (contributorName.equals(preferenceStore.getString(StorageService.PROPERTY))) {
-							for (IConfigurationElement e2 : Platform.getExtensionRegistry().getConfigurationElementsFor(serviceId)) {
-								if (e2.getContributor().getName().endsWith(".localstorage"))
-									try {
-										return (T) e2.createExecutableExtension("class");
-									} catch (CoreException e3) {
-										MessageBox.setError(this.getClass().getSimpleName(), e3.getMessage());
-									}
-							}
-						}
-						MessageBox.setError(this.getClass().getSimpleName(), e1.getMessage());
+						MessageBox.setError(this.getClass().getSimpleName(), e1.getMessage() + "\nTry to load fall back service");
+						return getFallbackService();
 					}
 			}
 		}
 		else if (services.get(serviceId).get(contributorName) == null) {
-			if (fallbackServices.get(serviceId) == null)
-				createFallbackService();
-			return (T) fallbackServices.get(serviceId);
+			return getFallbackService();
 		}
 		return (T) services.get(serviceId).get(contributorName);
 	}
@@ -67,10 +49,14 @@ public class ExtensionManager<T> {
 	/**
 	 * lazy load fall back service
 	 */
-	private void createFallbackService() {
-		if (StorageService.SERVICE_ID.equals(serviceId))
-			fallbackServices.put(serviceId, new LocalStorageService());
-		else if (SubmissionService.SERVICE_ID.equals(serviceId))
-			fallbackServices.put(serviceId, new LocalSubmissionService());
+	@SuppressWarnings("unchecked")
+	private T getFallbackService() {
+		if (fallbackServices.get(serviceId) == null) {
+			if (StorageService.SERVICE_ID.equals(serviceId))
+				fallbackServices.put(serviceId, new LocalStorageService());
+			else if (SubmissionService.SERVICE_ID.equals(serviceId))
+				fallbackServices.put(serviceId, new LocalSubmissionService());
+		}
+		return (T) fallbackServices.get(serviceId);
 	}
 }
