@@ -94,7 +94,7 @@
             <menu
                   commandId="Timesheet.wholeDayTask"
                   icon="icons/day_16.png"
-                  label="Whole day">
+                  label="Set whole day task">
             </menu>
             <command
                   commandId="Timesheet.checkout"
@@ -191,6 +191,7 @@
             <command
                   commandId="Timesheet.wholeDayTask"
                   icon="icons/day_32.png"
+                  label="Set whole day task"
                   style="pulldown">
             </command>
             <command
