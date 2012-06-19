@@ -197,8 +197,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
                     trayMenu.add(new CommandContributionItem(p));
 
-                    MenuManager wholeDayTask = new MenuManager("Set whole day task");
                     String wholeDayTaskCommandId = "Timesheet.wholeDayTask";
+                    MenuManager wholeDayTask = new MenuManager("Set whole day task",
+                    		AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/day_16.png"), wholeDayTaskCommandId);
                     
                     Map <String, String> parameters = new HashMap<String, String>();
 

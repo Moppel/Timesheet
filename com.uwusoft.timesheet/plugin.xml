@@ -77,6 +77,11 @@
                   </with>
                </visibleWhen>
             </command>
+            <menu
+                  commandId="Timesheet.wholeDayTask"
+                  icon="icons/day_16.png"
+                  label="Whole day">
+            </menu>
             <command
                   commandId="Timesheet.setBreak"
                   icon="icons/pause_16.png"
@@ -184,6 +189,11 @@
                </visibleWhen>
             </command>
             <command
+                  commandId="Timesheet.wholeDayTask"
+                  icon="icons/day_32.png"
+                  style="pulldown">
+            </command>
+            <command
                   commandId="Timesheet.checkout"
                   icon="icons/check_out_32.png"
                   style="push">
@@ -223,6 +233,11 @@
                   style="push">
             </command>
          </toolbar>
+      </menuContribution>
+      <menuContribution
+            allPopups="false"
+            class="com.uwusoft.timesheet.commands.WholeDayTaskFactory"
+            locationURI="menu:Timesheet.wholeDayTask">
       </menuContribution>
    </extension>
    <extension

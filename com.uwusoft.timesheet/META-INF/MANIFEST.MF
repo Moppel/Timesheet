@@ -8,7 +8,8 @@ Bundle-Vendor: UWUSOFT
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.equinox.security,
- org.eclipse.ui.intro
+ org.eclipse.ui.intro,
+ org.eclipse.core.expressions;bundle-version="3.4.300"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: com.uwusoft.timesheet;
