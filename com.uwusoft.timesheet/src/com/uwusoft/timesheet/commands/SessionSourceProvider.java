@@ -8,6 +8,7 @@ import org.eclipse.ui.ISources;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class SessionSourceProvider extends AbstractSourceProvider {
@@ -22,8 +23,9 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 		super();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-		enabled = storageService.getLastTask() != null;
-		breakSet = false;
+		TaskEntry lastTask = storageService.getLastTask();
+		enabled = lastTask != null;
+		breakSet = enabled & StorageService.BREAK.equals(lastTask.getTask().getName());
 	}
 
 	@Override
