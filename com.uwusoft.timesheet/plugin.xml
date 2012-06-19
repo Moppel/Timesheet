@@ -77,11 +77,6 @@
                   </with>
                </visibleWhen>
             </command>
-            <menu
-                  commandId="Timesheet.wholeDayTask"
-                  icon="icons/day_16.png"
-                  label="Whole day">
-            </menu>
             <command
                   commandId="Timesheet.setBreak"
                   icon="icons/pause_16.png"
@@ -96,6 +91,11 @@
                   </with>
                </visibleWhen>
             </command>
+            <menu
+                  commandId="Timesheet.wholeDayTask"
+                  icon="icons/day_16.png"
+                  label="Whole day">
+            </menu>
             <command
                   commandId="Timesheet.checkout"
                   icon="icons/check_out_16.png"

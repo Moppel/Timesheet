@@ -8,7 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.NotEnabledException;
+import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.core.commands.ParameterizedCommand;
+import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
@@ -125,33 +129,38 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
 				}
 			}
-			if (storageService.getLastTask() == null) {					
-				try { // automatic check in
-					Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate, true); // create missing holidays and handle week change
-					Date start = BusinessDayUtil.getLastBusinessDay(startDate);
-					while (end.before(start)) { // create missing whole day tasks until last business day						
-						DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
-								preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
-						if (dateDialog.open() == Dialog.OK) {
-							do {
-								storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()), WholeDayTasks.getInstance().getTotal(), true));
-							} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));	
-						}
+			if (storageService.getLastTask() == null) { // automatic check in								 
+				Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
+				Date start = BusinessDayUtil.getLastBusinessDay(startDate);
+				while (end.before(start)) { // create missing whole day tasks until last business day
+					DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
+							preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
+					if (dateDialog.open() == Dialog.OK) {
+						do {
+							storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
+									WholeDayTasks.getInstance().getTotal(), true));
+						} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
 					}
-					
-					Map<String, String> parameters = new HashMap<String, String>();
-					parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-					//parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(
-							commandService.getCommand("Timesheet.checkin"), parameters), null);
+				}
+
+				Map<String, String> parameters = new HashMap<String, String>();
+				parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
+				// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+				try {
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
 					for (int week = shutdownWeek; week < startWeek; week++) {
 						parameters.clear();
 						parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
-						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"),
-										parameters), null);
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
 					}
-				} catch (Exception ex) {
-					MessageBox.setError("Timesheet.checkin command", ex.getLocalizedMessage());
+				} catch (ExecutionException ex) {
+					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
+				} catch (NotDefinedException ex) {
+					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
+				} catch (NotEnabledException ex) {
+					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
+				} catch (NotHandledException ex) {
+					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
 				}
 			}
 			hookPopupMenu();
