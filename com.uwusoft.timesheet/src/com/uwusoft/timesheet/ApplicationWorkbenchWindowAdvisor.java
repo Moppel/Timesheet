@@ -85,84 +85,89 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				preWindowShellClose();
 			}
 		});
+		StorageService storageService = new ExtensionManager<StorageService>(
+				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		
+		Date startDate = TimesheetApp.startDate;
+		Date shutdownDate = startDate;
+		try {
+			String startTime = preferenceStore.getString(TimesheetApp.SYSTEM_START);
+			if (!StringUtils.isEmpty(startTime)) {
+				preferenceStore.setToDefault(TimesheetApp.SYSTEM_START);
+				startDate = StorageService.formatter.parse(startTime);				
+			}
+
+			String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
+			if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(storageService.getLastTaskEntryDate()))
+				shutdownDate = storageService.getLastTaskEntryDate();
+			else
+				shutdownDate = StorageService.formatter.parse(shutdownTime);				
+		} catch (ParseException e) {
+			MessageBox.setError("Shutdown date", e.getMessage());
+		}
+	
+		int startDay = getDay(startDate);
+		int startWeek = getWeek(startDate);
+
+		int shutdownDay = getDay(shutdownDate);
+		int shutdownWeek = getWeek(shutdownDate);
+
+		IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
+		ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
+				
+		if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
+			Map<String, String> parameters = new HashMap<String, String>();
+			parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
+			try { // automatic check out
+				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
+			} catch (ExecutionException ex) {
+				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotDefinedException ex) {
+				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotEnabledException ex) {
+				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotHandledException ex) {
+				MessageBox.setError("Automatic check out", ex.getMessage() + " (" + parameters + ")");
+			}
+		}
+		if (storageService.getLastTask() == null) { // automatic check in								 
+			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
+			Date start = BusinessDayUtil.getLastBusinessDay(startDate);
+			while (end.before(start)) { // create missing whole day tasks until last business day
+				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
+						preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
+				if (dateDialog.open() == Dialog.OK) {
+					do {
+						storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
+								WholeDayTasks.getInstance().getTotal(), true));
+					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
+				}
+			}
+
+			Map<String, String> parameters = new HashMap<String, String>();
+			parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
+			// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+			try {
+				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
+				for (int week = shutdownWeek; week < startWeek; week++) {
+					parameters.clear();
+					parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
+				}
+			} catch (ExecutionException ex) {
+				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotDefinedException ex) {
+				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotEnabledException ex) {
+				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+			} catch (NotHandledException ex) {
+				MessageBox.setError("Automatic check in", ex.getMessage() + " (" + parameters + ")");
+			}
+		}
 		trayItem = initTaskItem();
 		// Some OS might not support tray items
 		if (trayItem != null) {
 			window.getShell().setVisible(false);
-
-			StorageService storageService = new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-			
-			Date startDate = TimesheetApp.startDate;
-			Date shutdownDate = startDate;
-			try {
-				String startTime = preferenceStore.getString(TimesheetApp.SYSTEM_START);
-				if (!StringUtils.isEmpty(startTime)) {
-					preferenceStore.setToDefault(TimesheetApp.SYSTEM_START);
-					startDate = StorageService.formatter.parse(startTime);				
-				}
-
-				String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
-				if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(storageService.getLastTaskEntryDate()))
-					shutdownDate = storageService.getLastTaskEntryDate();
-				else
-					shutdownDate = StorageService.formatter.parse(shutdownTime);				
-			} catch (ParseException e) {
-				MessageBox.setError("Shutdown date", e.getLocalizedMessage());
-			}
-			
-			int startDay = getDay(startDate);
-			int startWeek = getWeek(startDate);
-
-			int shutdownDay = getDay(shutdownDate);
-			int shutdownWeek = getWeek(shutdownDate);
-
-			IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
-			ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
-				
-			if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
-				try { // automatic check out
-					Map<String, String> parameters = new HashMap<String, String>();
-					parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
-				} catch (Exception ex) {
-					MessageBox.setError("Timesheet.checkout command", ex.getLocalizedMessage());
-				}
-			}
-			if (storageService.getLastTask() == null) { // automatic check in								 
-				Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
-				Date start = BusinessDayUtil.getLastBusinessDay(startDate);
-				while (end.before(start)) { // create missing whole day tasks until last business day
-					DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
-							preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
-					if (dateDialog.open() == Dialog.OK) {
-						do {
-							storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
-									WholeDayTasks.getInstance().getTotal(), true));
-						} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
-					}
-				}
-
-				Map<String, String> parameters = new HashMap<String, String>();
-				parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-				// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
-				try {
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
-					for (int week = shutdownWeek; week < startWeek; week++) {
-						parameters.clear();
-						parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
-						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
-					}
-				} catch (ExecutionException ex) {
-					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
-				} catch (NotDefinedException ex) {
-					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
-				} catch (NotEnabledException ex) {
-					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
-				} catch (NotHandledException ex) {
-					MessageBox.setError("Timesheet.checkin command", ex.getMessage() + " (" + parameters + ")");
-				}
-			}
 			hookPopupMenu();
 		}
 	}
