@@ -39,6 +39,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.commands.CommandState;
+import com.uwusoft.timesheet.commands.WholeDayTaskFactory;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
@@ -197,19 +198,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
                     trayMenu.add(new CommandContributionItem(p));
 
-                    String wholeDayTaskCommandId = "Timesheet.wholeDayTask";
                     MenuManager wholeDayTask = new MenuManager("Set whole day task",
-                    		AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/day_16.png"), wholeDayTaskCommandId);
+                    		AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/day_16.png"), "Timesheet.wholeDayTask");
                     
-                    Map <String, String> parameters = new HashMap<String, String>();
-
-                    for (String task : WholeDayTasks.wholeDayTasks) {
-                    	parameters.put("Timesheet.commands.task", task);
-                    	p = new CommandContributionItemParameter(window, null, wholeDayTaskCommandId, CommandContributionItem.STYLE_PUSH);
-                    	p.label = Messages.getString(task);
-                    	p.parameters = parameters;         
-                    	wholeDayTask.add(new CommandContributionItem(p));
-                    }
+                    new WholeDayTaskFactory(wholeDayTask).createContributionItems(window, null);
 
                     trayMenu.add(wholeDayTask);
 
