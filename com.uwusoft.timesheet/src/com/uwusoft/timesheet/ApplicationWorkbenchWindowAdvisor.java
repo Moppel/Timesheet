@@ -85,6 +85,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				preWindowShellClose();
 			}
 		});
+		trayItem = initTaskItem();
+		// Some OS might not support tray items
+		if (trayItem != null) {
+			window.getShell().setVisible(false);
+			hookPopupMenu();
+		}
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		
@@ -163,12 +169,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			} catch (NotHandledException ex) {
 				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			}
-		}
-		trayItem = initTaskItem();
-		// Some OS might not support tray items
-		if (trayItem != null) {
-			window.getShell().setVisible(false);
-			hookPopupMenu();
 		}
 	}
 

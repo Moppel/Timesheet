@@ -25,7 +25,7 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 				StorageService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
 		TaskEntry lastTask = storageService.getLastTask();
 		enabled = lastTask != null;
-		breakSet = enabled & StorageService.BREAK.equals(lastTask.getTask().getName());
+		breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
 	}
 
 	@Override
