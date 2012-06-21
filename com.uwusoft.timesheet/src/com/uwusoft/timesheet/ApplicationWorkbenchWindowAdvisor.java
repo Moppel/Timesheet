@@ -71,7 +71,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 	public void preWindowOpen() {
 		IWorkbenchWindowConfigurer configurer = getWindowConfigurer();
-		configurer.setInitialSize(new Point(400, 300));
+		configurer.setInitialSize(new Point(900, 500));
 		configurer.setShowCoolBar(true);
 		configurer.setShowProgressIndicator(true);
 		configurer.setTitle("Timesheet");
@@ -88,7 +88,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		trayItem = initTaskItem();
 		// Some OS might not support tray items
 		if (trayItem != null) {
-			window.getShell().setVisible(false);
+			window.getShell().setVisible(false); // initially minimize to system tray
 			hookPopupMenu();
 		}
 		StorageService storageService = new ExtensionManager<StorageService>(
