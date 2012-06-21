@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.submission;
 
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,7 @@ import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
+import com.uwusoft.timesheet.submission.model.SubmissionTaskEntry;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class LocalSubmissionService implements SubmissionService {
@@ -38,6 +40,14 @@ public class LocalSubmissionService implements SubmissionService {
 			SubmissionProject project = new SubmissionProject("Overhead");
 			em.persist(project);
 			SubmissionTask task = new SubmissionTask("General Administration & Time Entry", project);
+			em.persist(task);
+			task = new SubmissionTask("Vacation", project);
+			em.persist(task);
+			task = new SubmissionTask("Time in Lieu", project);
+			em.persist(task);
+			task = new SubmissionTask("Sickness", project);
+			em.persist(task);
+			task = new SubmissionTask("Statutory Holiday", project);
 			em.persist(task);
 			project = new SubmissionProject("Sample Project");
 			em.persist(project);
@@ -69,6 +79,18 @@ public class LocalSubmissionService implements SubmissionService {
 
 	@Override
 	public void submit(Date date, SubmissionEntry task, Double total) {
+		if (task.getId() == null) return;
+		em.getTransaction().begin();
+		SubmissionTaskEntry entry = new SubmissionTaskEntry();
+		entry.setDateTime(new Timestamp(date.getTime()));
+		entry.setTotal(total.floatValue());
+		@SuppressWarnings("unchecked")
+		List<SubmissionTask> tasks = em.createQuery("select t from SubmissionTask t where t.id = :id")
+				.setParameter("id", entry.getTask().getId()).getResultList();
+		if (tasks.isEmpty()) return;
+		entry.setTask(tasks.iterator().next());
+		em.persist(entry);
+		em.getTransaction().commit();
 		
 		MessageBox.setMessage(getClass().getSimpleName(), "Task " + task.getName() + " successfully submitted.");
 	}
