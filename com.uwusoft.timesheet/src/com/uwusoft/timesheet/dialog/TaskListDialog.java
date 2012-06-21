@@ -135,6 +135,7 @@ public class TaskListDialog extends ListDialog {
 		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
+				setProposals.cancel();
 				ISelection rawSelection = getTableViewer().getSelection();
 				if (rawSelection != null
 						&& rawSelection instanceof IStructuredSelection) {
