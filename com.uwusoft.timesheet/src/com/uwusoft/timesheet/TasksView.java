@@ -156,7 +156,9 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
 		}
-		viewer.setInput(taskEntries);
+		try {
+			viewer.setInput(taskEntries);
+		} catch (IllegalStateException e) {} // if widget is disposed
 		return true;
 	}
 
