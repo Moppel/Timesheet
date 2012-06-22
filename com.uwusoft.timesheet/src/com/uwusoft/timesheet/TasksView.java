@@ -156,9 +156,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			TaskEntry lastTask = storageService.getLastTask();
 			if (lastTask != null) taskEntries.add(lastTask);
 		}
-		try {
-			viewer.setInput(taskEntries);
-		} catch (IllegalStateException e) {} // if widget is disposed
+		viewer.setInput(taskEntries);
 		return true;
 	}
 
@@ -295,8 +293,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    protected void setValue(Object element, Object value) {
 		    	TaskEntry entry = (TaskEntry) element;
 		    	String task = String.valueOf(value);
-		    	if (!entry.getTask().getName().equals(task)) {
-			    	//TODO entry.setTask(task);
+		    	if (!entry.getTask().getName().equals(task)) { // TODO test if project or comment has changed
 			        storageService.updateTaskEntry(entry, entry.getId());
 			        viewer.refresh(element);
 		    	}
@@ -512,6 +509,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				if (StringUtils.isEmpty(selectedTask)) return null;
 				entry.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				entry.setComment(listDialog.getComment());
+				viewer.refresh(entry);
 				return selectedTask;
 			}
 			return null;
