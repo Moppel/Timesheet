@@ -20,7 +20,7 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
 
 	@Override
 	protected String changePressed() {
-		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(oldValue));
+		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(oldValue), false);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

@@ -35,7 +35,7 @@ public class ImportTasksHandler extends AbstractHandler {
 		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), new ImportTaskWizard(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
 				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME))));
 		dialog.open();*/							
-		TaskListDialog listDialog = new TaskListDialog(Display.getDefault().getActiveShell(), null);
+		TaskListDialog listDialog = new TaskListDialog(Display.getDefault().getActiveShell(), null, false);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

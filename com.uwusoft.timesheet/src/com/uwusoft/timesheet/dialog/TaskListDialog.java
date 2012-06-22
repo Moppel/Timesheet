@@ -63,6 +63,7 @@ public class TaskListDialog extends ListDialog {
     private StorageService storageService;
     private SubmissionService submissionService;
     private Task taskSelected;
+    private boolean showComment;
 	private String[] systems;
 	private Map<String, SubmissionEntry> tasksMap;
     private Combo systemCombo, projectCombo;
@@ -87,7 +88,7 @@ public class TaskListDialog extends ListDialog {
 		}
 	}
 
-    public TaskListDialog(Shell shell, Task taskSelected) {
+    public TaskListDialog(Shell shell, Task taskSelected, boolean showComment) {
         super(shell);
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		storageService = new ExtensionManager<StorageService>(
@@ -100,6 +101,7 @@ public class TaskListDialog extends ListDialog {
         systems = systemsList.toArray(new String[systemsList.size()]);
         this.taskSelected = taskSelected;
         task = taskSelected.getName();
+        this.showComment = showComment;
 		setContentProvider(ArrayContentProvider.getInstance());
 		setLabelProvider(new TaskLabelProvider());
 		setTitle("Tasks");
@@ -108,7 +110,7 @@ public class TaskListDialog extends ListDialog {
     }
     
     public TaskListDialog(Shell shell, Task taskSelected, String comment) {
-    	this(shell, taskSelected);
+    	this(shell, taskSelected, true);
     	this.comment = comment;
     }
     
@@ -136,38 +138,40 @@ public class TaskListDialog extends ListDialog {
             }
         });
 
-        (new Label(parent, SWT.NULL)).setText("Comment: ");
-        commentText = new Text(parent, SWT.NONE);
-        commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(), new String[] {StringUtils.EMPTY});
-        commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-        commentText.setText(comment == null ? "" : comment);
-        commentText.addModifyListener(new ModifyListener() {
-			public void modifyText(ModifyEvent e) {
-				if (!StringUtils.isEmpty(task))
-				comment = commentText.getText();
-			}        	
-        });
-		setProposals = new Job("Search available comments") {
-			protected IStatus run(IProgressMonitor monitor) {
-				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
-		        return Status.OK_STATUS;
-			}
-		};
-		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
-			@Override
-			public void selectionChanged(SelectionChangedEvent event) {
-				setProposals.cancel();
-				ISelection rawSelection = getTableViewer().getSelection();
-				if (rawSelection != null
-						&& rawSelection instanceof IStructuredSelection) {
-					IStructuredSelection selection = (IStructuredSelection) rawSelection;
-					if (selection.size() == 1) {
-						task = (String) selection.getFirstElement();
-						setProposals.schedule();
-					}
-				}
-			}			
-		});
+        if (showComment) {
+            (new Label(parent, SWT.NULL)).setText("Comment: ");
+            commentText = new Text(parent, SWT.NONE);
+            commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(), new String[] {StringUtils.EMPTY});
+            commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+            commentText.setText(comment == null ? "" : comment);
+            commentText.addModifyListener(new ModifyListener() {
+    			public void modifyText(ModifyEvent e) {
+    				if (!StringUtils.isEmpty(task))
+    				comment = commentText.getText();
+    			}        	
+            });
+    		setProposals = new Job("Search available comments") {
+    			protected IStatus run(IProgressMonitor monitor) {
+    				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
+    		        return Status.OK_STATUS;
+    			}
+    		};
+    		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
+    			@Override
+    			public void selectionChanged(SelectionChangedEvent event) {
+    				setProposals.cancel();
+    				ISelection rawSelection = getTableViewer().getSelection();
+    				if (rawSelection != null
+    						&& rawSelection instanceof IStructuredSelection) {
+    					IStructuredSelection selection = (IStructuredSelection) rawSelection;
+    					if (selection.size() == 1) {
+    						task = (String) selection.getFirstElement();
+    						setProposals.schedule();
+    					}
+    				}
+    			}			
+    		});
+        }
 
         if (taskSelected.getProject().getSystem() != null) {
         	for (int i = 0; i < systems.length; i++) {
@@ -263,7 +267,7 @@ public class TaskListDialog extends ListDialog {
 	@Override
 	protected void okPressed() {
 		super.okPressed();
-		setProposals.cancel();
+		if (setProposals != null) setProposals.cancel();
 		if (original) {
 		    String selectedTask = Arrays.toString(getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
@@ -278,7 +282,7 @@ public class TaskListDialog extends ListDialog {
 	@Override
 	protected void cancelPressed() {
 		super.cancelPressed();
-		setProposals.cancel();
+		if (setProposals != null) setProposals.cancel();
 	}
 
 	public String getSystem() {
