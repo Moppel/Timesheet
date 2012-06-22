@@ -31,7 +31,7 @@ public class SetBreakHandler extends AbstractHandler {
 		TaskEntry lastTask = storageService.getLastTask();
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), StorageService.BREAK, new Date());
 		if (timeDialog.open() == Dialog.OK) {
-			storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
+			storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
 			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
 			storageService.createTaskEntry(task);				
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));

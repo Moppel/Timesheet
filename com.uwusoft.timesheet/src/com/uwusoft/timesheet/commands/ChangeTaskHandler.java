@@ -50,7 +50,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 											: " (" + listDialog.getProject() + ")") + (listDialog.getSystem() == null ? "" : "\nSystem: " + listDialog.getSystem()),
 									new Date());
 			if (timeDialog.open() == Dialog.OK) {
-				storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
+				storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
 				TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
 				task.setComment(listDialog.getComment());

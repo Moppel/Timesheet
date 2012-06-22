@@ -46,7 +46,7 @@ public class CheckoutHandler extends AbstractHandler {
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 				lastTask.display(), shutdownDate);
 		if (timeDialog.open() == Dialog.OK) {
-			storageService.updateTaskEntry(timeDialog.getTime(), lastTask.getId(), true);
+			storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
 			storageService.storeLastDailyTotal();
 			WholeDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
 			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));

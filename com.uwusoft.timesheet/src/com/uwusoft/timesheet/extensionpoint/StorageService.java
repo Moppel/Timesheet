@@ -41,6 +41,8 @@ public interface StorageService {
     public static final String CHECK_IN = "Check in";
     public static final String BREAK = "Break";
 	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+	
+	public static final String PROPERTY_WEEK = "week";
 
     List<String> getProjects(String system);
     
@@ -73,18 +75,21 @@ public interface StorageService {
    
     /**
      * update date/time for task
-     * @param time the time of the task entry
      * @param id the id of the task entry
+     * @param time the time of the task entry
      * @param wholeDate true: set Date, Time and Week column, false: set only Time column
      */
-    void updateTaskEntry(Date time, Long id, boolean wholeDate);
+    void updateTaskEntry(Long id, Date time, boolean wholeDate);
     
     /**
-     * update task name and project
-     * @param task
-     * @param id
+     * update task, project, system and comment
+     * @param id the id of the task entry
+     * @param task task name
+     * @param project project name
+     * @param system system name
+     * @param comment comment
      */
-    void updateTaskEntry(TaskEntry task, Long id);
+    void updateTaskEntry(Long id, String task, String project, String system, String comment);
 
     /**
      * only to be implemented for sequential storage system

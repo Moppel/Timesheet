@@ -5,7 +5,6 @@ import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,9 +47,9 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.WeekComposite;
 
 public class TasksView extends ViewPart implements PropertyChangeListener {
@@ -229,28 +228,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		    	TaskEntry entry = (TaskEntry) element;
-		    	if (entry.getDateTime() != null) {
-		    		try {
-		    			Calendar oldCal = Calendar.getInstance();
-		    			oldCal.setTime(entry.getDateTime());
-		    			Calendar newCal = Calendar.getInstance();
-		    			newCal.setTime(new SimpleDateFormat(timeFormat).parse((String) value));
-		    			if (oldCal.get(Calendar.HOUR) != newCal.get(Calendar.HOUR)
-		    					|| oldCal.get(Calendar.MINUTE) != newCal.get(Calendar.MINUTE)
-		    					|| oldCal.get(Calendar.AM_PM) != newCal.get(Calendar.AM_PM)) {
-		    				newCal.set(Calendar.YEAR, oldCal.get(Calendar.YEAR));
-		    				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
-		    				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
-		    				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
-		    				storageService.updateTaskEntry(entry.getDateTime(), entry.getId(), false);
-		    				viewer.refresh(element);
-		    			}
-		    		
-		    		} catch (ParseException e) {
-		    			MessageBox.setError("Task's view", e.getLocalizedMessage());
-		    		}
-		    	}
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
@@ -291,12 +268,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    }
 
 		    protected void setValue(Object element, Object value) {
-		    	TaskEntry entry = (TaskEntry) element;
-		    	String task = String.valueOf(value);
-		    	if (!entry.getTask().getName().equals(task)) { // TODO test if project or comment has changed
-			        storageService.updateTaskEntry(entry, entry.getId());
-			        viewer.refresh(element);
-		    	}
 		    }
 		});
 		col.setLabelProvider(new ColumnLabelProvider() {
@@ -474,9 +445,22 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(),
-					entry.getTask().getName() + (entry.getTask().getProject().getName() == null ? "" : " (" + entry.getTask().getProject().getName() + ")"), entry.getDateTime());
+			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(), entry.display(), entry.getDateTime());
 			if (timeDialog.open() == Dialog.OK) {
+    			Calendar oldCal = Calendar.getInstance();
+    			oldCal.setTime(entry.getDateTime());
+    			Calendar newCal = Calendar.getInstance();
+    			newCal.setTime(timeDialog.getTime());
+    			if (oldCal.get(Calendar.HOUR) != newCal.get(Calendar.HOUR)
+    					|| oldCal.get(Calendar.MINUTE) != newCal.get(Calendar.MINUTE)
+    					|| oldCal.get(Calendar.AM_PM) != newCal.get(Calendar.AM_PM)) {
+    				newCal.set(Calendar.YEAR, oldCal.get(Calendar.YEAR));
+    				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
+    				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
+    				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
+    				storageService.updateTaskEntry(entry.getId(), entry.getDateTime(), false);
+		    		viewer.refresh(entry);
+    			}
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
 			}
 			return null;
@@ -507,10 +491,19 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
 				if (StringUtils.isEmpty(selectedTask)) return null;
-				entry.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
-				entry.setComment(listDialog.getComment());
-				viewer.refresh(entry);
-				return selectedTask;
+				
+		    	if (!selectedTask.equals(entry.getTask().getName())
+		    			|| !listDialog.getProject().equals(entry.getTask().getProject().getName())
+		    			|| !listDialog.getSystem().equals(entry.getTask().getProject().getSystem())
+		    			|| !listDialog.getComment().equals(entry.getComment())) {
+		    		Task task = new Task(selectedTask);
+		    		task.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+		    		entry.setComment(listDialog.getComment());
+		    		entry.setTask(task);
+		    		storageService.updateTaskEntry(entry.getId(), selectedTask, listDialog.getProject(), listDialog.getSystem(), listDialog.getComment());
+		    		viewer.refresh(entry);
+					return selectedTask;
+		    	}				
 			}
 			return null;
 		}		
@@ -518,7 +511,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (evt.getNewValue() != null) {
+		if (StorageService.PROPERTY_WEEK.equals(evt.getPropertyName()) && evt.getNewValue() != null) {
 			Integer weekNum = (Integer) evt.getNewValue();
 			if (addTaskEntries(weekNum)) {
 				weekComposite.setCurrentWeekNum(weekNum);

@@ -103,13 +103,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
-	public void updateTaskEntry(Date time, Long id, boolean wholeDate) {
+	public void updateTaskEntry(Long id, Date time, boolean wholeDate) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void updateTaskEntry(TaskEntry task, Long id) {
+	public void updateTaskEntry(Long id, String task, String project, String system, String comment) {
 		// TODO Auto-generated method stub
 		
 	}

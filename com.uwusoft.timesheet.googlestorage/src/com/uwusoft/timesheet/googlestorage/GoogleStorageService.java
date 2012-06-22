@@ -365,7 +365,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
-			firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, cal.get(Calendar.WEEK_OF_YEAR)));
+			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
@@ -458,7 +458,7 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public void updateTaskEntry(Date time, Long id, boolean wholeDate) {
+	public void updateTaskEntry(Long id, Date time, boolean wholeDate) {
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
         Calendar cal = new GregorianCalendar();
         //cal.setFirstDayOfWeek(Calendar.MONDAY);
@@ -468,16 +468,15 @@ public class GoogleStorageService extends EventManager implements StorageService
     		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
             createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
         }
-        //firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, weekNum));
+        firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, weekNum));
 	}
 
-	public void updateTaskEntry(TaskEntry task, Long id) {
-		if (CHECK_IN.equals(task.getTask().getName()) || BREAK.equals(task.getTask().getName()))
-			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task.getTask().getName());
+	public void updateTaskEntry(Long id, String task, String project, String system, String comment) {
+		if (CHECK_IN.equals(task) || BREAK.equals(task))
+			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task);
 		else
-			updateTask(getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem()), id.intValue());
-		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), task.getComment());
-		//firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
+			updateTask(getTaskLink(task, project, system), id.intValue());
+		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), comment);
 	}
 
 	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
