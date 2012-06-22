@@ -67,6 +67,7 @@ public class TaskListDialog extends ListDialog {
     private AutoCompleteField commentCompleteField;
     private String projectSelected, systemSelected, task, comment;
     private boolean original;
+    private Job setProposals;
 	private StatusLineManager statusLineManager = new StatusLineManager();
 
     public TaskListDialog(Shell shell, Task taskSelected) {
@@ -126,7 +127,7 @@ public class TaskListDialog extends ListDialog {
 				comment = commentText.getText();
 			}        	
         });
-		final Job setProposals = new Job("Search available comments") {
+		setProposals = new Job("Search available comments") {
 			protected IStatus run(IProgressMonitor monitor) {
 				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
 		        return Status.OK_STATUS;
@@ -242,6 +243,7 @@ public class TaskListDialog extends ListDialog {
 	@Override
 	protected void okPressed() {
 		super.okPressed();
+		setProposals.cancel();
 		if (original) {
 		    String selectedTask = Arrays.toString(getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
@@ -251,6 +253,12 @@ public class TaskListDialog extends ListDialog {
 			projects.get(projectSelected).add(tasksMap.get(selectedTask));
 			storageService.importTasks(systemSelected, projects);
 		}
+	}
+
+	@Override
+	protected void cancelPressed() {
+		super.cancelPressed();
+		setProposals.cancel();
 	}
 
 	public String getSystem() {
