@@ -137,7 +137,7 @@ public class TimesheetApp implements IApplication {
 	}
 	
 	public static String getTaskName(String task, String project, String system) {
-		return task + (project == null ? "" : "\nProject: " + project) + "\nSystem: " + system;
+		return task + (project == null ? "" : ("\nProject: " + project + "\nSystem: " + system));
 	}
 	
 	public static Task createTask(String propertyName) {
