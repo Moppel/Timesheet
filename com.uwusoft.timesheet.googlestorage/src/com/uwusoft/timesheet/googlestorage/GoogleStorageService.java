@@ -126,7 +126,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	        	return true;
 			}
 		} catch (AuthenticationException e) {
-			message = e.getLocalizedMessage();
+			message = e.getMessage();
 			return false;
 		}
         throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
@@ -156,10 +156,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 					break;
 			}
 		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
     		return false;
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
     		return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
@@ -176,9 +176,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 	        defaultWorksheet = worksheets.get(0);
 	        worksheets.remove(defaultWorksheet); // only task and project sheets remaining
 		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -198,9 +198,11 @@ public class GoogleStorageService extends EventManager implements StorageService
 			throw new NullPointerException();
 		}
 
-		for (Object listener : getListeners()) {
-			((PropertyChangeListener) listener).propertyChange(event);
-		}    	
+        synchronized (getListeners()) {
+        	for (Object listener : getListeners()) {
+        		((PropertyChangeListener) listener).propertyChange(event);
+        	}    
+        }
     }
     
     public void reload() {
@@ -228,7 +230,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				projects.add(entry.getCustomElements().getValue(PROJECT));
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -248,7 +250,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				tasks.add(entry.getCustomElements().getValue(TASK));
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -284,11 +286,11 @@ public class GoogleStorageService extends EventManager implements StorageService
 	            			elements.getValue(COMMENT), elements.getValue(TIME) == null ? true : false, SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS))));
 	        }
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		} catch (ParseException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		}
 		return taskEntries;
     }
@@ -307,7 +309,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			}
 			return comments.toArray(new String[comments.size()]);
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -365,7 +367,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			}
 			firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, cal.get(Calendar.WEEK_OF_YEAR)));
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -380,7 +382,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1), elements.getValue(COMMENT));
 			return null;
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -396,11 +398,11 @@ public class GoogleStorageService extends EventManager implements StorageService
 					return new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		} catch (ParseException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		}		
 		return null;
 	}
@@ -424,7 +426,7 @@ public class GoogleStorageService extends EventManager implements StorageService
             }
             createUpdateCellEntry(defaultWorksheet, listEntries.size() + 1, headingIndex.get(DAILY_TOTAL), "=SUM(R[0]C[-1]:R[-" + rowsOfDay + "]C[-1])");
         } catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
         } catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
         }
@@ -450,7 +452,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(OVERTIME), "=R[0]C["
 						+ (headingIndex.get(WEEKLY_TOTAL) - headingIndex.get(OVERTIME)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
         } catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
         }        
@@ -466,7 +468,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
             createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
         }
-        firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, weekNum));
+        //firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, weekNum));
 	}
 
 	public void updateTaskEntry(TaskEntry task, Long id) {
@@ -475,7 +477,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		else
 			updateTask(getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem()), id.intValue());
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), task.getComment());
-		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
+		//firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
 	}
 
 	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
@@ -496,7 +498,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 									tasks.remove(task);							
 						projects.put(project, tasks);
 					} catch (IOException e) {
-						MessageBox.setError(title, e.getLocalizedMessage());
+						MessageBox.setError(title, e.getMessage());
 					} catch (ServiceException e) {
 						MessageBox.setError(title, e.getResponseBody());
 					}
@@ -537,9 +539,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 				}
 			}
 		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -594,11 +596,11 @@ public class GoogleStorageService extends EventManager implements StorageService
     		}
             entry.submitEntries();
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		} catch (ParseException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		}
 		return systems;
     }
@@ -657,7 +659,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 					break;
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -692,7 +694,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				return getProjectLink(system, project, projectId, false);
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -722,7 +724,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 					return worksheet.getTitle().getPlainText() + "!A" + (i + 2); // TODO hardcoded: task must be in the first column
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -742,7 +744,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 						entry.getCustomElements().getValue(TASK), entry.getCustomElements().getValue(PROJECT), system);
 			}
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
@@ -755,9 +757,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 	        entry.changeInputValueLocal(value);
 	        entry.update();
 		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getLocalizedMessage());
+			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
