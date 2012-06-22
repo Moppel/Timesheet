@@ -15,13 +15,16 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
+import com.uwusoft.timesheet.extensionpoint.StorageService;
+
 public class WeekComposite {
 	private int currentWeekNum, lastWeekNum;
 	private Date startDate, endDate;
 	private Label startDateLabel, endDateLabel;
-	private Button leftButton, rightButton;
+	private Button leftButton, rightButton, currentWeekButton;
 	private PropertyChangeListener listener;
 	private Composite composite;
+	private Calendar current;
 	
 	public WeekComposite(PropertyChangeListener listener, int currentWeekNum, int lastWeekNum) {
 		this.listener = listener;
@@ -36,19 +39,26 @@ public class WeekComposite {
         layout.wrap = false;
         composite.setLayout(layout);
         
+        current = new GregorianCalendar();
+        current.setTime(new Date());
+    	
 		leftButton = new Button(composite, SWT.PUSH);
         leftButton.setText("<<");
+        leftButton.setToolTipText("Previous week");
         leftButton.setEnabled(currentWeekNum > 1);
         
         startDateLabel = new Label(composite, SWT.NONE);
         
-        Button currentWeekButton = new Button(composite, SWT.PUSH);
+        currentWeekButton = new Button(composite, SWT.PUSH);
         currentWeekButton.setText(" - ");
+        currentWeekButton.setToolTipText("Current week");
+        currentWeekButton.setEnabled(currentWeekNum != current.get(Calendar.WEEK_OF_YEAR));
         
         endDateLabel = new Label(composite, SWT.NONE);
 
         rightButton = new Button(composite, SWT.PUSH);
         rightButton.setText(">>");
+        rightButton.setToolTipText("Next week");
     	rightButton.setEnabled(currentWeekNum < lastWeekNum);
         
         leftButton.addSelectionListener(new SelectionAdapter() {
@@ -60,9 +70,7 @@ public class WeekComposite {
         
     	currentWeekButton.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
-                Calendar cal = new GregorianCalendar();
-            	cal.setTime(new Date());        
-            	currentWeekNum = cal.get(Calendar.WEEK_OF_YEAR);
+            	currentWeekNum = current.get(Calendar.WEEK_OF_YEAR);
             	calculateStartEndDate(true);
             }
         });
@@ -79,6 +87,7 @@ public class WeekComposite {
 	}
 
 	private void calculateStartEndDate(boolean firePropertyChange) {
+    	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, StorageService.PROPERTY_WEEK, null, currentWeekNum));
 		Calendar cal = new GregorianCalendar();
     	cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
@@ -90,8 +99,8 @@ public class WeekComposite {
         endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(endDate));        
         leftButton.setEnabled(currentWeekNum > 1);
     	rightButton.setEnabled(currentWeekNum < lastWeekNum);
+        currentWeekButton.setEnabled(currentWeekNum != current.get(Calendar.WEEK_OF_YEAR));
     	composite.pack();
-    	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, "weekNum", null, currentWeekNum));
 	}
     
 	public Date getStartDate() {
