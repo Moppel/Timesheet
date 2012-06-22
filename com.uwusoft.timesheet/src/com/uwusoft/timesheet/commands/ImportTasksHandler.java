@@ -36,9 +36,6 @@ public class ImportTasksHandler extends AbstractHandler {
 				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME))));
 		dialog.open();*/							
 		TaskListDialog listDialog = new TaskListDialog(Display.getDefault().getActiveShell(), null);
-		listDialog.setTitle("Tasks");
-		listDialog.setMessage("Select task");
-		listDialog.setWidthInChars(70);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

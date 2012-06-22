@@ -38,9 +38,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 		TaskEntry lastTask = storageService.getLastTask();
 		TaskListDialog listDialog = new TaskListDialog(HandlerUtil.getActiveShell(event), lastTask.getTask());
-		listDialog.setTitle("Tasks");
 		listDialog.setMessage("Select next task");
-		listDialog.setWidthInChars(70);
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

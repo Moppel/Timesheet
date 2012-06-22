@@ -22,8 +22,6 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
-import org.eclipse.jface.viewers.ITableLabelProvider;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -38,8 +36,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -81,22 +77,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				return (Object[]) parent;
 			}
 			return new Object[0];
-		}
-	}
-
-	class ViewLabelProvider extends LabelProvider implements
-			ITableLabelProvider {
-		public String getColumnText(Object obj, int index) {
-			return getText(obj);
-		}
-
-		public Image getColumnImage(Object obj, int index) {
-			return getImage(obj);
-		}
-
-		public Image getImage(Object obj) {
-			return PlatformUI.getWorkbench().getSharedImages()
-					.getImage(ISharedImages.IMG_OBJ_ELEMENT);
 		}
 	}
 
@@ -190,7 +170,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
-				if (date == null) return "Last task";
 		    	if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isWholeDay()) {
 		    		return DateFormat.getDateInstance(DateFormat.SHORT).format(date);
 		    	}
@@ -235,7 +214,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
-				if (!((TaskEntry) element).isWholeDay() && date!= null) return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+				if (date == null) return "Incomplete";
+				else if (!((TaskEntry) element).isWholeDay()) return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
 				return "";
 			}
 			public Image getImage(Object obj) {
@@ -277,7 +257,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		        return ((TaskEntry) element).getTask().getName();
 			}
 			public Image getImage(Object obj) {
-				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
 			}
             @Override public void update(ViewerCell cell) {
                 even = searcher.isEven((TableItem)cell.getItem());
@@ -320,7 +300,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			public Image getImage(Object obj) {
 				TaskEntry task = (TaskEntry) obj;
 				if (StorageService.CHECK_IN.equals(task.getTask().getName()) || StorageService.BREAK.equals(task.getTask().getName())) return null;
-				return PlatformUI.getWorkbench().getSharedImages().getImage(ISharedImages.IMG_OBJ_ELEMENT);
+				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
 			}
             @Override public void update(ViewerCell cell) {
                 even = searcher.isEven((TableItem)cell.getItem());
@@ -482,11 +462,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry.getTask(), entry.getComment());
-			listDialog.setTitle("Tasks");
-			listDialog.setMessage("Select task");
-			listDialog.setContentProvider(ArrayContentProvider.getInstance());
-			listDialog.setLabelProvider(new ViewLabelProvider());
-			listDialog.setWidthInChars(70);
 			if (listDialog.open() == Dialog.OK) {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

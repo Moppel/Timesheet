@@ -21,6 +21,7 @@ import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.ITableLabelProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -29,6 +30,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -39,6 +41,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.dialogs.ListDialog;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
@@ -70,6 +73,20 @@ public class TaskListDialog extends ListDialog {
     private Job setProposals;
 	private StatusLineManager statusLineManager = new StatusLineManager();
 
+	class TaskLabelProvider extends LabelProvider implements ITableLabelProvider {
+		public String getColumnText(Object obj, int index) {
+			return getText(obj);
+		}
+
+		public Image getColumnImage(Object obj, int index) {
+			return getImage(obj);
+		}
+
+		public Image getImage(Object obj) {
+			return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
+		}
+	}
+
     public TaskListDialog(Shell shell, Task taskSelected) {
         super(shell);
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
@@ -84,7 +101,10 @@ public class TaskListDialog extends ListDialog {
         this.taskSelected = taskSelected;
         task = taskSelected.getName();
 		setContentProvider(ArrayContentProvider.getInstance());
-		setLabelProvider(new LabelProvider());
+		setLabelProvider(new TaskLabelProvider());
+		setTitle("Tasks");
+		setMessage("Select task");
+		setWidthInChars(70);
     }
     
     public TaskListDialog(Shell shell, Task taskSelected, String comment) {
