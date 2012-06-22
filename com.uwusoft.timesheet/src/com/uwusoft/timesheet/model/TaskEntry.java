@@ -22,7 +22,9 @@ public class TaskEntry {
 	private boolean wholeDay=false;	
 	private boolean status = false;
 	
-	/**
+    public static final String PROPERTY_TASK = "task";
+	
+    /**
 	 * JPA requires a no-arg constructor
 	 */
 	public TaskEntry() {
@@ -109,7 +111,9 @@ public class TaskEntry {
 	}
 	
 	public void setTask(Task task) {
+        //Task oldTask = this.task;
 		this.task = task;
+        //firePropertyChange(PROPERTY_TASK, oldTask, task);
 	}
 
 	public String getComment() {
@@ -143,9 +147,5 @@ public class TaskEntry {
 	@Override
 	public String toString() {
 		return "Task [Date=" + dateTime + ", task=" + task.getName() + (task.getProject() == null ? "" : " (project: " + task.getProject().getName() + ", system: " + task.getProject().getSystem() + ")") + ", total=" + total + ", wholeDay=" + wholeDay + "]";
-	}
-	
-	public String display() {
-		return task.getName() + (task.getProject() == null ? "" : "\nProject: " + task.getProject().getName() + "\nSystem: " + task.getProject().getSystem()); 		
 	}
 }

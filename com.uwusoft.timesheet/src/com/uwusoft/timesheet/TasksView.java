@@ -111,8 +111,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
 			return;
 		
-		storageService.addPropertyChangeListener(this);
-		
         Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());        
     	int currentWeekNum = cal.get(Calendar.WEEK_OF_YEAR);
@@ -143,6 +141,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		gridData.grabExcessVerticalSpace = true;
 		gridData.horizontalAlignment = GridData.FILL;
 		viewer.getControl().setLayoutData(gridData);
+		
+		storageService.addPropertyChangeListener(this);
 	}
 
 	private boolean addTaskEntries(Integer weekNum) {
@@ -445,7 +445,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(), entry.display(), entry.getDateTime());
+			TimeDialog timeDialog = new TimeDialog(cellEditorWindow.getDisplay(), entry.getTask().display(), entry.getDateTime());
 			if (timeDialog.open() == Dialog.OK) {
     			Calendar oldCal = Calendar.getInstance();
     			oldCal.setTime(entry.getDateTime());
