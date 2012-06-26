@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -55,7 +56,8 @@ public class TimesheetApp implements IApplication {
 		// see http://stackoverflow.com/a/4194224:
 		try {
 			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
-			final File currentJar = new File(SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			// see http://stackoverflow.com/a/579167
+			final File currentJar = new File(new URI("file", "/" + SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toString(), null));
 			final List<String> command = new ArrayList<String>();
 			command.add(javaBin);
 			command.add("-jar");
