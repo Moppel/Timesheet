@@ -57,7 +57,7 @@ public class TimesheetApp implements IApplication {
 		try {
 			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
 			// see http://stackoverflow.com/a/579167
-			final File currentJar = new File(new URI("file", "/" + SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toString(), null));
+			final File currentJar = new File(new URI(null, SystemShutdownTimeCaptureService.class.getProtectionDomain().getCodeSource().getLocation().toString(), null));
 			final List<String> command = new ArrayList<String>();
 			command.add(javaBin);
 			command.add("-jar");
@@ -68,9 +68,9 @@ public class TimesheetApp implements IApplication {
 			final ProcessBuilder builder = new ProcessBuilder(command);
 			builder.start();
 		} catch (IOException e) {
-			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
+			MessageBox.setError("Couldn't start shutdown service", e.getMessage());
 		} catch (URISyntaxException e) {
-			MessageBox.setError("Couldn't start shutdown service", e.getLocalizedMessage());
+			MessageBox.setError("Couldn't start shutdown service", e.getMessage());
 		}
 		
 		try {
