@@ -8,11 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.NotEnabledException;
-import org.eclipse.core.commands.NotHandledException;
 import org.eclipse.core.commands.ParameterizedCommand;
-import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.Dialog;
@@ -87,11 +83,14 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		});
 		trayItem = initTaskItem();
 		// Some OS might not support tray items
-		if (trayItem != null)
+		if (trayItem != null) {
 			window.getShell().setVisible(false); // initially minimize to system tray
+			hookPopupMenu();
+		}
 		
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		TaskEntry lastTask = storageService.getLastTask();
 		
 		Date startDate = TimesheetApp.startDate;
 		Date shutdownDate = startDate;
@@ -101,10 +100,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				preferenceStore.setToDefault(TimesheetApp.SYSTEM_START);
 				startDate = StorageService.formatter.parse(startTime);				
 			}
-
+	
 			String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
-			if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(storageService.getLastTaskEntryDate()))
-				shutdownDate = storageService.getLastTaskEntryDate();
+	    	Date lastDate = storageService.getLastTaskEntryDate();
+	    	if (lastDate == null) lastDate = BusinessDayUtil.getPreviousBusinessDay(new Date());
+			if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(lastDate))
+				shutdownDate = lastDate;
 			else
 				shutdownDate = StorageService.formatter.parse(shutdownTime);				
 		} catch (ParseException e) {
@@ -113,31 +114,25 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	
 		int startDay = getDay(startDate);
 		int startWeek = getWeek(startDate);
-
+	
 		int shutdownDay = getDay(shutdownDate);
 		int shutdownWeek = getWeek(shutdownDate);
-
+	
 		IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 		ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
 				
-		if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
+		if (startDay != shutdownDay && lastTask != null) { // don't automatically check in/out if program is restarted
 			Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
 			try { // automatic check out
 				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
-			} catch (ExecutionException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotDefinedException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotEnabledException ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotHandledException ex) {
+			} catch (Exception ex) {
 				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
 			}
 		}
 		if (storageService.getLastTask() == null) { // automatic check in								 
 			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
-			Date start = BusinessDayUtil.getLastBusinessDay(startDate);
+			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
 			while (end.before(start)) { // create missing whole day tasks until last business day
 				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
 						preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
@@ -148,7 +143,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
 				}
 			}
-
+	
 			Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
 			// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
@@ -159,18 +154,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 					parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
 					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
 				}
-			} catch (ExecutionException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotDefinedException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotEnabledException ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
-			} catch (NotHandledException ex) {
+			} catch (Exception ex) {
 				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
 			}
 		}
-		if (trayItem != null)
-			hookPopupMenu();
 	}
 
 	private int getDay(Date date) {

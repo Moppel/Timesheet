@@ -110,12 +110,12 @@ public class BusinessDayUtil {
 		}
 	}
 	
-	public static Date getLastBusinessDay(Date startDate) {
+	public static Date getPreviousBusinessDay(Date startDate) {
 		Date lastDay = DateUtils.truncate(addDays(startDate, -1), Calendar.DATE);
 		if (isBusinessDay(lastDay))
 			return lastDay;
 		else
-			return getLastBusinessDay(lastDay);
+			return getPreviousBusinessDay(lastDay);
 	}
 
 	/**
