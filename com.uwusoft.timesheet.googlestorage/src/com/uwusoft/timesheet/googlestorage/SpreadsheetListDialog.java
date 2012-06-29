@@ -45,7 +45,7 @@ public class SpreadsheetListDialog extends ListDialog {
 		}
 
 		public Image getImage(Object obj) {
-			return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
+			return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet.googlestorage", "/icons/spread_16.png").createImage();
 		}
 	}
 	
