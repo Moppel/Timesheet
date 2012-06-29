@@ -3,11 +3,8 @@ package com.uwusoft.timesheet;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -22,7 +19,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.equinox.app.IApplication;
@@ -52,9 +48,7 @@ public class TimesheetApp implements IApplication {
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
-    public static final String SYSTEM_SHUTDOWN = "system.shutdown";
-    public static final String SYSTEM_START= "system.start";
-    public static Date startDate;
+    public static Date startDate, shutDownDate;
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
@@ -62,40 +56,25 @@ public class TimesheetApp implements IApplication {
 	public Object start(IApplicationContext context) {
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		startDate = new Date(mx.getStartTime());
+		shutDownDate = startDate;
 
 		String settingsPath = Activator.getDefault().getStateLocation().toPortableString()
 				.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/"); // how to get path of settings?
 		
-		Properties transferProps = new Properties();
-		File props = new File(settingsPath + Activator.PLUGIN_ID + ".prefs");
 		File tmp = new File(settingsPath + "/" + SystemShutdownTimeCaptureService.tmpFile);
-		OutputStream out = null;
 		try {
-		if (tmp.exists()) {
-			BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
-			String line = time.readLine();
-			time.close();
-			if (line != null) {
-				InputStream in = new FileInputStream(props);
-				transferProps.load(in);
-				in.close();
-
-				SimpleDateFormat formatter = SystemShutdownTimeCaptureService.formatter;
-				transferProps.setProperty("system.shutdown", formatter.format(formatter.parse(line)));
-				transferProps.setProperty("system.start", formatter.format(startDate));
-				out = new FileOutputStream(props);
-				transferProps.store(out, "System Shutdown Time Capture Service");
-			}
-		} else
-			tmp.createNewFile();
+			if (tmp.exists()) {
+				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
+				String line = time.readLine();
+				time.close();
+				if (line != null) {
+					SimpleDateFormat formatter = SystemShutdownTimeCaptureService.formatter;
+					shutDownDate = formatter.parse(line);
+				}
+			} else
+				tmp.createNewFile();
 		} catch (ParseException e) {
 		} catch (IOException e) {
-		} finally {
-			if (out != null)
-				try {
-					out.close();
-				} catch (IOException e) {
-				}
 		}
 		
 		// see http://stackoverflow.com/a/4194224:

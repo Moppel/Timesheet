@@ -130,7 +130,6 @@ public class WholeDayTasks {
 			em.remove(taskEntry);
 		}
 		em.getTransaction().commit();
-		preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(end));
 	}
 
 	public float getTotal() {

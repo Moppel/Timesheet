@@ -1,13 +1,11 @@
 package com.uwusoft.timesheet;
 
-import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
@@ -90,27 +88,13 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		TaskEntry lastTask = storageService.getLastTask();
 		
 		Date startDate = TimesheetApp.startDate;
-		Date shutdownDate = startDate;
-		try {
-			String startTime = preferenceStore.getString(TimesheetApp.SYSTEM_START);
-			if (!StringUtils.isEmpty(startTime)) {
-				preferenceStore.setToDefault(TimesheetApp.SYSTEM_START);
-				startDate = StorageService.formatter.parse(startTime);				
-			}
-	
-			String shutdownTime = preferenceStore.getString(TimesheetApp.SYSTEM_SHUTDOWN);
-	    	Date lastDate = storageService.getLastTaskEntryDate();
-	    	if (lastDate == null) lastDate = BusinessDayUtil.getPreviousBusinessDay(new Date());
-			if (StringUtils.isEmpty(shutdownTime) || StorageService.formatter.parse(shutdownTime).before(lastDate))
-				shutdownDate = lastDate;
-			else
-				shutdownDate = StorageService.formatter.parse(shutdownTime);				
-		} catch (ParseException e) {
-			MessageBox.setError("Shutdown date", e.getMessage());
-		}
+		Date shutdownDate = TimesheetApp.shutDownDate;
+    	Date lastDate = storageService.getLastTaskEntryDate();
+    	if (lastDate == null) lastDate = BusinessDayUtil.getPreviousBusinessDay(new Date());
+		if (shutdownDate.before(lastDate))
+			shutdownDate = lastDate;
 	
 		int startDay = getDay(startDate);
 		int startWeek = getWeek(startDate);
@@ -121,7 +105,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
 		ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
 				
-		if (startDay != shutdownDay && lastTask != null) { // don't automatically check in/out if program is restarted
+		if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
 			Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
 			try { // automatic check out

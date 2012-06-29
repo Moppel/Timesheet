@@ -47,7 +47,6 @@ public class CheckoutHandler extends AbstractHandler {
 			storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
 			storageService.storeLastDailyTotal();
 			WholeDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
-			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 			commandStateService.setEnabled(false);

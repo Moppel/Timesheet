@@ -32,7 +32,6 @@ public class SetBreakHandler extends AbstractHandler {
 			storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
 			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
 			storageService.createTaskEntry(task);				
-			preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);

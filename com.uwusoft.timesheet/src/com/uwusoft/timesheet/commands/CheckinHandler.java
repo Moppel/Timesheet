@@ -46,7 +46,6 @@ public class CheckinHandler extends AbstractHandler {
 				TaskEntry defaultTaskEntry = new TaskEntry(timeDialog.getTime(), defaultTask);
 				defaultTaskEntry.setDateTime(null);
 				storageService.createTaskEntry(defaultTaskEntry);
-				preferenceStore.setValue(TimesheetApp.SYSTEM_SHUTDOWN, StorageService.formatter.format(timeDialog.getTime()));
 				storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
 				ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 				SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
