@@ -1,17 +1,24 @@
 package com.uwusoft.timesheet;
 
-import java.io.*;
-import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Properties;
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.RandomAccessFile;
+import java.net.URISyntaxException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.text.SimpleDateFormat;
 
 /**
  * the system shutdown time capture service
@@ -22,9 +29,9 @@ import java.awt.event.ActionListener;
  */
 public class SystemShutdownTimeCaptureService implements ActionListener {
     private static TrayIcon trayIcon;
-    private static SimpleDateFormat formatter;
-    private static File props, tmp;
-    private static Properties transferProps;
+    public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
+    public static String tmpFile = "shutdownTime.tmp";
+    private static File tmp;
     private static String comment = "System Shutdown Time Capture Service";
 
     public SystemShutdownTimeCaptureService() {
@@ -60,7 +67,7 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         while (true);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {
         String prefsPath = System.getProperty("user.home");
         if (args.length > 0) prefsPath = args[0];
         String dir;
@@ -76,42 +83,10 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
         FileLock lock = channel.tryLock();
         if (lock == null) {
             System.exit(0);
-        }
-		
-        RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
-		Date startDate = new Date(mx.getStartTime());
-
-		SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
-
-        formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-
-        transferProps = new Properties();
-        props = new File(prefsPath);
-        tmp = new File(dir + "/shutdownTime.tmp");
-		try {
-			if (tmp.exists()) {
-				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));				
-				String line = time.readLine();
-				time.close();
-				if (line != null) {
-					InputStream in = new FileInputStream(props);
-					transferProps.load(in);
-					in.close();
-
-					OutputStream out = new FileOutputStream(props);
-					transferProps.setProperty("system.shutdown", formatter.format(formatter.parse(line)));
-					transferProps.setProperty("system.start", formatter.format(startDate));
-					transferProps.store(out, comment);
-					out.close();
-				}
-			} else
-				tmp.createNewFile();
-		} catch (IOException e) {
-			helpAndTerminate(e.getMessage());
-		} catch (ParseException e) {
-			helpAndTerminate(e.getMessage());
-		}
+        }		
+        tmp = new File(dir + "/" + tmpFile);
         
+		SystemShutdownTimeCaptureService systemTimeCapture = new SystemShutdownTimeCaptureService();
         systemTimeCapture.addShutdownHook();
     }
 
