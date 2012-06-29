@@ -36,7 +36,6 @@ import org.eclipse.ui.PlatformUI;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
-import com.uwusoft.timesheet.shutdowntime.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.util.MessageBox;
 
 /**
