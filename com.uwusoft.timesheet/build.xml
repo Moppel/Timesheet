@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="Timesheet" default="create_run_jar" basedir=".">
+    <target name="create_run_jar">
+        <jar destfile="lib/SystemShutdownTimeCapture.jar" filesetmanifest="mergewithoutmain">
+            <manifest>
+                <attribute name="Main-Class" value="com.uwusoft.timesheet.shutdowntime.SystemShutdownTimeCaptureService"/>
+                <attribute name="Class-Path" value="."/>
+            </manifest>
+            <fileset dir="bin">
+                <include name="**/*SystemShutdownTimeCaptureService.class"/>
+                <include name="**/*Services.png"/>
+        	</fileset>
+        </jar>
+    </target>
+</project>

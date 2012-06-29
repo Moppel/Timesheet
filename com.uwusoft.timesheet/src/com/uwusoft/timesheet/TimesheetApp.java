@@ -1,7 +1,13 @@
 package com.uwusoft.timesheet;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -9,11 +15,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.equinox.app.IApplication;
@@ -27,6 +36,7 @@ import org.eclipse.ui.PlatformUI;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.shutdowntime.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.util.MessageBox;
 
 /**
@@ -51,8 +61,44 @@ public class TimesheetApp implements IApplication {
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
 	 */
 	public Object start(IApplicationContext context) {
+		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
+		startDate = new Date(mx.getStartTime());
+
 		String settingsPath = Activator.getDefault().getStateLocation().toPortableString()
 				.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/"); // how to get path of settings?
+		
+		Properties transferProps = new Properties();
+		File props = new File(settingsPath + Activator.PLUGIN_ID + ".prefs");
+		File tmp = new File(settingsPath + "/" + SystemShutdownTimeCaptureService.tmpFile);
+		OutputStream out = null;
+		try {
+		if (tmp.exists()) {
+			BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
+			String line = time.readLine();
+			time.close();
+			if (line != null) {
+				InputStream in = new FileInputStream(props);
+				transferProps.load(in);
+				in.close();
+
+				SimpleDateFormat formatter = SystemShutdownTimeCaptureService.formatter;
+				transferProps.setProperty("system.shutdown", formatter.format(formatter.parse(line)));
+				transferProps.setProperty("system.start", formatter.format(startDate));
+				out = new FileOutputStream(props);
+				transferProps.store(out, "System Shutdown Time Capture Service");
+			}
+		} else
+			tmp.createNewFile();
+		} catch (ParseException e) {
+		} catch (IOException e) {
+		} finally {
+			if (out != null)
+				try {
+					out.close();
+				} catch (IOException e) {
+				}
+		}
+		
 		// see http://stackoverflow.com/a/4194224:
 		try {
 			final String javaBin = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java";
@@ -87,9 +133,6 @@ public class TimesheetApp implements IApplication {
 		
         System.setProperty(SystemProperties.ARCHIVE_FACTORY, MyArchiveFactoryImpl.class.getName()); // see http://stackoverflow.com/a/7982008
 		
-		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
-		startDate = new Date(mx.getStartTime());
-
 		Display display = PlatformUI.createDisplay();
 		
 		int returnCode = PlatformUI.createAndRunWorkbench(display, new ApplicationWorkbenchAdvisor());
