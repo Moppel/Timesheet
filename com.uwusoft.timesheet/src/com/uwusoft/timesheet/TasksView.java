@@ -94,8 +94,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
         Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());        
     	int currentWeekNum = cal.get(Calendar.WEEK_OF_YEAR);
-		
-    	cal = new GregorianCalendar();
     	cal.setTime(storageService.getLastTaskEntryDate());
     	
     	weekComposite = new WeekComposite(this, currentWeekNum, cal.get(Calendar.WEEK_OF_YEAR));

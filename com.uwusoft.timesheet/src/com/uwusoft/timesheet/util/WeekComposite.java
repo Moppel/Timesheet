@@ -87,15 +87,15 @@ public class WeekComposite {
 	}
 
 	private void calculateStartEndDate(boolean firePropertyChange) {
-    	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, StorageService.PROPERTY_WEEK, null, currentWeekNum));
 		Calendar cal = new GregorianCalendar();
     	cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
     	startDate = cal.getTime();
-		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(startDate));
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
     	endDate = cal.getTime();
+    	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, StorageService.PROPERTY_WEEK, null, currentWeekNum));
+		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(startDate));
         endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(endDate));        
         leftButton.setEnabled(currentWeekNum > 1);
     	rightButton.setEnabled(currentWeekNum < lastWeekNum);
