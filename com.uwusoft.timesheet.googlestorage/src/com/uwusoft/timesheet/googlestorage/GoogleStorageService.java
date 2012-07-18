@@ -2,8 +2,11 @@ package com.uwusoft.timesheet.googlestorage;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -20,6 +23,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -28,10 +32,12 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
+import com.google.gdata.client.docs.DocsService;
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
 import com.google.gdata.client.spreadsheet.ListQuery;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.PlainTextConstruct;
+import com.google.gdata.data.docs.DocumentListEntry;
 import com.google.gdata.data.spreadsheet.CellEntry;
 import com.google.gdata.data.spreadsheet.CellFeed;
 import com.google.gdata.data.spreadsheet.CustomElementCollection;
@@ -74,7 +80,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     private String spreadsheetKey;
     private SpreadsheetService service;
-    //private DocsService docsService;
+    private DocsService docsService;
     private FeedURLFactory factory;
     private URL listFeedUrl;
 	private Map<String, Integer> headingIndex;
@@ -87,7 +93,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     public GoogleStorageService() throws CoreException {
         service = new SpreadsheetService("Timesheet");
-        //docsService = new DocsService("Timesheet");
+        docsService = new DocsService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
         boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
@@ -107,7 +113,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	String password = secureProps.getProperty(PREFIX + PASSWORD);
 	    	if (lastSuccess && !StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
-	        	//docsService.setUserCredentials(userName, password);
+	        	docsService.setUserCredentials(userName, password);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 	        	return true;
 	    	}
@@ -116,7 +122,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
 	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
-	        	//docsService.setUserCredentials(userName, password);
+	        	docsService.setUserCredentials(userName, password);
 	        	preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
 	        	if (loginDialog.isStorePassword())
 	        		secureProps.storeProperty(PREFIX + PASSWORD, loginDialog.getPassword());
@@ -137,14 +143,16 @@ public class GoogleStorageService extends EventManager implements StorageService
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
 	    	if (StringUtils.isEmpty(spreadsheetKey)) {
-	    		/*File file = new File("F:/My Documents/Downloads/Timesheet Template.ods");
+	    		URL fileURL = Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry("template/TimesheetTemplate.ods");
+	    		File file = new File(FileLocator.resolve(fileURL).toURI());
 	    		DocumentListEntry newDocument = new DocumentListEntry();
 	    		String mimeType = DocumentListEntry.MediaType.fromFileName(file.getName()).getMimeType();
 	    		newDocument.setFile(file, mimeType);
 	    		newDocument.setTitle(new PlainTextConstruct("Timesheet Test"));
 
-	    		docsService.insert(new URL("https://docs.google.com/feeds/documents/private/full/"), newDocument);*/
-	    		MessageBox.setMessage("Create spreadsheet", "Please manually create a spreadsheet and copy the spreadsheet key to the Google Spreadsheet Preferences!");
+	    		docsService.insert(new URL("https://docs.google.com/feeds/default/private/full"), newDocument);
+	    		spreadsheetKey = newDocument.getDocId();
+	    		MessageBox.setMessage("Create spreadsheet", "Please copy the spreadsheet key from the newly created \"Timesheet Test\" to the Google Spreadsheet Preferences!");
 	    		return false;
 	    	}
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
@@ -160,9 +168,11 @@ public class GoogleStorageService extends EventManager implements StorageService
     		return false;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
-    		return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
+    		return false;
+		} catch (URISyntaxException e) {
+			MessageBox.setError(title, e.getMessage());
     		return false;
 		}
     	return true;
