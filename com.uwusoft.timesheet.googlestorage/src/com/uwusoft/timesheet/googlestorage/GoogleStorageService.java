@@ -3,10 +3,10 @@ package com.uwusoft.timesheet.googlestorage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -19,6 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.common.EventManager;
@@ -38,6 +40,7 @@ import com.google.gdata.client.spreadsheet.ListQuery;
 import com.google.gdata.client.spreadsheet.SpreadsheetService;
 import com.google.gdata.data.PlainTextConstruct;
 import com.google.gdata.data.docs.DocumentListEntry;
+import com.google.gdata.data.media.MediaByteArraySource;
 import com.google.gdata.data.spreadsheet.CellEntry;
 import com.google.gdata.data.spreadsheet.CellFeed;
 import com.google.gdata.data.spreadsheet.CustomElementCollection;
@@ -143,17 +146,41 @@ public class GoogleStorageService extends EventManager implements StorageService
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
 	    	if (StringUtils.isEmpty(spreadsheetKey)) {
-	    		URL fileURL = Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry("template/TimesheetTemplate.ods");
-	    		File file = new File(FileLocator.resolve(fileURL).toURI());
+	    		String fileName = "template/TimesheetTemplate.ods";
+	    		URL fileURL = FileLocator.resolve(Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry(fileName));
+	    	    byte[] data = null;
+	    	    InputStream input = null;
+	            if ("file".equals(fileURL.getProtocol())) {//$NON-NLS-1$
+	    			File file = new File(fileURL.getPath());
+		    		data = new byte[(int) file.length()];
+		    		input = new FileInputStream(file);
+	            }
+	    		if ("jar".equals(fileURL.getProtocol())) { //$NON-NLS-1$
+	    			String path = fileURL.getPath();
+	    			if (path.startsWith("file:")) {
+	    				// strip off the !/
+	    				path = path.substring(5, path.indexOf("!"));
+	    				JarFile file = new JarFile(path);
+	    				ZipEntry entry = file.getEntry(fileName);
+	    	    		data = new byte[(int) entry.getSize()];
+	    				input = file.getInputStream(entry);
+	    			}
+	    		}
+	    		if (data == null) return false;
+	    		input.read(data);
+	    		input.close();
 	    		DocumentListEntry newDocument = new DocumentListEntry();
-	    		String mimeType = DocumentListEntry.MediaType.fromFileName(file.getName()).getMimeType();
-	    		newDocument.setFile(file, mimeType);
-	    		newDocument.setTitle(new PlainTextConstruct("Timesheet Test"));
+	    		String mimeType = DocumentListEntry.MediaType.fromFileName(fileName).getMimeType();
+	    		newDocument.setMediaSource(new MediaByteArraySource(data, mimeType));
+	    		Calendar cal = Calendar.getInstance();
+	    		cal.setTime(new Date());
+	    		String name = "Timesheet " + cal.get(Calendar.YEAR);
+	    		newDocument.setTitle(new PlainTextConstruct(name));
 
-	    		docsService.insert(new URL("https://docs.google.com/feeds/default/private/full"), newDocument);
+	    		newDocument = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument);
 	    		spreadsheetKey = newDocument.getDocId();
-	    		MessageBox.setMessage("Create spreadsheet", "Please copy the spreadsheet key from the newly created \"Timesheet Test\" to the Google Spreadsheet Preferences!");
-	    		return false;
+	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
+	    		MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
 	    	}
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
@@ -168,11 +195,9 @@ public class GoogleStorageService extends EventManager implements StorageService
     		return false;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
+    		return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
-    		return false;
-		} catch (URISyntaxException e) {
-			MessageBox.setError(title, e.getMessage());
     		return false;
 		}
     	return true;
