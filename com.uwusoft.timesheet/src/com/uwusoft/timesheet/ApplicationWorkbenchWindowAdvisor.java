@@ -1,23 +1,13 @@
 package com.uwusoft.timesheet;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
@@ -29,8 +19,6 @@ import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
-import org.eclipse.ui.commands.ICommandService;
-import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.menus.CommandContributionItem;
 import org.eclipse.ui.menus.CommandContributionItemParameter;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -38,13 +26,7 @@ import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.commands.WholeDayTaskFactory;
-import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.model.WholeDayTasks;
-import com.uwusoft.timesheet.util.BusinessDayUtil;
-import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.MessageBox;
+import com.uwusoft.timesheet.util.AutomaticCheckoutCheckinUtil;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
@@ -52,7 +34,6 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private TrayItem trayItem;
 	private Image trayImage;
 	private ApplicationActionBarAdvisor actionBarAdvisor;
-	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 
 	public ApplicationWorkbenchWindowAdvisor(IWorkbenchWindowConfigurer configurer) {
 		super(configurer);
@@ -85,80 +66,15 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			window.getShell().setVisible(false); // initially minimize to system tray
 			hookPopupMenu();
 		}
-		
-		StorageService storageService = new ExtensionManager<StorageService>(
-				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		
-		Date startDate = TimesheetApp.startDate;
-		Date shutdownDate = TimesheetApp.shutDownDate;
-    	Date lastDate = storageService.getLastTaskEntryDate();
-    	if (lastDate == null) lastDate = BusinessDayUtil.getPreviousBusinessDay(new Date());
-		if (shutdownDate.before(lastDate))
-			shutdownDate = lastDate;
-	
-		int startDay = getDay(startDate);
-		int startWeek = getWeek(startDate);
-	
-		int shutdownDay = getDay(shutdownDate);
-		int shutdownWeek = getWeek(shutdownDate);
-	
-		IHandlerService handlerService = (IHandlerService) window.getService(IHandlerService.class);
-		ICommandService commandService = (ICommandService) window.getService(ICommandService.class);
-				
-		if (startDay != shutdownDay && storageService.getLastTask() != null) { // don't automatically check in/out if program is restarted
-			Map<String, String> parameters = new HashMap<String, String>();
-			parameters.put("Timesheet.commands.shutdownTime", StorageService.formatter.format(shutdownDate));
-			try { // automatic check out
-				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkout"),	parameters), null);
-			} catch (Exception ex) {
-				MessageBox.setError("Automatic check out", ex.getMessage() + "\n(" + parameters + ")");
-			}
-		}
-		if (storageService.getLastTask() == null) { // automatic check in								 
-			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
-			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
-			while (end.before(start)) { // create missing whole day tasks until last business day
-				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
-						preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
-				if (dateDialog.open() == Dialog.OK) {
-					do {
-						storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
-								WholeDayTasks.getInstance().getTotal(), true));
-					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
-				}
-			}
-	
-			Map<String, String> parameters = new HashMap<String, String>();
-			parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-			// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
-			try {
-				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
-				for (int week = shutdownWeek; week < startWeek; week++) {
-					parameters.clear();
-					parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
-				}
-			} catch (Exception ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
-			}
-		}
-	}
-
-	private int getDay(Date date) {
-		Calendar calDay = Calendar.getInstance();
-		calDay.setTime(date);
-		return calDay.get(Calendar.DAY_OF_YEAR);
-	}
-
-	private int getWeek(Date date) {
-		Calendar calWeek = new GregorianCalendar();
-		calWeek.setTime(date);
-		return calWeek.get(Calendar.WEEK_OF_YEAR);
+		AutomaticCheckoutCheckinUtil.execute();
 	}
 
 	public boolean preWindowShellClose() {
-		window.getShell().setVisible(false);
-		return false; // if window close button pressed only minimize to system tray (don't exit the program)
+		if (trayItem != null) {
+			window.getShell().setVisible(false);
+			return false; // if window close button pressed only minimize to system tray (don't exit the program)
+		}
+		return true;
 	}
 	
 	private void hookPopupMenu() {
@@ -173,29 +89,29 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				
 				if (SessionSourceProvider.DISABLED.equals(sessionState)) {					
                     CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.checkin", CommandContributionItem.STYLE_PUSH);
-                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_in_16.png");
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/check_in_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 else {
                 	CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.changeTask", CommandContributionItem.STYLE_PUSH);
-                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png");
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/task_16.png");
                     trayMenu.add(new CommandContributionItem(p));
             				
                     if (SessionSourceProvider.DISABLED.equals(breakState)) {
                         p = new CommandContributionItemParameter(window, null, "Timesheet.setBreak", CommandContributionItem.STYLE_PUSH);
-                        p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/pause_16.png");
+                        p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/pause_16.png");
                         trayMenu.add(new CommandContributionItem(p));
                     }
 
                     MenuManager wholeDayTask = new MenuManager("Set whole day task",
-                    		AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/day_16.png"), "Timesheet.wholeDayTask");
+                    		AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/day_16.png"), "Timesheet.wholeDayTask");
                     
                     new WholeDayTaskFactory(wholeDayTask).createContributionItems(window, null);
 
                     trayMenu.add(wholeDayTask);
 
                     p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
-                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/check_out_16.png");
+                    p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/check_out_16.png");
                     trayMenu.add(new CommandContributionItem(p));
                 }
                 trayMenu.add(new Separator());
@@ -204,7 +120,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
         				new CommandContributionItemParameter(window, null, "Timesheet.importTasks", CommandContributionItem.STYLE_PUSH)));*/
 
 				CommandContributionItemParameter p = new CommandContributionItemParameter(window, null, "Timesheet.submit", CommandContributionItem.STYLE_PUSH);
-                p.icon = AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/signs_16.png");
+                p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/signs_16.png");
                 trayMenu.add(new CommandContributionItem(p));
                 
                 trayMenu.add(new Separator());

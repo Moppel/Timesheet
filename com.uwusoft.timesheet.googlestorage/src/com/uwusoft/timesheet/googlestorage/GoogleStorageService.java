@@ -11,6 +11,7 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -59,6 +60,7 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.util.AutomaticCheckoutCheckinUtil;
 import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -124,11 +126,13 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	Display display = Display.getDefault();
 	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
 			if (loginDialog.open() == Dialog.OK) {
-	        	service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+		    	userName = loginDialog.getUser();
+		    	password = loginDialog.getPassword();
+	        	service.setUserCredentials(userName, password);
 	        	docsService.setUserCredentials(userName, password);
-	        	preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
+	        	preferenceStore.setValue(PREFIX + USERNAME, userName);
 	        	if (loginDialog.isStorePassword())
-	        		secureProps.storeProperty(PREFIX + PASSWORD, loginDialog.getPassword());
+	        		secureProps.storeProperty(PREFIX + PASSWORD, password);
 	        	else
 	        		secureProps.removeProperty(PREFIX + PASSWORD);
 	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
@@ -181,22 +185,33 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    		newDocument = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument);
 	    		spreadsheetKey = newDocument.getDocId();
 	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
+	    		// TODO set default tasks if available
 	    		MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
 	    	}
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
-			// TODO add check if selected spreadsheet is valid
+			headingIndex.clear();
 			for (CellEntry entry : cellFeed.getEntries()) {
 				if (entry.getCell().getRow() == 1)
 					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
 				else
 					break;
-			}
+			}			
 			if (!reloadWorksheets()) return;
 	        Date lastTaskEntryDate = getLastTaskEntryDate();
 	        if (lastTaskEntryDate != null)
 	        	cal.setTime(lastTaskEntryDate);
-    		if (!spreadsheetKey.equals(oldSpreadsheetKey))
+    		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
+    			if (!headingIndex.keySet().containsAll(Arrays.asList(new String[] {StorageService.DATE, StorageService.TIME, StorageService.TOTAL,
+    					StorageService.DAILY_TOTAL, StorageService.WEEKLY_TOTAL, StorageService.WEEK, StorageService.TASK, StorageService.PROJECT,
+    					StorageService.COMMENT, StorageService.OVERTIME, StorageService.SUBMISSION_STATUS, StorageService.ID}))) {
+    				MessageBox.setError(title, "Please select valid spreadsheet!");
+    				preferenceStore.setValue(SPREADSHEET_KEY, oldSpreadsheetKey);
+    				return;
+    			}
+    			// TODO add default tasks somehow
+    			AutomaticCheckoutCheckinUtil.execute();
     			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
+    		}
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
