@@ -62,7 +62,7 @@ public class SpreadsheetListDialog extends ListDialog {
 			DocumentListFeed resultFeed = docsService.getFeed(new URL("http://docs.google.com/feeds/default/private/full/"),
 					DocumentListFeed.class);
 			for(DocumentListEntry entry : resultFeed.getEntries()) {
-				if (entry.getType().equals("spreadsheet") && spreadsheets.get(entry.getTitle().getPlainText()) == null)
+				if (entry.getType().equals("spreadsheet") && spreadsheets.get(entry.getTitle().getPlainText()) == null && !entry.getDocId().equals(preferenceStore.getString(GoogleStorageService.SPREADSHEET_KEY)))
 					spreadsheets.put(entry.getTitle().getPlainText(), entry.getDocId());
 			}
 		} catch (AuthenticationException e) {
