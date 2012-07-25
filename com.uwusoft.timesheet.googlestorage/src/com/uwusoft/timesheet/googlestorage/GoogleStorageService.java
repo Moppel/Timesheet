@@ -104,7 +104,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		factory = FeedURLFactory.getDefault();
 		headingIndex = new LinkedHashMap<String, Integer>();
 		submissionSystems = TimesheetApp.getSubmissionSystems();
-        if (!reloadWorksheets()) return;
+        reload();
         logger = Activator.getDefault().getLog();
     }
     
@@ -141,9 +141,12 @@ public class GoogleStorageService extends EventManager implements StorageService
         throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
    }
 
-    private boolean reloadSpreadsheetKey() {
+    public void reload() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
+		Calendar cal = new GregorianCalendar();
+		cal.setTime(new Date());
 		try {
 	    	if (StringUtils.isEmpty(spreadsheetKey)) {
 	    		String fileName = "template/TimesheetTemplate.ods";
@@ -166,15 +169,13 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    				input = file.getInputStream(entry);
 	    			}
 	    		}
-	    		if (data == null) return false;
+	    		if (data == null) return;
 	    		input.read(data);
 	    		input.close();
 	    		DocumentListEntry newDocument = new DocumentListEntry();
 	    		String mimeType = DocumentListEntry.MediaType.fromFileName(fileName).getMimeType();
 	    		newDocument.setMediaSource(new MediaByteArraySource(data, mimeType));
-	    		Calendar cal = Calendar.getInstance();
-	    		cal.setTime(new Date());
-	    		String name = "Timesheet " + cal.get(Calendar.YEAR);
+	    		String name = "Timesheet Test " + cal.get(Calendar.YEAR);
 	    		newDocument.setTitle(new PlainTextConstruct(name));
 
 	    		newDocument = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument);
@@ -182,30 +183,32 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
 	    		MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
 	    	}
-			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
+			// TODO add check if selected spreadsheet is valid
 			for (CellEntry entry : cellFeed.getEntries()) {
 				if (entry.getCell().getRow() == 1)
 					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
 				else
 					break;
 			}
+			if (!reloadWorksheets()) return;
+	        Date lastTaskEntryDate = getLastTaskEntryDate();
+	        if (lastTaskEntryDate != null)
+	        	cal.setTime(lastTaskEntryDate);
+    		if (!spreadsheetKey.equals(oldSpreadsheetKey))
+    			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 		} catch (MalformedURLException e) {
 			MessageBox.setError(title, e.getMessage());
-    		return false;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
-    		return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
-    		return false;
 		}
-    	return true;
     }
 
     private boolean reloadWorksheets() {
-    	if (!reloadSpreadsheetKey()) return false;
 		try {
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			WorksheetFeed feed = service.getFeed(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), WorksheetFeed.class);
 	        worksheets = feed.getEntries();
 	        defaultWorksheet = worksheets.get(0);
@@ -238,11 +241,6 @@ public class GoogleStorageService extends EventManager implements StorageService
         		((PropertyChangeListener) listener).propertyChange(event);
         	}    
         }
-    }
-    
-    public void reload() {
-    	if (!reloadWorksheets()) return;
-		firePropertyChangeEvent(new PropertyChangeEvent(this, "tasks", null, null));
     }
     
     public List<String> getSystems() {

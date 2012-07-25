@@ -46,6 +46,9 @@ public interface StorageService {
 
     List<String> getProjects(String system);
     
+    /**
+     * full reload
+     */
     void reload();
     
     /**
