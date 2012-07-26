@@ -179,14 +179,32 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    		DocumentListEntry newDocument = new DocumentListEntry();
 	    		String mimeType = DocumentListEntry.MediaType.fromFileName(fileName).getMimeType();
 	    		newDocument.setMediaSource(new MediaByteArraySource(data, mimeType));
-	    		String name = "Timesheet Test " + cal.get(Calendar.YEAR);
+	    		String name = "Timesheet " + cal.get(Calendar.YEAR);
 	    		newDocument.setTitle(new PlainTextConstruct(name));
 
-	    		newDocument = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument);
-	    		spreadsheetKey = newDocument.getDocId();
-	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
-	    		// TODO set default tasks if available
+	    		spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
 	    		MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
+    			if (oldSpreadsheetKey != null) {
+					List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(oldSpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
+					worksheets.remove(0); // remove timesheet
+			        for (WorksheetEntry worksheet : worksheets) {
+			        	String title = worksheet.getTitle().getPlainText();
+			        	MessageBox.setMessage("Created worksheet", title);
+    					WorksheetEntry newWorksheet = createWorksheet(title, title.endsWith(SubmissionService.PROJECTS) ?
+    							Arrays.asList(new String[] {PROJECT, ID}) : Arrays.asList(new String[] {TASK, PROJECT, ID, PROJECT + ID}));
+    					if (newWorksheet == null) break;
+    					for (ListEntry entry : service.getFeed(worksheet.getListFeedUrl(), ListFeed.class).getEntries()) {
+							ListEntry newEntry = new ListEntry();
+    						for (String element : entry.getCustomElements().getTags())
+    							newEntry.getCustomElements().setValueLocal(element, entry.getCustomElements().getValue(element));
+    						MessageBox.setMessage("Created entry", (title.endsWith(SubmissionService.PROJECTS) ?
+    								entry.getCustomElements().getValue(PROJECT) : entry.getCustomElements().getValue(TASK)));
+    						service.insert(newWorksheet.getListFeedUrl(), newEntry);
+    					}
+    		            if (!reloadWorksheets()) return;
+    				}
+    			}
+	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
 	    	}
 			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
 			headingIndex.clear();
@@ -197,9 +215,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 					break;
 			}			
 			if (!reloadWorksheets()) return;
-	        Date lastTaskEntryDate = getLastTaskEntryDate();
-	        if (lastTaskEntryDate != null)
-	        	cal.setTime(lastTaskEntryDate);
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
     			if (!headingIndex.keySet().containsAll(Arrays.asList(new String[] {StorageService.DATE, StorageService.TIME, StorageService.TOTAL,
     					StorageService.DAILY_TOTAL, StorageService.WEEKLY_TOTAL, StorageService.WEEK, StorageService.TASK, StorageService.PROJECT,
@@ -208,8 +223,10 @@ public class GoogleStorageService extends EventManager implements StorageService
     				preferenceStore.setValue(SPREADSHEET_KEY, oldSpreadsheetKey);
     				return;
     			}
-    			// TODO add default tasks somehow
     			AutomaticCheckoutCheckinUtil.execute();
+    	        Date lastTaskEntryDate = getLastTaskEntryDate();
+    	        if (lastTaskEntryDate != null)
+    	        	cal.setTime(lastTaskEntryDate);
     			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
     		}
 		} catch (MalformedURLException e) {
@@ -552,15 +569,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 				}
 			}
 			else {
-				createWorksheet(submissionSystem);
-				
-	            if (!reloadWorksheets()) return;
-	            WorksheetEntry worksheet = getWorksheet(submissionSystem);
+				WorksheetEntry worksheet = createWorksheet(submissionSystem, Arrays.asList(new String[] {TASK, PROJECT, ID, PROJECT + ID}));				
 			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-				// create column headers:
-			    createUpdateCellEntry(worksheet, 1, 1, TASK);
-				createUpdateCellEntry(worksheet, 1, 2, PROJECT);
-				createUpdateCellEntry(worksheet, 1, 3, ID);
 			}
 			for (String project : projects.keySet()) {
 				for (SubmissionEntry task : projects.get(project)) {
@@ -594,13 +604,19 @@ public class GoogleStorageService extends EventManager implements StorageService
 		}
 	}
 
-	private void createWorksheet(String system) throws IOException,
+	private WorksheetEntry createWorksheet(String system, List<String> headings) throws IOException,
 			ServiceException, MalformedURLException {
 		WorksheetEntry newWorksheet = new WorksheetEntry();
 		newWorksheet.setTitle(new PlainTextConstruct(system));
 		newWorksheet.setColCount(6);
 		newWorksheet.setRowCount(20);
 		service.insert(factory.getWorksheetFeedUrl(spreadsheetKey, "private", "full"), newWorksheet);
+		if (!reloadWorksheets()) return null;
+        WorksheetEntry worksheet = getWorksheet(system);
+		// create column headers:
+        for (int i = 0; i < headings.size(); i++) 
+        	createUpdateCellEntry(worksheet, 1, i+1, headings.get(i));
+	    return worksheet;
 	}
 
 	public Set<String> submitEntries(int weekNum) {
@@ -718,13 +734,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 		URL worksheetListFeedUrl = getListFeedUrl(systemProjects);
 		try {
 			if (worksheetListFeedUrl == null) {
-				createWorksheet(systemProjects);
-				if (!reloadWorksheets()) return null;
-	            WorksheetEntry worksheet = getWorksheet(systemProjects);
+				WorksheetEntry worksheet = createWorksheet(systemProjects, Arrays.asList(new String[] {PROJECT, ID}));
+				if (worksheet == null) return null;
 			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
-				// create column headers:
-			    createUpdateCellEntry(worksheet, 1, 1, PROJECT);
-			    createUpdateCellEntry(worksheet, 1, 2, ID);
 			}
 			ListFeed feed = service.getFeed(worksheetListFeedUrl, ListFeed.class);
 			List<ListEntry> entries = feed.getEntries();
