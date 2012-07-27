@@ -15,6 +15,7 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
 	
 	public TaskFieldEditor(String name, String labelText, Composite parent) {
 		super(name, labelText, parent);
+		getTextControl().setEditable(false);
         setChangeButtonText("Select task");
 	}
 

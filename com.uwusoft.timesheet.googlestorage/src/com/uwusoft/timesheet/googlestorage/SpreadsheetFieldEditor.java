@@ -8,12 +8,13 @@ public class SpreadsheetFieldEditor extends StringButtonFieldEditor {
 
 	public SpreadsheetFieldEditor(String name, String labelText, Composite parent) {
 		super(name, labelText, parent);
+		getTextControl().setEditable(false);
         setChangeButtonText("Select spreadsheet");
 	}
 
 	@Override
 	protected String changePressed() {
-		SpreadsheetListDialog listDialog = new SpreadsheetListDialog(getShell());
+		SpreadsheetListDialog listDialog = new SpreadsheetListDialog(getShell(), getTextControl().getText());
 		if (listDialog.open() == Dialog.OK)
 		    return listDialog.getSpreadsheetKey();
 		return null;
