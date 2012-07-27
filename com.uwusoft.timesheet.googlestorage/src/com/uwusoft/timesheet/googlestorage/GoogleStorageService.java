@@ -149,71 +149,9 @@ public class GoogleStorageService extends EventManager implements StorageService
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
-		Calendar cal = new GregorianCalendar();
-		cal.setTime(new Date());
 		try {
-	    	if (StringUtils.isEmpty(spreadsheetKey)) {
-	    		String fileName = "template/TimesheetTemplate.ods";
-	    		URL fileURL = FileLocator.resolve(Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry(fileName));
-	    	    byte[] data = null;
-	    	    InputStream input = null;
-	            if ("file".equals(fileURL.getProtocol())) {//$NON-NLS-1$
-	    			File file = new File(fileURL.getPath());
-		    		data = new byte[(int) file.length()];
-		    		input = new FileInputStream(file);
-	            }
-	    		if ("jar".equals(fileURL.getProtocol())) { //$NON-NLS-1$
-	    			String path = fileURL.getPath();
-	    			if (path.startsWith("file:")) {
-	    				// strip off the !/
-	    				path = path.substring(5, path.indexOf("!"));
-	    				JarFile file = new JarFile(path);
-	    				ZipEntry entry = file.getEntry(fileName);
-	    	    		data = new byte[(int) entry.getSize()];
-	    				input = file.getInputStream(entry);
-	    			}
-	    		}
-	    		if (data == null) return;
-	    		input.read(data);
-	    		input.close();
-	    		DocumentListEntry newDocument = new DocumentListEntry();
-	    		String mimeType = DocumentListEntry.MediaType.fromFileName(fileName).getMimeType();
-	    		newDocument.setMediaSource(new MediaByteArraySource(data, mimeType));
-	    		String name = "Timesheet " + cal.get(Calendar.YEAR);
-	    		newDocument.setTitle(new PlainTextConstruct(name));
-
-	    		spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
-	    		MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
-    			if (oldSpreadsheetKey != null) {
-					List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(oldSpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
-					worksheets.remove(0); // remove timesheet
-			        for (WorksheetEntry worksheet : worksheets) {
-			        	String title = worksheet.getTitle().getPlainText();
-			        	MessageBox.setMessage("Created worksheet", title);
-    					WorksheetEntry newWorksheet = createWorksheet(title, title.endsWith(SubmissionService.PROJECTS) ?
-    							Arrays.asList(new String[] {PROJECT, ID}) : Arrays.asList(new String[] {TASK, PROJECT, ID, PROJECT + ID}));
-    					if (newWorksheet == null) break;
-    					for (ListEntry entry : service.getFeed(worksheet.getListFeedUrl(), ListFeed.class).getEntries()) {
-							ListEntry newEntry = new ListEntry();
-    						for (String element : entry.getCustomElements().getTags())
-    							newEntry.getCustomElements().setValueLocal(element, entry.getCustomElements().getValue(element));
-    						MessageBox.setMessage("Created entry", (title.endsWith(SubmissionService.PROJECTS) ?
-    								entry.getCustomElements().getValue(PROJECT) : entry.getCustomElements().getValue(TASK)));
-    						service.insert(newWorksheet.getListFeedUrl(), newEntry);
-    					}
-    		            if (!reloadWorksheets()) return;
-    				}
-    			}
-	    		preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
-	    	}
-			CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
-			headingIndex.clear();
-			for (CellEntry entry : cellFeed.getEntries()) {
-				if (entry.getCell().getRow() == 1)
-					headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
-				else
-					break;
-			}			
+	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
+	    	else reloadHeadingIndex();			
 			if (!reloadWorksheets()) return;
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
     			if (!headingIndex.keySet().containsAll(Arrays.asList(new String[] {StorageService.DATE, StorageService.TIME, StorageService.TOTAL,
@@ -225,6 +163,8 @@ public class GoogleStorageService extends EventManager implements StorageService
     			}
     			AutomaticCheckoutCheckinUtil.execute();
     	        Date lastTaskEntryDate = getLastTaskEntryDate();
+    			Calendar cal = new GregorianCalendar();
+    			cal.setTime(new Date());
     	        if (lastTaskEntryDate != null)
     	        	cal.setTime(lastTaskEntryDate);
     			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
@@ -237,6 +177,144 @@ public class GoogleStorageService extends EventManager implements StorageService
 			MessageBox.setError(title, e.getResponseBody());
 		}
     }
+
+	public void handleYearChange(int lastWeek) {
+		handleYearChange(Activator.getDefault().getPreferenceStore().getString(SPREADSHEET_KEY), lastWeek);
+	}
+    
+    private void handleYearChange(String copySpreadsheetKey, int lastWeek) {
+		String fileName = "template/TimesheetTemplate.ods";
+		try {
+			URL fileURL = FileLocator.resolve(Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry(fileName));
+			byte[] data = null;
+			InputStream input = null;
+			if ("file".equals(fileURL.getProtocol())) {//$NON-NLS-1$
+				File file = new File(fileURL.getPath());
+				data = new byte[(int) file.length()];
+				input = new FileInputStream(file);
+			}
+			if ("jar".equals(fileURL.getProtocol())) { //$NON-NLS-1$
+				String path = fileURL.getPath();
+				if (path.startsWith("file:")) {
+					// strip off the !/
+					path = path.substring(5, path.indexOf("!"));
+					JarFile file = new JarFile(path);
+					ZipEntry entry = file.getEntry(fileName);
+					data = new byte[(int) entry.getSize()];
+					input = file.getInputStream(entry);
+				}
+			}
+			if (data == null) return;
+			input.read(data);
+			input.close();
+			DocumentListEntry newDocument = new DocumentListEntry();
+			String mimeType = DocumentListEntry.MediaType.fromFileName(fileName).getMimeType();
+			newDocument.setMediaSource(new MediaByteArraySource(data, mimeType));
+			Calendar cal = new GregorianCalendar();
+			cal.setTime(new Date());
+			if (lastWeek != 0) cal.add(Calendar.YEAR, 1);
+			String name = "Timesheet " + cal.get(Calendar.YEAR);
+			newDocument.setTitle(new PlainTextConstruct(name));
+
+			spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
+			MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
+			if (copySpreadsheetKey != null) {
+				reloadHeadingIndex();
+				List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(copySpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
+				worksheets.remove(0); // remove timesheet
+			    for (WorksheetEntry worksheet : worksheets) {
+			    	String title = worksheet.getTitle().getPlainText();
+			    	MessageBox.setMessage("Created worksheet", title);
+					WorksheetEntry newWorksheet = createWorksheet(title, title.endsWith(SubmissionService.PROJECTS) ?
+							Arrays.asList(new String[] {PROJECT, ID}) : Arrays.asList(new String[] {TASK, PROJECT, ID, PROJECT + ID}));
+					if (newWorksheet == null) break;
+					for (ListEntry entry : service.getFeed(worksheet.getListFeedUrl(), ListFeed.class).getEntries()) {
+						ListEntry newEntry = new ListEntry();
+						for (String element : entry.getCustomElements().getTags())
+							newEntry.getCustomElements().setValueLocal(element, entry.getCustomElements().getValue(element));
+						MessageBox.setMessage("Created entry", (title.endsWith(SubmissionService.PROJECTS) ?
+								entry.getCustomElements().getValue(PROJECT) : entry.getCustomElements().getValue(TASK)));
+						service.insert(newWorksheet.getListFeedUrl(), newEntry);
+					}
+			        if (!reloadWorksheets()) return;
+				}
+			    if (lastWeek != 0) { // copy end of last week in last year in new timesheet
+			    	cal.add(Calendar.YEAR, -1);
+			    	cal.set(Calendar.WEEK_OF_YEAR, lastWeek + 1);
+			    	cal.setFirstDayOfWeek(Calendar.MONDAY);
+			    	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+			    	Date startDate = cal.getTime();
+			    	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			    	Date endDate = cal.getTime();
+		            ListQuery query = new ListQuery(factory.getListFeedUrl(copySpreadsheetKey, "1", "private", "full"));
+		            query.setSpreadsheetQuery(DATE.toLowerCase() + " >= " + new SimpleDateFormat(dateFormat).format(startDate)
+		            		+ " and " + DATE.toLowerCase() + " <= " + new SimpleDateFormat(dateFormat).format(endDate));
+			        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
+			        for (ListEntry listEntry : listEntries) {
+			            CustomElementCollection elements = listEntry.getCustomElements();
+						ListEntry timeEntry = new ListEntry();
+						timeEntry.getCustomElements().setValueLocal(DATE, elements.getValue(DATE));
+						timeEntry.getCustomElements().setValueLocal(TIME, elements.getValue(TIME));
+						timeEntry.getCustomElements().setValueLocal(WEEK, elements.getValue(WEEK));
+						if (elements.getValue(COMMENT) != null) timeEntry.getCustomElements().setValueLocal(COMMENT, elements.getValue(COMMENT));
+						if (CHECK_IN.equals(elements.getValue(TASK)) || BREAK.equals(elements.getValue(TASK)))
+							timeEntry.getCustomElements().setValueLocal(TASK, elements.getValue(TASK));
+						service.insert(listFeedUrl, timeEntry);
+			            if (!reloadWorksheets()) return;
+			    		
+			        	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
+			        	if (feed.getTotalResults() == 1) {
+			    			MessageBox.setError(title, "Couldn't insert cell (Maybe there's an empty line in the spreadsheet)");
+			    			return;
+			        	}
+			            createUpdateCellEntry(defaultWorksheet, feed.getEntries().size() + 1, headingIndex.get(ID), "=ROW()");
+			            
+						String taskLink = null;
+						if (!CHECK_IN.equals(elements.getValue(TASK)) && !BREAK.equals(elements.getValue(TASK))) {
+							CellEntry cellEntry = service.getEntry(new URL(factory.getCellFeedUrl(copySpreadsheetKey, "1", "private", "full").toString()
+									+ "/" + "R" + elements.getValue(ID) + "C" + headingIndex.get(PROJECT)), CellEntry.class);
+							String system = cellEntry.getCell().getInputValue().split("!")[0];
+							taskLink = getTaskLink(elements.getValue(TASK), elements.getValue(PROJECT), system.substring(system.indexOf("=") + 1));
+						}
+			            
+			            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + elements.getValue(TASK)
+			            		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
+			            
+			            if (taskLink != null) {
+							updateTask(taskLink, feed.getEntries().size() + 1);
+							// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
+							CellEntry cellEntry = service.getEntry(new URL(factory.getCellFeedUrl(copySpreadsheetKey, "1", "private", "full").toString()
+									+ "/" + "R" + elements.getValue(ID) + "C" + headingIndex.get(TOTAL)), CellEntry.class);
+							String total = cellEntry.getCell().getInputValue();
+							if (total.startsWith("="))
+								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
+							else
+								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), total);
+							// TODO store daily total and last task
+						}
+			        }
+			    }
+			}
+			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+			preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getResponseBody());
+		}
+	}
+
+	private void reloadHeadingIndex() throws IOException, ServiceException,
+			MalformedURLException {
+		CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
+		headingIndex.clear();
+		for (CellEntry entry : cellFeed.getEntries()) {
+			if (entry.getCell().getRow() == 1)
+				headingIndex.put(entry.getCell().getValue(), entry.getCell().getCol());
+			else
+				break;
+		}
+	}
 
     private boolean reloadWorksheets() {
 		try {

@@ -104,6 +104,8 @@ public interface StorageService {
      */
     void storeLastWeekTotal(String weeklyWorkingHours);
     
+    void handleYearChange(int lastWeek);
+    
     TaskEntry getLastTask();
     
     Date getLastTaskEntryDate();

@@ -121,18 +121,23 @@ public class BusinessDayUtil {
 	/**
 	 */
 	public static void handleWeekChange(Date startDate, Date endDate) {
-		Calendar calWeek = new GregorianCalendar();
-		calWeek.setFirstDayOfWeek(Calendar.MONDAY);
-		calWeek.setTime(startDate);
-		int startWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-		calWeek.setTime(endDate);
-		int endWeek = calWeek.get(Calendar.WEEK_OF_YEAR);
-		if (startWeek != endWeek) {
-			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-			StorageService storageService = new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-			storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS));
-		}
+		Calendar cal = new GregorianCalendar();
+		cal.setFirstDayOfWeek(Calendar.MONDAY);
+		cal.setTime(startDate);
+		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+		int startYear = cal.get(Calendar.YEAR);
+		cal.setTime(endDate);
+		int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
+		int endYear = cal.get(Calendar.YEAR);
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (startWeek != endWeek)
+			new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY))
+					.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS));
+		if (startYear != endYear)
+			new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY))
+					.handleYearChange(startWeek);
 	}
 
 	/**

@@ -225,4 +225,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 			return null;
 		}
 	}
+
+	@Override
+	public void handleYearChange(int lastWeek) {
+		// TODO Auto-generated method stub
+		
+	}
 }
