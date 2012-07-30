@@ -27,11 +27,10 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class ChangeTaskHandler extends AbstractHandler {
+	private TaskListDialog listDialog;
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		ILog logger = Activator.getDefault().getLog();
 		String changeTime = event.getParameter("Timesheet.commands.changeTime");
 		Date changeDate = new Date();
 		if (changeTime != null)
@@ -40,19 +39,28 @@ public class ChangeTaskHandler extends AbstractHandler {
 			} catch (ParseException e) {
 				MessageBox.setError("Change task", e.getMessage());
 			}
+		changeTask(changeDate);
+		if (listDialog.getRememberedTime() != null)
+			changeTask(listDialog.getRememberedTime());
+		return null;
+	}
+
+	private void changeTask(Date changeDate) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		ILog logger = Activator.getDefault().getLog();
 		Task lastTask;
 		TaskEntry lastTaskEntry = storageService.getLastTask();
 		if (StorageService.BREAK.equals(lastTaskEntry.getTask().getName()))
 			lastTask = TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK);
 		else
 			lastTask = lastTaskEntry.getTask();
-		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(), lastTask, changeDate, "Change task");
+		listDialog = new TaskListDialog(Display.getDefault(), lastTask, changeDate, "Change task");
 		listDialog.setMessage("Select next task");
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = listDialog.getTask();
-			if (StringUtils.isEmpty(selectedTask)) return null;
+			if (StringUtils.isEmpty(selectedTask)) return;
 			storageService.updateTaskEntry(lastTaskEntry.getId(), listDialog.getTime(), true);
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTask));
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
@@ -69,7 +77,6 @@ public class ChangeTaskHandler extends AbstractHandler {
 			storageService.createTaskEntry(task);				
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			commandStateService.setEnabled(true);
-		}						
-		return null;
+		}
 	}
 }
