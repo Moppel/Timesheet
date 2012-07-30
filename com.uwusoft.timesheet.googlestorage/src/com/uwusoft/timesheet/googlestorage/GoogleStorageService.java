@@ -238,7 +238,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 					}
 			        if (!reloadWorksheets()) return;
 				}
-			    if (lastWeek != 0) { // copy end of last week in last year in new timesheet
+			    /*if (lastWeek != 0) { // copy end of last week in last year in new timesheet
 			    	cal.add(Calendar.YEAR, -1);
 			    	cal.set(Calendar.WEEK_OF_YEAR, lastWeek + 1);
 			    	cal.setFirstDayOfWeek(Calendar.MONDAY);
@@ -290,10 +290,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 							else
 								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), total);
-							// TODO store daily total and last task
+							// TODO store daily total, overtime and last task
 						}
 			        }
-			    }
+			    }*/
 			}
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
@@ -474,7 +474,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 				if (task.getTotal() == 0)
 					timeEntry.getCustomElements().setValueLocal(TIME, new SimpleDateFormat(timeFormat).format(task.getDateTime()));
 			}
-			else timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
+			else if (!BREAK.equals(task.getTask().getName()))
+				timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
 			
 			String taskLink = null;
 			if (CHECK_IN.equals(task.getTask().getName()) || BREAK.equals(task.getTask().getName()))

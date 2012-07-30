@@ -75,8 +75,8 @@ public class TaskListDialog extends ListDialog {
     private Combo systemCombo, projectCombo;
     private Text commentText;
     private AutoCompleteField commentCompleteField;
-    private String projectSelected, systemSelected, task, comment, changeTitle;
-    private Date changeDate;
+    private String projectSelected, systemSelected, task, comment, changeTitle, selectedTask;
+	private Date changeDate;
     private int day, month, year, hours, minutes;
     private boolean original;
     private Job setProposals;
@@ -139,9 +139,14 @@ public class TaskListDialog extends ListDialog {
     protected Control createDialogArea(Composite composite) {
         if (changeDate != null) {
             Composite timePanel = new Composite(composite, SWT.NONE);
-            timePanel.setLayout(new GridLayout(2, false));
+            timePanel.setLayout(new GridLayout(3, false));
         	(new Label(timePanel, SWT.NULL)).setText(changeTitle + " at : ");
         	(new Label(timePanel, SWT.NULL)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(changeDate));
+            Button rememberButton = new Button(timePanel, SWT.PUSH);
+            rememberButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/signs_16.png").createImage());
+            rememberButton.setText("Remember time");
+            rememberButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+            rememberButton.setVisible(false);
         	(new Label(timePanel, SWT.NULL)).setText("");
         	DateTime timeEntry = new DateTime(timePanel, SWT.TIME | SWT.SHORT);
             timeEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
@@ -157,6 +162,18 @@ public class TaskListDialog extends ListDialog {
     			}
     		});
             timeEntry.setFocus();
+            Button breakButton = new Button(timePanel, SWT.PUSH);
+            breakButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/pause_16.png").createImage());
+            breakButton.setText("Set Break");
+            breakButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+            breakButton.addSelectionListener(new SelectionAdapter() {
+                public void widgetSelected(SelectionEvent e) {
+                	selectedTask = StorageService.BREAK;
+                	projectSelected = null;
+                	systemSelected = null;
+                	okPressed();
+                }
+            });
         }
         
         Composite parent = (Composite) super.createDialogArea(composite);
@@ -311,10 +328,10 @@ public class TaskListDialog extends ListDialog {
 	protected void okPressed() {
 		super.okPressed();
 		if (setProposals != null) setProposals.cancel();
+	    selectedTask = Arrays.toString(getResult());
+	    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+		if (StringUtils.isEmpty(selectedTask)) return;
 		if (original) {
-		    String selectedTask = Arrays.toString(getResult());
-		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
-			if (StringUtils.isEmpty(selectedTask)) return;
 			Map<String, Set<SubmissionEntry>> projects = new HashMap<String, Set<SubmissionEntry>>();
 			projects.put(projectSelected, new HashSet<SubmissionEntry>());
 			projects.get(projectSelected).add(tasksMap.get(selectedTask));
@@ -326,6 +343,10 @@ public class TaskListDialog extends ListDialog {
 	protected void cancelPressed() {
 		super.cancelPressed();
 		if (setProposals != null) setProposals.cancel();
+	}
+
+    public String getTask() {
+		return selectedTask;
 	}
 
 	public String getSystem() {

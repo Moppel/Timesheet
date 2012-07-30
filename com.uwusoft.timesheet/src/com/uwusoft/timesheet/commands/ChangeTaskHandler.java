@@ -1,7 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -18,6 +17,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
@@ -42,24 +42,33 @@ public class ChangeTaskHandler extends AbstractHandler {
 			}
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
-		TaskEntry lastTask = storageService.getLastTask();
-		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(), lastTask.getTask(), changeDate, "Change task");
+		Task lastTask;
+		TaskEntry lastTaskEntry = storageService.getLastTask();
+		if (StorageService.BREAK.equals(lastTaskEntry.getTask().getName()))
+			lastTask = TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK);
+		else
+			lastTask = lastTaskEntry.getTask();
+		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(), lastTask, changeDate, "Change task");
 		listDialog.setMessage("Select next task");
 		if (listDialog.open() == Dialog.OK) {
-		    String selectedTask = Arrays.toString(listDialog.getResult());
-		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return null;
-			storageService.updateTaskEntry(lastTask.getId(), listDialog.getTime(), true);
+			storageService.updateTaskEntry(lastTaskEntry.getId(), listDialog.getTime(), true);
+            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTask));
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
-			task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
-			task.setComment(listDialog.getComment());
-			storageService.createTaskEntry(task);				
-            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change task last task: " + lastTask));
-			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
+			
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
+			if (listDialog.getProject() != null) {
+				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+				commandStateService.setBreak(true); // currently the only task without project is the break
+			}
+			else
+				commandStateService.setBreak(false);
+			task.setComment(listDialog.getComment());
+			storageService.createTaskEntry(task);				
+			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			commandStateService.setEnabled(true);
-			commandStateService.setBreak(false);
 		}						
 		return null;
 	}
