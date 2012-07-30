@@ -1,7 +1,10 @@
 package com.uwusoft.timesheet.dialog;
 
+import java.util.Date;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,6 +33,7 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -37,6 +41,8 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.DateTime;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -69,7 +75,9 @@ public class TaskListDialog extends ListDialog {
     private Combo systemCombo, projectCombo;
     private Text commentText;
     private AutoCompleteField commentCompleteField;
-    private String projectSelected, systemSelected, task, comment;
+    private String projectSelected, systemSelected, task, comment, changeTitle;
+    private Date changeDate;
+    private int day, month, year, hours, minutes;
     private boolean original;
     private Job setProposals;
 	private StatusLineManager statusLineManager = new StatusLineManager();
@@ -114,8 +122,43 @@ public class TaskListDialog extends ListDialog {
     	this.comment = comment;
     }
     
+    public TaskListDialog(Display display, Task taskSelected, Date changeDate, String changeTitle) {
+    	this(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP), taskSelected, true);
+    	this.changeDate = changeDate;
+    	this.changeTitle = changeTitle;
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(changeDate);
+		day = calendar.get(Calendar.DAY_OF_MONTH);
+		month = calendar.get(Calendar.MONTH);
+		year = calendar.get(Calendar.YEAR);
+		hours = calendar.get(Calendar.HOUR_OF_DAY);
+		minutes = calendar.get(Calendar.MINUTE);		
+    }
+    
     @Override
     protected Control createDialogArea(Composite composite) {
+        if (changeDate != null) {
+            Composite timePanel = new Composite(composite, SWT.NONE);
+            timePanel.setLayout(new GridLayout(2, false));
+        	(new Label(timePanel, SWT.NULL)).setText(changeTitle + " at : ");
+        	(new Label(timePanel, SWT.NULL)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(changeDate));
+        	(new Label(timePanel, SWT.NULL)).setText("");
+        	DateTime timeEntry = new DateTime(timePanel, SWT.TIME | SWT.SHORT);
+            timeEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+            timeEntry.setHours(hours);
+            timeEntry.setMinutes(minutes);
+            timeEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+            timeEntry.addSelectionListener(new SelectionListener() {			
+    			public void widgetSelected(SelectionEvent e) {
+    				hours = ((DateTime) e.getSource()).getHours();
+    				minutes = ((DateTime) e.getSource()).getMinutes();
+    			}
+    			public void widgetDefaultSelected(SelectionEvent e) {
+    			}
+    		});
+            timeEntry.setFocus();
+        }
+        
         Composite parent = (Composite) super.createDialogArea(composite);
         
         Composite systemPanel = new Composite(parent, SWT.NONE);
@@ -296,4 +339,14 @@ public class TaskListDialog extends ListDialog {
 	public String getComment() {
 		return comment;
 	}	
+    
+    public Date getTime() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, day);
+		calendar.set(Calendar.MONTH, month);
+		calendar.set(Calendar.YEAR, year);
+		calendar.set(Calendar.HOUR_OF_DAY, hours);
+		calendar.set(Calendar.MINUTE, minutes);
+		return calendar.getTime();
+    }
 }
