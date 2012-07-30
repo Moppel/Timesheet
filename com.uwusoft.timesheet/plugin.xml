@@ -327,6 +327,11 @@
             defaultHandler="com.uwusoft.timesheet.commands.ChangeTaskHandler"
             id="Timesheet.changeTask"
             name="Change Task">
+         <commandParameter
+               id="Timesheet.commands.changeTime"
+               name="changeTime"
+               optional="true">
+         </commandParameter>
       </command>
       <command
             defaultHandler="com.uwusoft.timesheet.commands.SetBreakHandler"

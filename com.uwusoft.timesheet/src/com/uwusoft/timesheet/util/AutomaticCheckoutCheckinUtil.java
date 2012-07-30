@@ -74,7 +74,7 @@ public class AutomaticCheckoutCheckinUtil {
 	
 			Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-			// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek));
+			// parameters.put("Timesheet.commands.storeWeekTotal", Boolean.toString(startWeek != shutdownWeek)); week change is handled in BusinessDayUtil
 			try {
 				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
 				for (int week = shutdownWeek; week < startWeek; week++) {
@@ -88,6 +88,13 @@ public class AutomaticCheckoutCheckinUtil {
 		}
 		else {
 			commandStateService.setEnabled(true);
+			Map<String, String> parameters = new HashMap<String, String>();
+			parameters.put("Timesheet.commands.changeTime", StorageService.formatter.format(startDate));
+			try {
+				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.changeTask"), parameters), null);
+			} catch (Exception e) {
+				MessageBox.setError("Automatic change task", e.getMessage() + "\n(" + parameters + ")");
+			}
 		}
 		commandStateService.setBreak(false);			
 	}
