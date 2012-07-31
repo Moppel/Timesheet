@@ -62,17 +62,17 @@ public class ChangeTaskHandler extends AbstractHandler {
 		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return;
 			storageService.updateTaskEntry(lastTaskEntry.getId(), listDialog.getTime(), true);
-            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTask));
+            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTaskEntry.getTask()));
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 			
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 			if (listDialog.getProject() != null) {
 				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
-				commandStateService.setBreak(true); // currently the only task without project is the break
+				commandStateService.setBreak(false);
 			}
 			else
-				commandStateService.setBreak(false);
+				commandStateService.setBreak(true); // currently the only task without project is the break
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);				
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);

@@ -1,7 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -44,8 +43,7 @@ public class CheckinHandler extends AbstractHandler {
 			if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 				storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
 			storageService.createTaskEntry(new TaskEntry(listDialog.getTime(), new Task(StorageService.CHECK_IN)));
-		    String selectedTask = Arrays.toString(listDialog.getResult());
-		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
+		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return null;
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 			task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
