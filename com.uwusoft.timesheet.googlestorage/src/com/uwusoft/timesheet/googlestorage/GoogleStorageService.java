@@ -578,7 +578,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				headingIndex.get(PROJECT), "=" + taskLink.replace("!A", "!B")); // TODO hardcoded: project must be in the second column
 	}
 
-    public void storeLastDailyTotal() {
+    public void handleDayChange() {
         try {
             if (!reloadWorksheets()) return;
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
@@ -596,9 +596,11 @@ public class GoogleStorageService extends EventManager implements StorageService
         }
     }
 
-    public void storeLastWeekTotal(String weeklyWorkingHours) {
+    public void handleWeekChange() {
         try {
             if (!reloadWorksheets()) return;
+    		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+            String weeklyWorkingHours = preferenceStore.getString(TimesheetApp.WORKING_HOURS);
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();
             int rowsOfWeek = 0;

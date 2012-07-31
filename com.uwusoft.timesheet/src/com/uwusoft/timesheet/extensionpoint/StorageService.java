@@ -97,12 +97,12 @@ public interface StorageService {
     /**
      * only to be implemented for sequential storage system
      */
-    void storeLastDailyTotal();
+    void handleDayChange();
 
     /**
      * only to be implemented for sequential storage system
      */
-    void storeLastWeekTotal(String weeklyWorkingHours);
+    void handleWeekChange();
     
     void handleYearChange(int lastWeek);
     

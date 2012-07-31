@@ -130,11 +130,11 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
-	public void storeLastDailyTotal() {
+	public void handleDayChange() {
 	}
 
 	@Override
-	public void storeLastWeekTotal(String weeklyWorkingHours) {
+	public void handleWeekChange() {
 	}
 
 	@Override

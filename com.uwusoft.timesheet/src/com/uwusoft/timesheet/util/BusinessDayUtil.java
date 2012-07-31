@@ -90,7 +90,7 @@ public class BusinessDayUtil {
 		Date nextDay = DateUtils.truncate(addDays(startDate, 1), Calendar.DATE);
 		// If tomorrow is a valid business day, return it
 		if (isBusinessDay(nextDay)) {
-			if (createHoliday) handleWeekChange(startDate, nextDay);
+			if (createHoliday) handleWeekAndYearChange(startDate, nextDay);
 			return nextDay;
 		}
 		// Else we recursively call our function until we find one.
@@ -99,7 +99,7 @@ public class BusinessDayUtil {
 				IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 				StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 						.getService(preferenceStore.getString(StorageService.PROPERTY));
-				handleWeekChange(startDate, nextDay);
+				handleWeekAndYearChange(startDate, nextDay);
 				if (holidayService.isValid(nextDay)) { // store holiday entry
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
 					taskEntry.setComment(holidayService.getName(nextDay));
@@ -120,7 +120,7 @@ public class BusinessDayUtil {
 
 	/**
 	 */
-	public static void handleWeekChange(Date startDate, Date endDate) {
+	private static void handleWeekAndYearChange(Date startDate, Date endDate) {
 		Calendar cal = new GregorianCalendar();
 		cal.setFirstDayOfWeek(Calendar.MONDAY);
 		cal.setTime(startDate);
@@ -132,8 +132,7 @@ public class BusinessDayUtil {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (startWeek != endWeek)
 			new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY))
-					.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS));
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY)).handleWeekChange();
 		if (startYear != endYear)
 			new ExtensionManager<StorageService>(
 					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY))
