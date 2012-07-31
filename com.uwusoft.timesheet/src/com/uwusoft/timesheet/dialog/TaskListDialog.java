@@ -1,11 +1,11 @@
 package com.uwusoft.timesheet.dialog;
 
-import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -145,16 +145,29 @@ public class TaskListDialog extends ListDialog {
         	(new Label(timePanel, SWT.NULL)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(changeDate));
             final Button rememberButton = new Button(timePanel, SWT.PUSH);
             rememberButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/signs_16.png").createImage());
-            rememberButton.setText("Remember time");
+            final String text = "Remember time";
+            rememberButton.setText(text);
             rememberButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-            //rememberButton.setVisible(false); TODO enable button after five minutes
+            rememberButton.setVisible(false);
             rememberButton.addSelectionListener(new SelectionAdapter() {
                 public void widgetSelected(SelectionEvent e) {
-                	rememberedTime = new Date();
-                	rememberButton.setText(new SimpleDateFormat("HH:mm").format(rememberedTime));
-                	rememberButton.setEnabled(false);
-                	timePanel.pack(true);
+                	if (rememberButton.getText().equals(text)) {
+                		rememberedTime = new Date();
+                		rememberButton.setText(new SimpleDateFormat("HH:mm").format(rememberedTime));
+                	}
+                	else {
+                		rememberedTime = null;
+                		rememberButton.setText(text);
+                	}
                 }
+            });
+            rememberButton.getDisplay().timerExec(5 * 60 * 1000, new Runnable() { // enable after five minutes
+				public void run() {
+					if (!rememberButton.isDisposed()) {
+						rememberButton.setVisible(true);
+						timePanel.pack();
+					}
+				}            	
             });
         	(new Label(timePanel, SWT.NULL)).setText("");
         	DateTime timeEntry = new DateTime(timePanel, SWT.TIME | SWT.SHORT);
