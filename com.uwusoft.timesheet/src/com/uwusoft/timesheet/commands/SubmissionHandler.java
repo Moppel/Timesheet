@@ -36,7 +36,8 @@ public class SubmissionHandler extends AbstractHandler {
 		String parameter = event.getParameter("Timesheet.commands.weekNum");
 		if (parameter != null) weekNum = Integer.parseInt(parameter);
     	
-		cal.setTime(storageService.getLastTaskEntryDate());
+		Date lastTaskEntryDate = storageService.getLastTaskEntryDate();
+		if (lastTaskEntryDate != null) cal.setTime(lastTaskEntryDate);
 		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum, cal.get(Calendar.WEEK_OF_YEAR));
 		if (submissionDialog.open() == Dialog.OK) {
 			Set<String> systems = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
