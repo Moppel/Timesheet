@@ -47,11 +47,15 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.ListDialog;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.commands.CheckinHandler;
+import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
@@ -187,6 +191,10 @@ public class TaskListDialog extends ListDialog {
             Button breakButton = new Button(timePanel, SWT.PUSH);
             breakButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/pause_16.png").createImage());
             breakButton.setText("Set Break");
+    		ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
+    		SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
+            breakButton.setVisible(!CheckinHandler.title.equals(changeTitle)
+            		&& commandStateService.getCurrentState().get(SessionSourceProvider.BREAK_STATE) == SessionSourceProvider.DISABLED);
             breakButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
             breakButton.addSelectionListener(new SelectionAdapter() {
                 public void widgetSelected(SelectionEvent e) {

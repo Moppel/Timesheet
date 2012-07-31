@@ -24,6 +24,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class CheckinHandler extends AbstractHandler {
+	public static final String title = "Check in";
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -38,7 +39,7 @@ public class CheckinHandler extends AbstractHandler {
 			MessageBox.setError("Check in", e.getMessage());
 		}			
 		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(),
-				TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK), startDate, "Check in");
+				TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK), startDate, title);
 		if (listDialog.open() == Dialog.OK) {
 			if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
 				storageService.storeLastWeekTotal(preferenceStore.getString(TimesheetApp.WORKING_HOURS)); // store Week and Overtime
