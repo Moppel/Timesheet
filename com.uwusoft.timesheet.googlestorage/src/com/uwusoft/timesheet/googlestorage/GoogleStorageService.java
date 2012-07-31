@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.core.commands.common.EventManager;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
@@ -34,6 +36,9 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.commands.ICommandService;
+import org.eclipse.ui.handlers.IHandlerService;
 
 import com.google.gdata.client.docs.DocsService;
 import com.google.gdata.client.spreadsheet.FeedURLFactory;
@@ -183,6 +188,21 @@ public class GoogleStorageService extends EventManager implements StorageService
 	}
     
     private void handleYearChange(String copySpreadsheetKey, int lastWeek) {
+    	if (lastWeek != 0 && !StringUtils.isEmpty(copySpreadsheetKey)) {
+    		// First submit rest of last year
+    		spreadsheetKey = copySpreadsheetKey;
+    		openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
+    		IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+    		ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
+    		Map<String, String> parameters = new HashMap<String, String>();
+    		parameters.put("Timesheet.commands.weekNum", Integer.toString(lastWeek));
+    		try {
+    			handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
+    		} catch (Exception e) {
+    			MessageBox.setError(title, e.getMessage());
+    		}
+    	}
+		// Then create new timesheet for next year
 		String fileName = "template/TimesheetTemplate.ods";
 		try {
 			URL fileURL = FileLocator.resolve(Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry(fileName));
@@ -907,6 +927,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 	public void openUrl(String openBrowser) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (preferenceStore.getBoolean(PREFIX + openBrowser))
-			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + preferenceStore.getString(SPREADSHEET_KEY) + "&pli=1#gid=0");
+			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + spreadsheetKey + "&pli=1#gid=0");
 	}
 }
