@@ -113,7 +113,7 @@ public class TaskListDialog extends ListDialog {
 		}
         systems = systemsList.toArray(new String[systemsList.size()]);
         this.taskSelected = taskSelected;
-        task = taskSelected.getName();
+        task = taskSelected == null ? null : taskSelected.getName();
         this.showComment = showComment;
 		setContentProvider(ArrayContentProvider.getInstance());
 		setLabelProvider(new TaskLabelProvider());
@@ -263,7 +263,7 @@ public class TaskListDialog extends ListDialog {
     		});
         }
 
-        if (taskSelected.getProject().getSystem() != null) {
+        if (taskSelected != null && taskSelected.getProject().getSystem() != null) {
         	for (int i = 0; i < systems.length; i++) {
         		if (taskSelected.getProject().getSystem().equals(systems[i])) {
                 	systemCombo.select(i);
@@ -341,7 +341,7 @@ public class TaskListDialog extends ListDialog {
 		else {
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
 	        getTableViewer().setInput(tasks);
-			if (taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
+			if (taskSelected != null && taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
 				for (int i = 0; i < tasks.size(); i++) {
 					if (tasks.get(i).equals(this.taskSelected.getName())) {
 						ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
