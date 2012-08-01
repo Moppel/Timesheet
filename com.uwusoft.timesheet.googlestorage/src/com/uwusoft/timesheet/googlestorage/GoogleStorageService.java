@@ -155,7 +155,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
-	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
+	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 31);
 	    	else reloadHeadingIndex();			
 			if (!reloadWorksheets()) return;
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
@@ -188,23 +188,23 @@ public class GoogleStorageService extends EventManager implements StorageService
 	}
     
     private void handleYearChange(String copySpreadsheetKey, int lastWeek) {
-    	if (lastWeek != 0 && !StringUtils.isEmpty(copySpreadsheetKey)) {
-    		// First submit rest of last year
-    		spreadsheetKey = copySpreadsheetKey;
-    		openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
-    		IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
-    		ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
-    		Map<String, String> parameters = new HashMap<String, String>();
-    		parameters.put("Timesheet.commands.weekNum", Integer.toString(lastWeek));
-    		try {
-    			handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
-    		} catch (Exception e) {
-    			MessageBox.setError(title, e.getMessage());
-    		}
-    	}
-		// Then create new timesheet for next year
-		String fileName = "template/TimesheetTemplate.ods";
 		try {
+			if (lastWeek != 0 && !StringUtils.isEmpty(copySpreadsheetKey)) {
+				// First submit rest of last year
+				spreadsheetKey = copySpreadsheetKey;
+				openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
+				IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+				ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
+				Map<String, String> parameters = new HashMap<String, String>();
+				parameters.put("Timesheet.commands.weekNum", Integer.toString(lastWeek));
+				try {
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
+				} catch (Exception e) {
+					MessageBox.setError(title, e.getMessage());
+				}
+			}
+			// Then create new timesheet for next year
+			String fileName = "template/TimesheetTemplate.ods";
 			URL fileURL = FileLocator.resolve(Platform.getBundle("com.uwusoft.timesheet.googlestorage").getEntry(fileName));
 			byte[] data = null;
 			InputStream input = null;
@@ -237,11 +237,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 			newDocument.setTitle(new PlainTextConstruct(name));
 
 			spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
-			MessageBox.setMessage("Created spreadsheet", "Created spreadsheet \"" + name + "\"");
-			if (copySpreadsheetKey != null) {
-				reloadHeadingIndex();
+			MessageBox.setMessage("Spreadsheet created", "Created \"" + name + "\"");
+			if (!StringUtils.isEmpty(copySpreadsheetKey)) {
 				List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(copySpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
-				worksheets.remove(0); // remove timesheet
+				WorksheetEntry timesheet = worksheets.remove(0); // remove timesheet
 			    for (WorksheetEntry worksheet : worksheets) {
 			    	String title = worksheet.getTitle().getPlainText();
 			    	MessageBox.setMessage("Created worksheet", title);
@@ -258,62 +257,31 @@ public class GoogleStorageService extends EventManager implements StorageService
 					}
 			        if (!reloadWorksheets()) return;
 				}
-			    /*if (lastWeek != 0) { // copy end of last week in last year in new timesheet
-			    	cal.add(Calendar.YEAR, -1);
-			    	cal.set(Calendar.WEEK_OF_YEAR, lastWeek + 1);
-			    	cal.setFirstDayOfWeek(Calendar.MONDAY);
-			    	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-			    	Date startDate = cal.getTime();
-			    	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-			    	Date endDate = cal.getTime();
-		            ListQuery query = new ListQuery(factory.getListFeedUrl(copySpreadsheetKey, "1", "private", "full"));
-		            query.setSpreadsheetQuery(DATE.toLowerCase() + " >= " + new SimpleDateFormat(dateFormat).format(startDate)
-		            		+ " and " + DATE.toLowerCase() + " <= " + new SimpleDateFormat(dateFormat).format(endDate));
-			        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
-			        for (ListEntry listEntry : listEntries) {
-			            CustomElementCollection elements = listEntry.getCustomElements();
-						ListEntry timeEntry = new ListEntry();
-						timeEntry.getCustomElements().setValueLocal(DATE, elements.getValue(DATE));
-						timeEntry.getCustomElements().setValueLocal(TIME, elements.getValue(TIME));
-						timeEntry.getCustomElements().setValueLocal(WEEK, elements.getValue(WEEK));
-						if (elements.getValue(COMMENT) != null) timeEntry.getCustomElements().setValueLocal(COMMENT, elements.getValue(COMMENT));
-						if (CHECK_IN.equals(elements.getValue(TASK)) || BREAK.equals(elements.getValue(TASK)))
-							timeEntry.getCustomElements().setValueLocal(TASK, elements.getValue(TASK));
-						service.insert(listFeedUrl, timeEntry);
-			            if (!reloadWorksheets()) return;
-			    		
-			        	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-			        	if (feed.getTotalResults() == 1) {
-			    			MessageBox.setError(title, "Couldn't insert cell (Maybe there's an empty line in the spreadsheet)");
-			    			return;
-			        	}
-			            createUpdateCellEntry(defaultWorksheet, feed.getEntries().size() + 1, headingIndex.get(ID), "=ROW()");
-			            
-						String taskLink = null;
-						if (!CHECK_IN.equals(elements.getValue(TASK)) && !BREAK.equals(elements.getValue(TASK))) {
-							CellEntry cellEntry = service.getEntry(new URL(factory.getCellFeedUrl(copySpreadsheetKey, "1", "private", "full").toString()
-									+ "/" + "R" + elements.getValue(ID) + "C" + headingIndex.get(PROJECT)), CellEntry.class);
-							String system = cellEntry.getCell().getInputValue().split("!")[0];
-							taskLink = getTaskLink(elements.getValue(TASK), elements.getValue(PROJECT), system.substring(system.indexOf("=") + 1));
-						}
-			            
-			            logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + elements.getValue(TASK)
-			            		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
-			            
-			            if (taskLink != null) {
-							updateTask(taskLink, feed.getEntries().size() + 1);
-							// if no total set: the (temporary) total of the task will be calculated by: end time - end time of the previous task
-							CellEntry cellEntry = service.getEntry(new URL(factory.getCellFeedUrl(copySpreadsheetKey, "1", "private", "full").toString()
-									+ "/" + "R" + elements.getValue(ID) + "C" + headingIndex.get(TOTAL)), CellEntry.class);
-							String total = cellEntry.getCell().getInputValue();
-							if (total.startsWith("="))
-								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
-							else
-								createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), total);
-							// TODO store daily total, overtime and last task
-						}
-			        }
-			    }*/
+				// get weekly total and overtime to roll over to next year
+				String overtime = "";
+				ListFeed feed = service.getFeed(factory.getListFeedUrl(copySpreadsheetKey, "1", "private", "full"), ListFeed.class);
+				List<ListEntry> listEntries = feed.getEntries();
+				int rowsOfWeek = 0;
+				for (int i = listEntries.size() - 2; i > 0; i--, rowsOfWeek++) {
+					CustomElementCollection elements = listEntries.get(i).getCustomElements();
+					if (elements.getValue(WEEKLY_TOTAL) != null) {
+						overtime = elements.getValue(OVERTIME);
+						break; // end of last week
+					}
+					if (i==1) break;
+				}            
+				ListEntry timeEntry = new ListEntry();
+				timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");
+				service.insert(factory.getListFeedUrl(copySpreadsheetKey, "1", "private", "full"), timeEntry);
+			
+				createUpdateCellEntry(timesheet, listEntries.size() + 2, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
+				
+				feed = service.getFeed(factory.getListFeedUrl(copySpreadsheetKey, "1", "private", "full"), ListFeed.class);
+				String weeklyTotal = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements().getValue(WEEKLY_TOTAL);
+			    
+				reloadHeadingIndex();
+				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(WEEKLY_TOTAL), weeklyTotal);
+				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(OVERTIME), overtime);
 			}
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
