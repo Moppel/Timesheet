@@ -42,10 +42,14 @@ public class SubmissionHandler extends AbstractHandler {
 		if (submissionDialog.open() == Dialog.OK) {
 			Set<String> systems = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
 					.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());
-			MessageBox.setMessage("Submission", "Submission of week " + submissionDialog.getWeekNum() + " successful!");
-			Map<String, String> submissionSystems = TimesheetApp.getSubmissionSystems();
-			for (String system : systems) {
-			    new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)).openUrl();
+			if (systems.isEmpty())
+				MessageBox.setMessage("Submission", "No more entries to submit for " + submissionDialog.getWeekNum());			
+			else {
+				MessageBox.setMessage("Submission", "Submission of week " + submissionDialog.getWeekNum() + " successful!");
+				Map<String, String> submissionSystems = TimesheetApp.getSubmissionSystems();
+				for (String system : systems) {
+					new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(submissionSystems.get(system)).openUrl();
+				}
 			}
 		}                            							
 		return null;
