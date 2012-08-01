@@ -292,8 +292,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		}
 	}
 
-	private void reloadHeadingIndex() throws IOException, ServiceException,
-			MalformedURLException {
+	private void reloadHeadingIndex() throws IOException, ServiceException, MalformedURLException {
 		CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
 		headingIndex.clear();
 		for (CellEntry entry : cellFeed.getEntries()) {
@@ -449,7 +448,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     public void createTaskEntry(TaskEntry task) {
         try {
-            if (!reloadWorksheets()) return;
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			ListEntry timeEntry = new ListEntry();
 			
 	        Calendar cal = new GregorianCalendar();
@@ -566,16 +565,18 @@ public class GoogleStorageService extends EventManager implements StorageService
 
     public void handleWeekChange() {
         try {
-            if (!reloadWorksheets()) return;
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
     		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
             String weeklyWorkingHours = preferenceStore.getString(TimesheetApp.WORKING_HOURS);
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();
             int rowsOfWeek = 0;
-            for (int i = listEntries.size() - 2; i > 0; i--, rowsOfWeek++) {
+            for (int i = listEntries.size() - 2; i > 1; i--, rowsOfWeek++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
-                if (elements.getValue(WEEKLY_TOTAL) != null) break; // end of last week
-                if (i==1) break;
+                if (elements.getValue(WEEKLY_TOTAL) != null) {
+                	if (i == 2) rowsOfWeek++; // add weekly total offset from rollover
+                	break; // end of last week
+                }
             }            
             ListEntry timeEntry = new ListEntry();
 			timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");
