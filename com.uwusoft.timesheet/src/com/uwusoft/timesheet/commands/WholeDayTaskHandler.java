@@ -11,9 +11,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.util.MessageBox;
 
