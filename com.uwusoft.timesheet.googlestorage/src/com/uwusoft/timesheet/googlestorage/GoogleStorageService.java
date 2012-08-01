@@ -571,19 +571,18 @@ public class GoogleStorageService extends EventManager implements StorageService
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();
             int rowsOfWeek = 0;
-            for (int i = listEntries.size() - 2; i > 1; i--, rowsOfWeek++) {
+            int i = listEntries.size() - 2;
+            for (; i > 1; i--, rowsOfWeek++) {
                 CustomElementCollection elements = listEntries.get(i).getCustomElements();
-                if (elements.getValue(WEEKLY_TOTAL) != null) {
-                	if (i == 2) rowsOfWeek++; // add weekly total offset from rollover
-                	break; // end of last week
-                }
+                if (elements.getValue(WEEKLY_TOTAL) != null) break; // end of last week
             }            
             ListEntry timeEntry = new ListEntry();
 			timeEntry.getCustomElements().setValueLocal(WEEKLY_TOTAL, "0");
 			service.insert(listFeedUrl, timeEntry);
             if (!reloadWorksheets()) return;
 			
-			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-" + ++rowsOfWeek + "]C[-1])");
+			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(WEEKLY_TOTAL), "=SUM(R[-1]C[-1]:R[-"
+						+ (i == 1 ? ++rowsOfWeek + 1 : ++rowsOfWeek) + "]C[-1])"); // add weekly total from roll over on second line
 			createUpdateCellEntry(defaultWorksheet, listEntries.size() + 2, headingIndex.get(OVERTIME), "=R[0]C["
 						+ (headingIndex.get(WEEKLY_TOTAL) - headingIndex.get(OVERTIME)) + "]-" +weeklyWorkingHours+ "+" +"R[-" + ++rowsOfWeek + "]C[0]");
         } catch (IOException e) {
