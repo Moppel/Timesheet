@@ -283,6 +283,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(WEEKLY_TOTAL), weeklyTotal);
 				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(OVERTIME), overtime);
 			}
+			// TODO if copySpreadsheetKey is null start import task wizard (maybe select submission systems before)
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
 		} catch (IOException e) {
@@ -508,9 +509,11 @@ public class GoogleStorageService extends EventManager implements StorageService
 	public TaskEntry getLastTask() {
     	try {
 			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-			CustomElementCollection elements = feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements();
-			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && elements.getValue(TASK) != null && feed.getEntries().size() > 1) // if date and time isn't set yet this should be the last task
-				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(feed.getEntries().size() + 1), elements.getValue(COMMENT));
+			int size = feed.getEntries().size();
+			if (size == 0) return null;
+			CustomElementCollection elements = feed.getEntries().get(size - 1).getCustomElements();
+			if (elements.getValue(DATE) == null && elements.getValue(TIME) == null && elements.getValue(TASK) != null && size > 1) // if date and time isn't set yet this should be the last task
+				return new TaskEntry(Long.parseLong(elements.getValue(ID)), elements.getValue(TASK), elements.getValue(PROJECT), getSystem(size + 1), elements.getValue(COMMENT));
 			return null;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
