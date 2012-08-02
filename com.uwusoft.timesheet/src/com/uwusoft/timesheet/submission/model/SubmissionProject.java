@@ -32,6 +32,11 @@ public class SubmissionProject {
 		this.name = name;
 	}
 
+	public SubmissionProject(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
 	public Long getId() {
 		return id;
 	}
@@ -46,6 +51,10 @@ public class SubmissionProject {
 
 	public List<SubmissionTask> getTasks() {
 		return tasks;
+	}
+
+	public void setTasks(List<SubmissionTask> tasks) {
+		this.tasks = tasks;
 	}
 
 	public void addTask(SubmissionTask task) {

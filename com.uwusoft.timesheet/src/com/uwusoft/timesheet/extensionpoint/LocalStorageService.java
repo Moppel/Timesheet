@@ -24,6 +24,8 @@ import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class LocalStorageService extends EventManager implements StorageService {
@@ -138,14 +140,14 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
-	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
-		for (String project : projects.keySet()) {
-			for (SubmissionEntry submissionTask : projects.get(project)) {
-				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProjectName(), submissionTask.getSystem());
+	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {
+		for (SubmissionProject project : projects) {
+			for (SubmissionTask submissionTask : project.getTasks()) {
+				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProject().getName(), submissionSystem);
 				if (foundTask == null) {
 					em.getTransaction().begin();
-					Project foundProject = findProjectByNameAndSystem(submissionTask.getProjectName(), submissionTask.getSystem());
-					if (foundProject == null) foundProject = new Project(submissionTask.getProjectName(), submissionTask.getSystem());
+					Project foundProject = findProjectByNameAndSystem(submissionTask.getProject().getName(), submissionSystem);
+					if (foundProject == null) foundProject = new Project(submissionTask.getProject().getName(), submissionSystem);
 					em.persist(new Task(submissionTask.getName(), foundProject));
 					em.getTransaction().commit();
 				}

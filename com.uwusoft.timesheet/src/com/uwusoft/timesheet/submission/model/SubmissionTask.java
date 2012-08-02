@@ -28,6 +28,11 @@ public class SubmissionTask {
 		this.name = name;
 	}
 	
+	public SubmissionTask(Long id, String name) {
+		this.id = id;
+		this.name = name;
+	}
+
 	/**
 	 * @param name
 	 * @param project

@@ -1,8 +1,8 @@
 package com.uwusoft.timesheet.wizard;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -11,18 +11,18 @@ import org.eclipse.jface.wizard.Wizard;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ImportTaskWizard extends Wizard {
 
 	private SubmissionService submissionService;
-	private Map<String, Set<SubmissionEntry>> projects;
+	private List<SubmissionProject> projects;
 	private String system;
 
 	public ImportTaskWizard(String system) {
 		super();
-		projects = new HashMap<String, Set<SubmissionEntry>>();
+		projects = new ArrayList<SubmissionProject>();
 		this.system = system;
 		setNeedsProgressMonitor(true);
 	}
@@ -37,9 +37,9 @@ public class ImportTaskWizard extends Wizard {
 				break;
 			}
 		}
-		Map<String, Set<SubmissionEntry>> projects = submissionService.getAssignedProjects();
-		for (String project : projects.keySet()) {
-			addPage(new TaskListPage(system,  project, projects.get(project)));			
+		Collection<SubmissionProject> projects = submissionService.getAssignedProjects().values();
+		for (SubmissionProject project : projects) {
+			addPage(new TaskListPage(system,  project));			
 		}
 	}
 	
@@ -54,5 +54,4 @@ public class ImportTaskWizard extends Wizard {
 		storageService.importTasks(system, projects);
 		return true;
 	}
-
 }

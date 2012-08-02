@@ -3,10 +3,8 @@ package com.uwusoft.timesheet.submission;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -63,17 +61,11 @@ public class LocalSubmissionService implements SubmissionService {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Map<String, Set<SubmissionEntry>> getAssignedProjects() {
-		Map<String, Set<SubmissionEntry>> assignedProjects = new HashMap<String, Set<SubmissionEntry>>();
+	public Map<String, SubmissionProject> getAssignedProjects() {
+		Map<String, SubmissionProject> assignedProjects = new HashMap<String, SubmissionProject>();
 		Query q = em.createQuery("select p from SubmissionProject p");
-		for (SubmissionProject project : (List<SubmissionProject>)q.getResultList()) {
-			assignedProjects.put(project.getName(), new HashSet<SubmissionEntry>());
-			q = em.createQuery("select t from SubmissionTask t where t.project.id = :id")
-					.setParameter("id", project.getId());
-			for (SubmissionTask task : (List<SubmissionTask>)q.getResultList()) {
-				assignedProjects.get(project.getName()).add(new SubmissionEntry(project.getId(), task.getId(), task.getName(), project.getName(), "Local"));
-			}
-		}
+		for (SubmissionProject project : (List<SubmissionProject>)q.getResultList())
+			assignedProjects.put(project.getName(), project);
 		return assignedProjects;
 	}
 

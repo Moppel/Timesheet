@@ -105,7 +105,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		table.setHeaderVisible(true);
 		table.setLinesVisible(true);
 
-		viewer.setContentProvider(new ArrayContentProvider());
+		viewer.setContentProvider(ArrayContentProvider.getInstance());
 
 		addTaskEntries(currentWeekNum);
 		// Make the selection available to other views

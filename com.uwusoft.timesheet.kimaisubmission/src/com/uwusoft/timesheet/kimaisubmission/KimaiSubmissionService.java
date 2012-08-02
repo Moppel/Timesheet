@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +26,8 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
@@ -94,8 +95,8 @@ public class KimaiSubmissionService implements SubmissionService {
 	}
 
 	@Override
-	public Map<String, Set<SubmissionEntry>> getAssignedProjects() {
-		Map<String, Set<SubmissionEntry>> projects = new HashMap<String, Set<SubmissionEntry>>();
+	public Map<String, SubmissionProject> getAssignedProjects() {
+		Map<String, SubmissionProject> projects = new HashMap<String, SubmissionProject>();
 		Set<KimaiTask> tasks;
 		KimaiConnection connection=new KimaiConnection(server);
 		try {
@@ -109,8 +110,8 @@ public class KimaiSubmissionService implements SubmissionService {
 			String projectName = task.getProjectName() == null ? "" : task.getProjectName()
 					+ (task.getCustomerName() == null ? "" : " (" + task.getCustomerName() + ")");
 			if (projects.get(projectName) == null)
-				projects.put(projectName, new HashSet<SubmissionEntry>());
-			projects.get(projectName).add(new SubmissionEntry(task.getProjectId(), task.getEventId(), task.getEventName(), projectName, title));
+				projects.put(projectName, new SubmissionProject(task.getProjectId(), projectName));
+			projects.get(projectName).addTask(new SubmissionTask(task.getEventId(), task.getEventName()));
 		}
 		return projects;
 	}

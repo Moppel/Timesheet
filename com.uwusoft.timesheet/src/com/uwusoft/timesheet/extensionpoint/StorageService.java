@@ -4,11 +4,10 @@ import java.beans.PropertyChangeListener;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
 
 /**
  * todo: add class doc
@@ -110,7 +109,7 @@ public interface StorageService {
     
     Date getLastTaskEntryDate();
     
-    void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects);
+    void importTasks(String submissionSystem, List<SubmissionProject> projects);
     
     Set<String> submitEntries(int weekNum);
     

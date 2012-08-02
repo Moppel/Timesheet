@@ -65,6 +65,8 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.AutomaticCheckoutCheckinUtil;
 import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -155,7 +157,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
-	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 31);
+	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
 	    	else reloadHeadingIndex();			
 			if (!reloadWorksheets()) return;
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
@@ -616,23 +618,23 @@ public class GoogleStorageService extends EventManager implements StorageService
 		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), comment);
 	}
 
-	public void importTasks(String submissionSystem, Map<String, Set<SubmissionEntry>> projects) {
+	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
-				for (String project : projects.keySet()) {
+				for (SubmissionProject project : projects) {
 					ListQuery query = new ListQuery(worksheetListFeedUrl);
-					query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project + "\"");
+					query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project.getName() + "\"");
 					try {
 						ListFeed feed = service.query(query, ListFeed.class);
 						List<ListEntry> listEntries = feed.getEntries();
-						Set<SubmissionEntry> tasks = new HashSet<SubmissionEntry>(projects.get(project));
+						List<SubmissionTask> tasks = new ArrayList<SubmissionTask>(project.getTasks());
 						
 						for (ListEntry entry : listEntries) // collect available tasks
-							for (SubmissionEntry task : projects.get(project))
+							for (SubmissionTask task : tasks)
 								if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
 									tasks.remove(task);							
-						projects.put(project, tasks);
+						project.setTasks(tasks);
 					} catch (IOException e) {
 						MessageBox.setError(title, e.getMessage());
 					} catch (ServiceException e) {
@@ -644,26 +646,24 @@ public class GoogleStorageService extends EventManager implements StorageService
 				WorksheetEntry worksheet = createWorksheet(submissionSystem, Arrays.asList(new String[] {TASK, PROJECT, ID, PROJECT + ID}));				
 			    worksheetListFeedUrl = worksheet.getListFeedUrl(); 			
 			}
-			for (String project : projects.keySet()) {
-				for (SubmissionEntry task : projects.get(project)) {
+			for (SubmissionProject project : projects) {
+				for (SubmissionTask task : project.getTasks()) {
 					ListEntry taskEntry = new ListEntry();
 					taskEntry.getCustomElements().setValueLocal(TASK, task.getName());
 					taskEntry.getCustomElements().setValueLocal(ID, Long.toString(task.getId()));
-					taskEntry.getCustomElements().setValueLocal(PROJECT + ID, Long.toString(task.getProjectId()));
+					taskEntry.getCustomElements().setValueLocal(PROJECT + ID, Long.toString(project.getId()));
 		            
 					logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Import task: " + task.getName() + " id=" + task.getId()
-		            		+ " (" + task.getProjectName() + " id=" + task.getProjectId() + ") "));
+		            		+ " (" + project.getName() + " id=" + project.getId() + ") "));
 					
 					service.insert(worksheetListFeedUrl, taskEntry);
 					reloadWorksheets();
-					if (!StringUtils.isEmpty(project)) {
-						String projectLink = getProjectLink(submissionSystem, project, task.getProjectId(), true);
-						if (projectLink != null) {
-							WorksheetEntry worksheet = getWorksheet(submissionSystem);
-							ListFeed feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
-							createUpdateCellEntry(worksheet, feed.getEntries().size() + 1,
-									getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
-						}
+					String projectLink = getProjectLink(submissionSystem, project.getName(), project.getId(), true);
+					if (projectLink != null) {
+						WorksheetEntry worksheet = getWorksheet(submissionSystem);
+						ListFeed feed = service.getFeed(worksheet.getListFeedUrl(), ListFeed.class);
+						createUpdateCellEntry(worksheet, feed.getEntries().size() + 1,
+								getHeadingIndex(submissionSystem, PROJECT), "=" + projectLink);
 					}
 				}
 			}

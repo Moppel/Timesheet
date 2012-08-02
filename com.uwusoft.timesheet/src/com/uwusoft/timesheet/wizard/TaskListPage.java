@@ -1,8 +1,7 @@
 package com.uwusoft.timesheet.wizard;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -16,20 +15,19 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 
 public class TaskListPage extends WizardPage {
 
 	private TableViewer viewer;
-	private String project;
-	private Set<SubmissionEntry> tasks;
+	private SubmissionProject project;
 
-	protected TaskListPage(String system, String project, Set<SubmissionEntry> tasks) {
+	protected TaskListPage(String system, SubmissionProject project) {
 		super("Submission system: " + system);
-		setTitle("Project: " + project);
+		setTitle("Project: " + project.getName());
 		setDescription("System: " + system);
 		this.project = project;
-		this.tasks = tasks;
 	}
 
 	@Override
@@ -41,21 +39,22 @@ public class TaskListPage extends WizardPage {
 		column.setResizable(true);
 		viewerColumn.setLabelProvider(new ColumnLabelProvider() {
             public String getText(Object element) {
-		        return ((SubmissionEntry) element).getName();
+		        return ((SubmissionTask) element).getName();
 			}
 			public Image getImage(Object obj) {
 				return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
 			}
 		});
         viewer.setContentProvider(ArrayContentProvider.getInstance());
-        viewer.setInput(tasks);
+        viewer.setInput(project.getTasks());
 		// Required to avoid an error in the system
 		setControl(parent);
 		setPageComplete(true);
 	}
 
 	@SuppressWarnings("unchecked")
-	public void addTasksToProjects(Map<String, Set<SubmissionEntry>> projects) {
-		projects.put(project, new HashSet<SubmissionEntry>(((StructuredSelection) viewer.getSelection()).toList()));
+	public void addTasksToProjects(List<SubmissionProject> projects) {
+		project.setTasks(new ArrayList<SubmissionTask>(((StructuredSelection) viewer.getSelection()).toList()));
+		projects.add(project);
 	}
 }

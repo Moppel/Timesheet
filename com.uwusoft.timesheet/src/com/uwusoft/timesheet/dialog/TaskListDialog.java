@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,8 +59,9 @@ import com.uwusoft.timesheet.commands.CheckinHandler;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 /**
@@ -76,7 +78,8 @@ public class TaskListDialog extends ListDialog {
     private Task taskSelected;
     private boolean showComment;
 	private String[] systems;
-	private Map<String, SubmissionEntry> tasksMap;
+	private Map<String, SubmissionProject> assignedProjects;
+	private Map<String, SubmissionTask> tasksMap;
     private Combo systemCombo, projectCombo;
     private Text commentText;
     private AutoCompleteField commentCompleteField;
@@ -325,15 +328,15 @@ public class TaskListDialog extends ListDialog {
 		if (original) {
 			submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(
 					TimesheetApp.getSubmissionSystems().get(systemSelected));
-			Map<String, Set<SubmissionEntry>> assignedProjects = submissionService.getAssignedProjects();
-			Set<SubmissionEntry> submissionTasks = assignedProjects.get(projectSelected);
-			if (submissionTasks == null) {
+			assignedProjects = submissionService.getAssignedProjects();
+			SubmissionProject submissionProject = assignedProjects.get(projectSelected);
+			if (submissionProject == null) {
 				projectSelected = assignedProjects.keySet().iterator().next();
-				submissionTasks = assignedProjects.get(projectSelected);
+				submissionProject = assignedProjects.get(projectSelected);
 			}
 			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-			tasksMap = new HashMap<String, SubmissionEntry>();
-			for (SubmissionEntry task : submissionTasks) {
+			tasksMap = new HashMap<String, SubmissionTask>();
+			for (SubmissionTask task : submissionProject.getTasks()) {
 				if (!tasks.contains(task.getName())) tasksMap.put(task.getName(), task);
 			}
 			getTableViewer().setInput(tasksMap.keySet());
@@ -364,9 +367,10 @@ public class TaskListDialog extends ListDialog {
 	    }
 		if (StringUtils.isEmpty(selectedTask)) return;
 		if (original) {
-			Map<String, Set<SubmissionEntry>> projects = new HashMap<String, Set<SubmissionEntry>>();
-			projects.put(projectSelected, new HashSet<SubmissionEntry>());
-			projects.get(projectSelected).add(tasksMap.get(selectedTask));
+			List<SubmissionProject> projects = new ArrayList<SubmissionProject>();
+			SubmissionProject project = assignedProjects.get(projectSelected);
+			project.setTasks(Collections.singletonList(tasksMap.get(selectedTask)));
+			projects.add(project);
 			storageService.importTasks(systemSelected, projects);
 		}
 	}
