@@ -7,6 +7,7 @@ import java.util.List;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
+import org.eclipse.swt.custom.BusyIndicator;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
@@ -36,14 +37,18 @@ public class ImportTaskWizard extends Wizard {
 
 	@Override
 	public void addPages() {
-		Collection<SubmissionProject> projects = submissionService.getAssignedProjects().values();
-		for (SubmissionProject project : projects) {
-			List<String> tasks = storageService.findTasksBySystemAndProject(system, project.getName());
-			for (SubmissionTask task : new ArrayList<SubmissionTask>(project.getTasks()))
-				if (tasks.contains(task.getName()))
-					project.removeTask(task); // remove already imported tasks
-			addPage(new TaskListPage(system,  project));			
-		}
+		BusyIndicator.showWhile(getContainer().getShell().getDisplay(), new Runnable() {
+			public void run() {
+				Collection<SubmissionProject> projects = submissionService.getAssignedProjects().values();
+				for (SubmissionProject project : projects) {
+					List<String> tasks = storageService.findTasksBySystemAndProject(system, project.getName());
+					for (SubmissionTask task : new ArrayList<SubmissionTask>(project.getTasks()))
+						if (tasks.contains(task.getName()))
+							project.removeTask(task); // remove already imported tasks
+					addPage(new TaskListPage(system,  project));			
+				}
+			}
+		});
 	}
 	
 	@Override
