@@ -20,8 +20,7 @@ public class ImportTasksHandler extends AbstractHandler {
 		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
 		if (systems.length == 1) system = systems[0];
 		else return null; // TODO list dialog for available submission services
-		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), new ImportTaskWizard(Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME))));
+		WizardDialog dialog = new WizardDialog(Display.getDefault().getActiveShell(), new ImportTaskWizard(system));
 		dialog.open();							
 		return null;
 	}

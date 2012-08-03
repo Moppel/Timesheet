@@ -12,45 +12,44 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class ImportTaskWizard extends Wizard {
 
 	private SubmissionService submissionService;
+	private StorageService storageService;
 	private List<SubmissionProject> projects;
 	private String system;
 
 	public ImportTaskWizard(String system) {
 		super();
 		projects = new ArrayList<SubmissionProject>();
-		this.system = system;
+		submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system);
+		this.system = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		storageService = new ExtensionManager<StorageService>(
+                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		setNeedsProgressMonitor(true);
 	}
 
 	@Override
 	public void addPages() {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		String[] systems = preferenceStore.getString(SubmissionService.PROPERTY).split(SubmissionService.separator);
-		for (String _system : systems) {
-			if (_system.contains(system.toLowerCase())) {
-				submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(_system);
-				break;
-			}
-		}
 		Collection<SubmissionProject> projects = submissionService.getAssignedProjects().values();
 		for (SubmissionProject project : projects) {
+			List<String> tasks = storageService.findTasksBySystemAndProject(system, project.getName());
+			for (SubmissionTask task : new ArrayList<SubmissionTask>(project.getTasks()))
+				if (tasks.contains(task.getName()))
+					project.removeTask(task); // remove already imported tasks
 			addPage(new TaskListPage(system,  project));			
 		}
 	}
 	
 	@Override
 	public boolean performFinish() {
-		for (IWizardPage page : getPages()) {
+		for (IWizardPage page : getPages())
 			((TaskListPage)page).addTasksToProjects(projects);
-		}
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		StorageService storageService = new ExtensionManager<StorageService>(
-                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
 		storageService.importTasks(system, projects);
 		return true;
 	}
