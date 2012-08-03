@@ -132,6 +132,11 @@
                   visible="true">
             </separator>
             <command
+                  commandId="Timesheet.importTasks"
+                  icon="icons/import_16.png"
+                  style="push">
+            </command>
+            <command
                   commandId="Timesheet.submit"
                   icon="icons/signs_16.png"
                   style="push">
@@ -246,6 +251,11 @@
                   name="com.uwusoft.timesheet.separator1"
                   visible="true">
             </separator>
+            <command
+                  commandId="Timesheet.importTasks"
+                  icon="icons/import_16.png"
+                  style="push">
+            </command>
             <command
                   commandId="Timesheet.submit"
                   icon="icons/signs_32.png"
