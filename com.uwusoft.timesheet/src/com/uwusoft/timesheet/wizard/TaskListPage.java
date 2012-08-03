@@ -11,6 +11,8 @@ import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -32,7 +34,17 @@ public class TaskListPage extends WizardPage {
 
 	@Override
 	public void createControl(Composite parent) {
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		// A WizardPage must create a new Composite that must use the Composite of the method parameter as parent
+		Composite container = new Composite(parent, SWT.NULL);
+		GridLayout layout = new GridLayout();
+		container.setLayout(layout);
+		viewer = new TableViewer(container, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		GridData gridData = new GridData();
+		gridData.verticalAlignment = GridData.FILL;
+		gridData.grabExcessHorizontalSpace = true;
+		gridData.grabExcessVerticalSpace = true;
+		gridData.horizontalAlignment = GridData.FILL;
+		viewer.getControl().setLayoutData(gridData);
 		final TableViewerColumn viewerColumn = new TableViewerColumn(viewer, SWT.NONE);
 		final TableColumn column = viewerColumn.getColumn();
 		column.setWidth(300);
@@ -48,7 +60,7 @@ public class TaskListPage extends WizardPage {
         viewer.setContentProvider(ArrayContentProvider.getInstance());
         viewer.setInput(project.getTasks());
 		// Required to avoid an error in the system
-		setControl(parent);
+		setControl(container);
 		setPageComplete(true);
 	}
 
