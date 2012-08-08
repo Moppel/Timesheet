@@ -157,8 +157,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
-	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
-	    	else reloadHeadingIndex();			
+	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 31);
+	    	else reloadHeadingIndex();
 			if (!reloadWorksheets()) return;
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
     			if (!headingIndex.keySet().containsAll(Arrays.asList(new String[] {StorageService.DATE, StorageService.TIME, StorageService.TOTAL,
@@ -901,5 +901,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (preferenceStore.getBoolean(PREFIX + openBrowser))
 			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + spreadsheetKey + "&pli=1#gid=0");
+	}
+
+	@Override
+	public String getPreferencePageId() {
+		return "com.uwusoft.timesheet.googlestorage.GooglePreferencePage";
 	}
 }

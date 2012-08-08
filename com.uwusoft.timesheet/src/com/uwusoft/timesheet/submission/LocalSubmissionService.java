@@ -90,4 +90,9 @@ public class LocalSubmissionService implements SubmissionService {
 	@Override
 	public void openUrl() {
 	}
+
+	@Override
+	public String getPreferencePageId() {
+		return null;
+	}
 }

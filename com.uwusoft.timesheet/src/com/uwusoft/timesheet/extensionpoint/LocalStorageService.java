@@ -233,4 +233,9 @@ public class LocalStorageService extends EventManager implements StorageService 
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public String getPreferencePageId() {
+		return null;
+	}
 }

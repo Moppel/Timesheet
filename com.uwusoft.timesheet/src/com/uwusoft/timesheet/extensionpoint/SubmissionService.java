@@ -13,7 +13,7 @@ import com.uwusoft.timesheet.submission.model.SubmissionProject;
  * @version $Revision: $, $Date: Aug 17, 2011
  * @since Aug 17, 2011
  */
-public interface SubmissionService {
+public interface SubmissionService extends PreferencesService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.submissionservice";
 	public static final String SERVICE_NAME = "submission";
 	public static final String PROPERTY = "submission.system";

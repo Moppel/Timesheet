@@ -154,4 +154,9 @@ public class KimaiSubmissionService implements SubmissionService {
 		if (preferenceStore.getBoolean(PREFIX + OPEN_BROWSER))
 			DesktopUtil.openUrl(preferenceStore.getString(PREFIX + URL));
 	}
+
+	@Override
+	public String getPreferencePageId() {
+		return "com.uwusoft.timesheet.kimaisubmission.kimaipreferencepage";
+	}
 }
