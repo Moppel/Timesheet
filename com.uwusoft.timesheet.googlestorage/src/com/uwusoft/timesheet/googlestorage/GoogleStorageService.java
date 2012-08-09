@@ -107,6 +107,8 @@ public class GoogleStorageService extends EventManager implements StorageService
         service = new SpreadsheetService("Timesheet");
         docsService = new DocsService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
+        service.useSsl();
+        docsService.useSsl();
         boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
        	while (!lastSuccess);
@@ -157,7 +159,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		String oldSpreadsheetKey = spreadsheetKey;
         spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
 		try {
-	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 31);
+	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
 	    	else reloadHeadingIndex();
 			if (!reloadWorksheets()) return;
     		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
@@ -240,7 +242,19 @@ public class GoogleStorageService extends EventManager implements StorageService
 
 			spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
 			MessageBox.setMessage("Spreadsheet created", "Created \"" + name + "\"");
-			if (!StringUtils.isEmpty(copySpreadsheetKey)) {
+			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+			if (StringUtils.isEmpty(copySpreadsheetKey)) {
+				preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
+				Map<String, String> parameters = new HashMap<String, String>();
+				IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+				ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
+				try {
+					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.importTasks"),	parameters), null);
+				} catch (Exception e) {
+					MessageBox.setError(title, e.getMessage());
+				}
+			}
+			else {
 				List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(copySpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
 				WorksheetEntry timesheet = worksheets.remove(0); // remove timesheet
 			    for (WorksheetEntry worksheet : worksheets) {
@@ -285,8 +299,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(WEEKLY_TOTAL), weeklyTotal);
 				createUpdateCellEntry(defaultWorksheet, 2, headingIndex.get(OVERTIME), overtime);
 			}
-			// TODO if copySpreadsheetKey is null start import task wizard (maybe select submission systems before)
-			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
