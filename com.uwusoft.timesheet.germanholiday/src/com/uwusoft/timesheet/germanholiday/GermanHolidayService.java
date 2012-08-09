@@ -98,4 +98,9 @@ public class GermanHolidayService implements HolidayService {
 	public Collection<String> getRegionValidHolidays() {
 		return regionValidHolidaysList;
 	}
+
+	@Override
+	public String getPreferencePageId() {
+		return "com.uwusoft.timesheet.germanholiday.preferences.GermanHolidayPreferencePage";
+	}
 }

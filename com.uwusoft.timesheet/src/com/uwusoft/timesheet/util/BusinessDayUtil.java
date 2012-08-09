@@ -9,10 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -23,9 +27,22 @@ import com.uwusoft.timesheet.model.WholeDayTasks;
 public class BusinessDayUtil {
 
 	private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
-	private static transient Task task = TimesheetApp.createTask(TimesheetApp.HOLIDAY_TASK);
-	private static transient HolidayService holidayService = new ExtensionManager<HolidayService>(
-			HolidayService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(HolidayService.PROPERTY));
+	private static Task task = TimesheetApp.createTask(TimesheetApp.HOLIDAY_TASK);
+	private static HolidayService holidayService;
+	
+	static {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (StringUtils.isEmpty(preferenceStore.getString(HolidayService.PROPERTY))) {
+			// first setup for holiday system
+			PreferencesDialog preferencesDialog;
+			do
+				preferencesDialog = new PreferencesDialog(Display.getDefault(), HolidayService.SERVICE_ID, HolidayService.SERVICE_NAME, false);
+			while (preferencesDialog.open() != Dialog.OK);
+			preferenceStore.setValue(HolidayService.PROPERTY, preferencesDialog.getSelectedSystem());			
+		}
+		holidayService = new ExtensionManager<HolidayService>(
+				HolidayService.SERVICE_ID).getService(preferenceStore.getString(HolidayService.PROPERTY));
+	}
 
 	/*
 	 * This method will calculate the next business day after the one input.

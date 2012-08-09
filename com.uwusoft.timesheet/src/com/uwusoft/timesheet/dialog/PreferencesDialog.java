@@ -2,8 +2,11 @@ package com.uwusoft.timesheet.dialog;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IStatus;
@@ -36,7 +39,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class PreferencesDialog extends Dialog {
 	private String serviceId, serviceName;
 	private boolean multipleSelect;
-	private List<String> selectedSystems;
+	private Map<String, String> selectedSystems;
 	private String selectedSystem;
 	private List<IPreferencePage> pages;
 
@@ -45,7 +48,7 @@ public class PreferencesDialog extends Dialog {
 		this.serviceId = serviceId;
 		this.serviceName = serviceName;
 		this.multipleSelect = multipleSelect;
-		selectedSystems = new ArrayList<String>();
+		selectedSystems = new HashMap<String, String>();
 		pages = new ArrayList<IPreferencePage>();
 	}
 
@@ -78,18 +81,19 @@ public class PreferencesDialog extends Dialog {
 	        		public void widgetSelected(SelectionEvent evt) {
 	        			if (((Button) evt.getSource()).getSelection()) {
 	        				page.setVisible(true);
-	        				selectedSystems.add(contributorName);
+	        				selectedSystems.put(descriptiveName, contributorName);
 	        				pages.add(page);
 	        			}
 	        			else {
 	        				page.setVisible(false);
-	        				selectedSystems.remove(contributorName);
+	        				selectedSystems.remove(descriptiveName);
 	        				pages.remove(page);
 	        			}
 	        		};
 	        	});
 	        }
 	        else {
+				selectedSystems.put(descriptiveName, contributorName);
 	        	systemCombo.add(descriptiveName);
 	        	systemCombo.addSelectionListener(new SelectionAdapter() {
 	        		public void widgetSelected(SelectionEvent evt) {
@@ -149,11 +153,18 @@ public class PreferencesDialog extends Dialog {
 		close();
 	}
 
-	public List<String> getSelectedSystems() {
-		return selectedSystems;
+	public boolean close() {
+		for (IPreferencePage page : pages) {
+			page.dispose();
+		}
+		return super.close();
+	}
+	
+	public Collection<String> getSelectedSystems() {
+		return selectedSystems.values();
 	}
 
 	public String getSelectedSystem() {
-		return selectedSystem;
+		return selectedSystems.get(selectedSystem);
 	}
 }

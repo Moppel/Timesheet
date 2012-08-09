@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-public interface HolidayService {
+public interface HolidayService extends PreferencesService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.holidayservice";
 	public static final String SERVICE_NAME = "holiday";
 	public static final String PROPERTY = "holiday.system";
