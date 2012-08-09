@@ -3,6 +3,7 @@ package com.uwusoft.timesheet.preferences;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.preference.ComboFieldEditor;
@@ -49,7 +50,8 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
     		addField(new TaskFieldEditor(task, Messages.getString(task) + " task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getFieldEditorParent()));
-		addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:", getFieldEditorParent()));
+		if (!StringUtils.isEmpty(getPreferenceStore().getString(TimesheetApp.DAILY_TASK)))
+			addField(new StringFieldEditor(TimesheetApp.DAILY_TASK_TOTAL, "Daily task total:", getFieldEditorParent()));
 	}
 
 	private String[][] getSystemArray(String serviceId, String serviceName) {
