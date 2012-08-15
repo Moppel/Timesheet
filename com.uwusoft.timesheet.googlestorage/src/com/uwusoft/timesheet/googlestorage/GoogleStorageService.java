@@ -59,6 +59,7 @@ import com.google.gdata.util.ServiceException;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.LoginDialog;
+import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
@@ -109,6 +110,12 @@ public class GoogleStorageService extends EventManager implements StorageService
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
         service.useSsl();
         docsService.useSsl();
+        if (StringUtils.isEmpty(Activator.getDefault().getPreferenceStore().getString(PREFIX + USERNAME))) {
+        	PreferencesDialog preferencesDialog;
+        	do
+        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.googlestorage.GooglePreferencePage");
+        	while (preferencesDialog.open() != Dialog.OK);
+        }
         boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
        	while (!lastSuccess);
@@ -253,6 +260,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 				} catch (Exception e) {
 					MessageBox.setError(title, e.getMessage());
 				}
+	        	PreferencesDialog preferencesDialog;
+	        	do
+	        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.preferences.TimesheetPreferencePage");
+	        	while (preferencesDialog.open() != Dialog.OK);				
 			}
 			else {
 				List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(copySpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
@@ -913,10 +924,5 @@ public class GoogleStorageService extends EventManager implements StorageService
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (preferenceStore.getBoolean(PREFIX + openBrowser))
 			DesktopUtil.openUrl("https://docs.google.com/spreadsheet/ccc?key=" + spreadsheetKey + "&pli=1#gid=0");
-	}
-
-	@Override
-	public String getPreferencePageId() {
-		return "com.uwusoft.timesheet.googlestorage.GooglePreferencePage";
 	}
 }

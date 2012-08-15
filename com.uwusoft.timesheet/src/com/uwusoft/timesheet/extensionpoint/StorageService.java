@@ -16,7 +16,7 @@ import com.uwusoft.timesheet.submission.model.SubmissionProject;
  * @version $Revision: $, $Date: Aug 15, 2011
  * @since Aug 15, 2011
  */
-public interface StorageService extends PreferencesService {
+public interface StorageService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.storageservice";
 	public static final String SERVICE_NAME = "storage";
 	public static final String PROPERTY = "storage.system";

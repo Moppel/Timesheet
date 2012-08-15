@@ -7,23 +7,18 @@ import java.util.Map;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.extensionpoint.HolidayService;
+import com.uwusoft.timesheet.germanholiday.Messages;
 import com.uwusoft.timesheet.preferences.AbstractListEditor;
-import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class RegionValidHolidayListEditor extends AbstractListEditor {
 	private Map<String, String> holidays, holidayNames;
-	private HolidayService holidayService;
 
-	public RegionValidHolidayListEditor(String name, String labelText, Composite parent) {
+	public RegionValidHolidayListEditor(String name, String labelText, List<String> regionValidHolidaysList, Composite parent) {
 		super(name, labelText, parent);
-		holidayService = new ExtensionManager<HolidayService>(
-				HolidayService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(HolidayService.PROPERTY));
 		holidays = new HashMap<String, String>();
 		holidayNames = new HashMap<String, String>();
-		for (String holiday : holidayService.getRegionValidHolidays()) {
-			String localizedName = holidayService.getName(holiday); 
+		for (String holiday : regionValidHolidaysList) {
+			String localizedName = Messages.getString(holiday); 
 			holidays.put(holiday, localizedName);
 			holidayNames.put(localizedName, holiday);
 		}

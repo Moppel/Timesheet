@@ -24,6 +24,7 @@ import com.kiwisoft.tires.kimai.model.KimaiTask;
 import com.kiwisoft.tires.kimai.model.KimaiTimeEntry;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
+import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -75,6 +76,12 @@ public class KimaiSubmissionService implements SubmissionService {
 	public KimaiSubmissionService() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		logger = Activator.getDefault().getLog();
+        if (StringUtils.isEmpty(preferenceStore.getString(PREFIX + URL))) {
+            PreferencesDialog preferencesDialog;
+        	do
+        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.kimaisubmission.kimaipreferencepage");
+        	while (preferencesDialog.open() != Dialog.OK);
+        }
 		server=new KimaiServer();
 		server.setUrl(preferenceStore.getString(PREFIX + URL));
        	while (!authenticate());
@@ -153,10 +160,5 @@ public class KimaiSubmissionService implements SubmissionService {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (preferenceStore.getBoolean(PREFIX + OPEN_BROWSER))
 			DesktopUtil.openUrl(preferenceStore.getString(PREFIX + URL));
-	}
-
-	@Override
-	public String getPreferencePageId() {
-		return "com.uwusoft.timesheet.kimaisubmission.kimaipreferencepage";
 	}
 }

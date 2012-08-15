@@ -16,7 +16,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
-import com.uwusoft.timesheet.dialog.PreferencesDialog;
+import com.uwusoft.timesheet.dialog.SingleSelectSystemDialog;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -33,12 +33,12 @@ public class BusinessDayUtil {
 	static {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (StringUtils.isEmpty(preferenceStore.getString(HolidayService.PROPERTY))) {
-			// first setup for holiday system
-			PreferencesDialog preferencesDialog;
+			// TODO first setup for holiday system
+			SingleSelectSystemDialog systemDialog;
 			do
-				preferencesDialog = new PreferencesDialog(Display.getDefault(), HolidayService.SERVICE_ID, HolidayService.SERVICE_NAME, false);
-			while (preferencesDialog.open() != Dialog.OK);
-			preferenceStore.setValue(HolidayService.PROPERTY, preferencesDialog.getSelectedSystem());			
+				systemDialog = new SingleSelectSystemDialog(Display.getDefault(), HolidayService.SERVICE_ID, HolidayService.SERVICE_NAME);
+			while (systemDialog.open() != Dialog.OK);
+			preferenceStore.setValue(HolidayService.PROPERTY, systemDialog.getSelectedSystem());			
 		}
 		holidayService = new ExtensionManager<HolidayService>(
 				HolidayService.SERVICE_ID).getService(preferenceStore.getString(HolidayService.PROPERTY));
@@ -113,15 +113,14 @@ public class BusinessDayUtil {
 		// Else we recursively call our function until we find one.
 		else {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
-				IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-				StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-						.getService(preferenceStore.getString(StorageService.PROPERTY));
 				handleWeekAndYearChange(startDate, nextDay);
-				if (holidayService.isValid(nextDay)) { // store holiday entry
+				//if (holidayService.isValid(nextDay)) { // store holiday entry
+					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+							.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
 					taskEntry.setComment(holidayService.getName(nextDay));
 					storageService.createTaskEntry(taskEntry);
-				}
+				//}
 			}
 			return getNextBusinessDay(nextDay, createHoliday);
 		}

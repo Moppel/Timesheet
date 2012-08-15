@@ -20,7 +20,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.dialog.PreferencesDialog;
+import com.uwusoft.timesheet.dialog.SingleSelectSystemDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.model.WholeDayTasks;
@@ -30,11 +30,11 @@ public class AutomaticCheckoutCheckinUtil {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY))) {
 			// first setup of storage system
-			PreferencesDialog preferencesDialog;
+			SingleSelectSystemDialog systemDialog;
 			do
-				preferencesDialog = new PreferencesDialog(Display.getDefault(), StorageService.SERVICE_ID, StorageService.SERVICE_NAME, false);
-			while (preferencesDialog.open() != Dialog.OK);
-			preferenceStore.setValue(StorageService.PROPERTY, preferencesDialog.getSelectedSystem());
+				systemDialog = new SingleSelectSystemDialog(Display.getDefault(), StorageService.SERVICE_ID, StorageService.SERVICE_NAME);
+			while (systemDialog.open() != Dialog.OK);
+			preferenceStore.setValue(StorageService.PROPERTY, systemDialog.getSelectedSystem());
 		}
 		StorageService storageService = new ExtensionManager<StorageService>(
 				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
