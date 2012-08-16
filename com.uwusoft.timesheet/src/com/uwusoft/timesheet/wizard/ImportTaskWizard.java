@@ -23,16 +23,23 @@ public class ImportTaskWizard extends Wizard {
 	private List<SubmissionProject> projects;
 	private String system;
 
-	public ImportTaskWizard(String system) {
+	public ImportTaskWizard(StorageService storageService, String system) {
 		super();
 		projects = new ArrayList<SubmissionProject>();
 		submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system);
 		this.system = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
 				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		storageService = new ExtensionManager<StorageService>(
-                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		if (storageService == null)
+			this.storageService = new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		else
+			this.storageService = storageService;
 		setNeedsProgressMonitor(true);
+	}
+
+	public ImportTaskWizard(String system) {
+		this(null, system);
 	}
 
 	@Override
@@ -53,9 +60,13 @@ public class ImportTaskWizard extends Wizard {
 	
 	@Override
 	public boolean performFinish() {
-		for (IWizardPage page : getPages())
-			((TaskListPage)page).addTasksToProjects(projects);
-		storageService.importTasks(system, projects);
+		BusyIndicator.showWhile(getContainer().getShell().getDisplay(), new Runnable() {
+			public void run() {
+				for (IWizardPage page : getPages())
+					((TaskListPage)page).addTasksToProjects(projects);
+				storageService.importTasks(system, projects);
+			}
+		});
 		return true;
 	}
 }

@@ -143,7 +143,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {
 		for (SubmissionProject project : projects) {
 			for (SubmissionTask submissionTask : project.getTasks()) {
-				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProject().getName(), submissionSystem);
+				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProject().getName(), submissionSystem); // TODO fix NPE
 				if (foundTask == null) {
 					em.getTransaction().begin();
 					Project foundProject = findProjectByNameAndSystem(submissionTask.getProject().getName(), submissionSystem);

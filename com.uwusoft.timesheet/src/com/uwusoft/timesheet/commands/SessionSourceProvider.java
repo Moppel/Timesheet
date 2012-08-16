@@ -3,6 +3,7 @@ package com.uwusoft.timesheet.commands;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 
@@ -21,11 +22,16 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 
 	public SessionSourceProvider() {
 		super();
-		StorageService storageService = new ExtensionManager<StorageService>(
-				StorageService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-		TaskEntry lastTask = storageService.getLastTask();
-		enabled = lastTask != null;
-		breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
+		String storageSystem = Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY);
+		if (StringUtils.isEmpty(storageSystem))
+			enabled = false;
+		else {
+			StorageService storageService = new ExtensionManager<StorageService>(
+					StorageService.SERVICE_ID).getService(storageSystem);
+			TaskEntry lastTask = storageService.getLastTask();
+			enabled = lastTask != null;
+			breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
+		}
 	}
 
 	@Override

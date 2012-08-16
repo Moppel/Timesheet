@@ -46,6 +46,7 @@ import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.StorageSystemSetup;
 import com.uwusoft.timesheet.util.WeekComposite;
 
 public class TasksView extends ViewPart implements PropertyChangeListener {
@@ -87,14 +88,17 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	public void createPartControl(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 		
-		if((storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-				.getService(preferenceStore.getString(StorageService.PROPERTY))) == null)
-			return;
+		if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY)))
+			StorageSystemSetup.execute();
+		
+		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+					.getService(preferenceStore.getString(StorageService.PROPERTY));
 		
         Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());        
     	int currentWeekNum = cal.get(Calendar.WEEK_OF_YEAR);
-    	cal.setTime(storageService.getLastTaskEntryDate());
+    	if (storageService.getLastTaskEntryDate() != null)
+    		cal.setTime(storageService.getLastTaskEntryDate());
     	
     	weekComposite = new WeekComposite(this, currentWeekNum, cal.get(Calendar.WEEK_OF_YEAR));
     	weekComposite.createComposite(new Composite(parent, SWT.NONE));

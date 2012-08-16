@@ -71,6 +71,7 @@ import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.AutomaticCheckoutCheckinUtil;
 import com.uwusoft.timesheet.util.DesktopUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.ImportTasksUtil;
 import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
@@ -105,6 +106,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     private ILog logger;
     
     public GoogleStorageService() throws CoreException {
+        logger = Activator.getDefault().getLog();
         service = new SpreadsheetService("Timesheet");
         docsService = new DocsService("Timesheet");
         service.setProtocolVersion(SpreadsheetService.Versions.V1);
@@ -123,7 +125,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 		headingIndex = new LinkedHashMap<String, Integer>();
 		submissionSystems = TimesheetApp.getSubmissionSystems();
         reload();
-        logger = Activator.getDefault().getLog();
     }
     
     private boolean authenticate(boolean lastSuccess) throws CoreException {
@@ -169,7 +170,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    	if (StringUtils.isEmpty(spreadsheetKey)) handleYearChange(oldSpreadsheetKey, 0);
 	    	else reloadHeadingIndex();
 			if (!reloadWorksheets()) return;
-    		if (!spreadsheetKey.equals(oldSpreadsheetKey)) {
+    		if (!StringUtils.isEmpty(oldSpreadsheetKey) && !spreadsheetKey.equals(oldSpreadsheetKey)) {
     			if (!headingIndex.keySet().containsAll(Arrays.asList(new String[] {StorageService.DATE, StorageService.TIME, StorageService.TOTAL,
     					StorageService.DAILY_TOTAL, StorageService.WEEKLY_TOTAL, StorageService.WEEK, StorageService.TASK, StorageService.PROJECT,
     					StorageService.COMMENT, StorageService.OVERTIME, StorageService.SUBMISSION_STATUS, StorageService.ID}))) {
@@ -251,19 +252,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 			MessageBox.setMessage("Spreadsheet created", "Created \"" + name + "\"");
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			if (StringUtils.isEmpty(copySpreadsheetKey)) {
-				preferenceStore.setValue(SPREADSHEET_KEY, spreadsheetKey);
-				Map<String, String> parameters = new HashMap<String, String>();
-				IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
-				ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
-				try {
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.importTasks"),	parameters), null);
-				} catch (Exception e) {
-					MessageBox.setError(title, e.getMessage());
-				}
-	        	PreferencesDialog preferencesDialog;
-	        	do
-	        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.preferences.TimesheetPreferencePage");
-	        	while (preferencesDialog.open() != Dialog.OK);				
+				ImportTasksUtil.execute(this);
+				reloadHeadingIndex();
 			}
 			else {
 				List<WorksheetEntry> worksheets = service.getFeed(factory.getWorksheetFeedUrl(copySpreadsheetKey, "private", "full"), WorksheetFeed.class).getEntries();
