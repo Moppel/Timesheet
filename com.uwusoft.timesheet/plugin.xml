@@ -102,7 +102,7 @@
             <menu
                   commandId="Timesheet.wholeDayTask"
                   icon="icons/day_16.png"
-                  label="Set whole day task">
+                  label="Set all day task">
                <visibleWhen
                      checkEnabled="false">
                   <with
@@ -221,7 +221,7 @@
             <command
                   commandId="Timesheet.wholeDayTask"
                   icon="icons/day_32.png"
-                  label="Set whole day task"
+                  label="Set all day task"
                   style="pulldown">
                <visibleWhen
                      checkEnabled="false">
@@ -376,7 +376,7 @@
       <command
             defaultHandler="com.uwusoft.timesheet.commands.WholeDayTaskHandler"
             id="Timesheet.wholeDayTask"
-            name="Whole day">
+            name="All day">
          <commandParameter
                id="Timesheet.commands.task"
                name="task"

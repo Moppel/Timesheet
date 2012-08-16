@@ -103,7 +103,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                         trayMenu.add(new CommandContributionItem(p));
                     }
 
-                    MenuManager wholeDayTask = new MenuManager("Set whole day task",
+                    MenuManager wholeDayTask = new MenuManager("Set all day task",
                     		AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/day_16.png"), "Timesheet.wholeDayTask");
                     
                     new WholeDayTaskFactory(wholeDayTask).createContributionItems(window, null);
