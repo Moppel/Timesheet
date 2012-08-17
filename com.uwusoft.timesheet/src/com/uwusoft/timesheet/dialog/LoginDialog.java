@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.dialog;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -38,31 +39,34 @@ public class LoginDialog extends Dialog {
 			gridData.horizontalAlignment = SWT.CENTER;
 			gridData.horizontalSpan = 2;
 			Label label = new Label(composite, SWT.NONE);
+	        label.setImage(JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_ERROR));
 			label.setLayoutData(gridData);
 			label.setForeground(display.getSystemColor(SWT.COLOR_RED));
 			label.setText(message);
 		}
         
-		Label label = new Label(composite, SWT.NONE);
-        label.setText("User: ");
+		new Label(composite, SWT.NONE).setText("User: ");
     	GridData gridData = new GridData();
     	gridData.widthHint = 150;
     	gridData.horizontalAlignment = SWT.FILL;
         txtUserName = new Text(composite, SWT.NONE);
         txtUserName.setLayoutData(gridData);
         if (user != null) txtUserName.setText(user);
-        label = new Label(composite, SWT.NONE);
-        label.setText("Password: ");
+        new Label(composite, SWT.NONE).setText("Password: ");
         txtPassword = new Text(composite, SWT.NONE);
         txtPassword.setLayoutData(gridData);
         txtPassword.setEchoChar('*');
         if (password != null) txtPassword.setText(password);
 		gridData = new GridData();
-		gridData.horizontalAlignment = SWT.CENTER;
 		gridData.horizontalSpan = 2;
-        checkbox = new Button(parent, SWT.CHECK);
-        checkbox.setText("Save password encrypted in your user home?");
+        checkbox = new Button(composite, SWT.CHECK);
+        checkbox.setText("Save password");
         checkbox.setLayoutData(gridData);
+        Label label = new Label(composite, SWT.NONE);
+        label.setImage(JFaceResources.getImage(Dialog.DLG_IMG_MESSAGE_WARNING));
+        label.setLayoutData(gridData);
+        label.setText("Saved passwords are stored on your computer in a file\n" +
+        		"that is difficult, but not impossible, for an intruder to read.");
         //getButton(OK).setText("Login");
 		return composite;
 	}
