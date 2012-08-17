@@ -145,9 +145,12 @@ public class TaskListDialog extends ListDialog {
     
     @Override
     protected Control createDialogArea(Composite composite) {
+        Composite parent = (Composite) super.createDialogArea(composite);        
         if (changeDate != null) {
-            final Composite timePanel = new Composite(composite, SWT.NONE);
+            final Composite timePanel = new Composite(parent, SWT.NONE);
+            timePanel.moveAbove(getContents());
             timePanel.setLayout(new GridLayout(3, false));
+            timePanel.setLayoutData(new GridData(GridData.FILL_BOTH));
         	(new Label(timePanel, SWT.NULL)).setText(changeTitle + " at : ");
         	(new Label(timePanel, SWT.NULL)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(changeDate));
             final Button rememberButton = new Button(timePanel, SWT.PUSH);
@@ -208,9 +211,6 @@ public class TaskListDialog extends ListDialog {
                 }
             });
         }
-        
-        Composite parent = (Composite) super.createDialogArea(composite);
-        
         Composite systemPanel = new Composite(parent, SWT.NONE);
         systemPanel.setLayout(new GridLayout(4, false));
         
