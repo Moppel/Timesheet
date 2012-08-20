@@ -271,15 +271,21 @@ public class LocalStorageService extends EventManager implements StorageService 
 	
 	public Task findTaskByNameProjectAndSystem(String name, String project, String system) {
 		try {
-			return (Task) em.createQuery(
-				"select t from Task t " +
-				"where t.name = :name " +
-				"and t.project.name = :project " +
-				"and t.project.system = :system")
-				.setParameter("name", name)
-				.setParameter("project", project)
-				.setParameter("system", system)
-				.getSingleResult();
+			StringBuilder builder = new StringBuilder("select t from Task t " +
+													  "where t.name = :name");
+			if (project != null) {
+				builder.append(" and t.project.name = :project" +
+						" and t.project.system = :system");
+			}
+			Query query = em.createQuery(builder.toString())
+				.setParameter("name", name);
+				
+			if (project != null) {
+				query.setParameter("project", project)
+					 .setParameter("system", system);
+			}
+			return (Task) query.getSingleResult();
+			
 		} catch (Exception e) {
 			return null;
 		}
