@@ -1,9 +1,12 @@
 package com.uwusoft.timesheet.extensionpoint;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,7 @@ import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.model.WholeDayTasks;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
@@ -50,7 +54,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 	
 	@Override
 	public void reload() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -84,11 +87,29 @@ public class LocalStorageService extends EventManager implements StorageService 
 		removeListenerObject(listener);
 	}
 
+    protected void firePropertyChangeEvent(final PropertyChangeEvent event) {
+		if (event == null) {
+			throw new NullPointerException();
+		}
+
+        synchronized (getListeners()) {
+        	for (Object listener : getListeners()) {
+        		((PropertyChangeListener) listener).propertyChange(event);
+        	}    
+        }
+    }
+    
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<TaskEntry> getTaskEntries(Date startDate, Date endDate) {
-		Date date = new Date(); // TODO 
-		Query q = em.createNativeQuery("select t from TaskEntry t where {fn TIMESTAMPDIFF(SQL_TSI_DAY, t.dateTime, " + new Timestamp(date.getTime()) + ")} = 0");
+		Query q = em.createQuery("select t from TaskEntry t" +
+				" where t.task.name <> :beginWDT" +
+				" and t.dateTime >= :startDate" +
+				" and t.dateTime <= :endDate" +
+				" order by t.dateTime")
+				.setParameter("beginWDT", WholeDayTasks.BEGIN_WDT)
+				.setParameter("startDate", new Timestamp(startDate.getTime()))
+				.setParameter("endDate", new Timestamp(endDate.getTime()));
 		return q.getResultList();
 	}
 
@@ -100,20 +121,38 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public void createTaskEntry(TaskEntry task) {
-		// TODO Auto-generated method stub
-		
+		em.getTransaction().begin();
+		Task foundTask = findTaskByNameProjectAndSystem(task.getTask().getName(),
+				task.getTask().getProject() == null ? null : task.getTask().getProject().getName(),
+						task.getTask().getProject() == null ? null : task.getTask().getProject().getSystem());
+		em.persist(new TaskEntry(task.getDateTime(), foundTask));
+		em.getTransaction().commit();
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(task.getDateTime() == null ? new Date() : task.getDateTime());
+		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
 	@Override
 	public void updateTaskEntry(Long id, Date time, boolean wholeDate) {
-		// TODO Auto-generated method stub
-		
+		em.getTransaction().begin();
+		TaskEntry entry = em.find(TaskEntry.class, id);
+		entry.setDateTime(new Timestamp(time.getTime()));
+		em.persist(entry);
+		em.getTransaction().commit();
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(time);
+		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
 	@Override
 	public void updateTaskEntry(Long id, String task, String project, String system, String comment) {
-		// TODO Auto-generated method stub
-		
+		em.getTransaction().begin();
+		TaskEntry entry = em.find(TaskEntry.class, id);
+		Task foundTask = findTaskByNameProjectAndSystem(task, project, system);
+		entry.setTask(foundTask);
+		entry.setComment(comment);
+		em.persist(entry);
+		em.getTransaction().commit();
 	}
 
 	@Override
@@ -127,8 +166,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public Date getLastTaskEntryDate() {
-		// TODO Auto-generated method stub
-		return null;
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
+				" where t.dateTime is not null" +
+				" order by t.dateTime desc")
+				.getResultList();
+		if (taskEntries.isEmpty()) return null;
+		return taskEntries.iterator().next().getDateTime();
 	}
 
 	@Override
@@ -140,14 +184,21 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
+	public void handleYearChange(int lastWeek) {
+	}
+
+	@Override
 	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {
 		for (SubmissionProject project : projects) {
 			for (SubmissionTask submissionTask : project.getTasks()) {
-				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionTask.getProject().getName(), submissionSystem); // TODO fix NPE
+				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), project.getName(), submissionSystem);
 				if (foundTask == null) {
 					em.getTransaction().begin();
-					Project foundProject = findProjectByNameAndSystem(submissionTask.getProject().getName(), submissionSystem);
-					if (foundProject == null) foundProject = new Project(submissionTask.getProject().getName(), submissionSystem);
+					Project foundProject = findProjectByNameAndSystem(project.getName(), submissionSystem);
+					if (foundProject == null) {
+						foundProject = new Project(project.getName(), submissionSystem);
+						em.persist(foundProject);
+					}
 					em.persist(new Task(submissionTask.getName(), foundProject));
 					em.getTransaction().commit();
 				}
@@ -226,11 +277,5 @@ public class LocalStorageService extends EventManager implements StorageService 
 		} catch (Exception e) {
 			return null;
 		}
-	}
-
-	@Override
-	public void handleYearChange(int lastWeek) {
-		// TODO Auto-generated method stub
-		
 	}
 }

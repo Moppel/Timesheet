@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -91,9 +92,9 @@ public class WeekComposite {
     	cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-    	startDate = cal.getTime();
+    	startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-    	endDate = cal.getTime();
+    	endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
     	if (listener != null && firePropertyChange) listener.propertyChange(new PropertyChangeEvent(this, StorageService.PROPERTY_WEEK, null, currentWeekNum));
 		startDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(startDate));
         endDateLabel.setText(DateFormat.getDateInstance(DateFormat.MEDIUM).format(endDate));        

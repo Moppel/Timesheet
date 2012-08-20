@@ -19,7 +19,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class WholeDayTasks {
 	private static WholeDayTasks instance;
-	private static String BEGIN_WDT = "BEGIN_WDT";
+	public static String BEGIN_WDT = "BEGIN_WDT";
 	private static LocalStorageService localStorageService;
 	public static String[] wholeDayTasks = {TimesheetApp.VACATION_TASK, TimesheetApp.TIL_TASK, TimesheetApp.SICK_TASK, TimesheetApp.HOLIDAY_TASK};
 	private Date nextBegin;

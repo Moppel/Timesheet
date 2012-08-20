@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -130,7 +131,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	private boolean addTaskEntries(Integer weekNum) {
 		if (viewer == null) return false;
         Calendar cal = new GregorianCalendar();
-    	cal.setTime(new Date());
+    	cal.setTime(DateUtils.truncate(new Date(), Calendar.DATE));
     	if (weekNum == null) weekNum = weekComposite.getWeekNum();
     	else weekComposite.setCurrentWeekNum(weekNum);
 		List<TaskEntry> taskEntries = new ArrayList<TaskEntry>(storageService.getTaskEntries(weekComposite.getStartDate(), weekComposite.getEndDate()));
@@ -298,6 +299,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
             boolean even = true;
 
             public String getText(Object element) {
+            	if (((TaskEntry) element).getTask().getProject() == null) return "";
 				return ((TaskEntry) element).getTask().getProject().getName();
 			}
 			public Image getImage(Object obj) {
