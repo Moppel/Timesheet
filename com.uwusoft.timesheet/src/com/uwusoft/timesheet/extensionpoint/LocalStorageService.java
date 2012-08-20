@@ -47,8 +47,14 @@ public class LocalStorageService extends EventManager implements StorageService 
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 	}
     
-    public LocalStorageService() {
+    @SuppressWarnings("unchecked")
+	public LocalStorageService() {
 		em = factory.createEntityManager();
+		Query query = em.createQuery("select t from Task t where t.name = :name");
+		List<Task> tasks = query.setParameter("name", StorageService.CHECK_IN).getResultList();
+		if (tasks.isEmpty()) em.persist(new Task(StorageService.CHECK_IN));
+		tasks = query.setParameter("name", StorageService.BREAK).getResultList();
+		if (tasks.isEmpty()) em.persist(new Task(StorageService.BREAK));
 		submissionSystems = TimesheetApp.getSubmissionSystems();
 	}
 	
