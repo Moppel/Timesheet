@@ -28,7 +28,7 @@ public class SetBreakHandler extends AbstractHandler {
 		TaskEntry lastTask = storageService.getLastTask();
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), StorageService.BREAK, new Date());
 		if (timeDialog.open() == Dialog.OK) {
-			storageService.updateTaskEntry(lastTask, timeDialog.getTime(), true);
+			storageService.updateTaskEntryDate(lastTask, true);
 			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
 			storageService.createTaskEntry(task);				
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);

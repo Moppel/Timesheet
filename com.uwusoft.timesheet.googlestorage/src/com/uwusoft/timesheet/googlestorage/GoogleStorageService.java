@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -612,15 +611,14 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public void updateTaskEntry(TaskEntry entry, Date time, boolean wholeDate) {
-		entry.setDateTime(new Timestamp(time.getTime()));
-		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
-        Calendar cal = new GregorianCalendar();
-        //cal.setFirstDayOfWeek(Calendar.MONDAY);
-        cal.setTime(time);
-        int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
+	public void updateTaskEntryDate(TaskEntry entry, boolean wholeDate) {
+		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
         if (wholeDate) {
-    		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
+            Calendar cal = new GregorianCalendar();
+            //cal.setFirstDayOfWeek(Calendar.MONDAY);
+            cal.setTime(entry.getDateTime());
+            int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
+    		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
             createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
         }
 	}

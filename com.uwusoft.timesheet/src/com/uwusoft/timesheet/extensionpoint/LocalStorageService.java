@@ -154,13 +154,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
-	public void updateTaskEntry(TaskEntry entry, Date time, boolean wholeDate) {
+	public void updateTaskEntryDate(TaskEntry entry, boolean wholeDate) {
 		em.getTransaction().begin();
-		entry.setDateTime(new Timestamp(time.getTime()));
 		em.persist(entry);
 		em.getTransaction().commit();
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(time);
 	}
 
 	@Override

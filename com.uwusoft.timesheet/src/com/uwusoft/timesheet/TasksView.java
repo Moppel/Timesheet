@@ -441,7 +441,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
     				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
     				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
-    				storageService.updateTaskEntry(entry, entry.getDateTime(), false);
+    				storageService.updateTaskEntryDate(entry, false);
 		    		viewer.refresh(entry);
     			}
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());

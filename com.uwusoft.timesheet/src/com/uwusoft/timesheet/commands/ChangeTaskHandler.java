@@ -61,7 +61,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return;
-			storageService.updateTaskEntry(lastTaskEntry, listDialog.getTime(), true);
+			storageService.updateTaskEntryDate(lastTaskEntry, true);
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTaskEntry.getTask()));
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 			
