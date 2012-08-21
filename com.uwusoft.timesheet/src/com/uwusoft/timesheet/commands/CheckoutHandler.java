@@ -43,7 +43,7 @@ public class CheckoutHandler extends AbstractHandler {
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
 				lastTask.getTask().display(), shutdownDate);
 		if (timeDialog.open() == Dialog.OK) {
-			storageService.updateTaskEntry(lastTask.getId(), timeDialog.getTime(), true);
+			storageService.updateTaskEntry(lastTask, timeDialog.getTime(), true);
 			storageService.handleDayChange();
 			WholeDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);

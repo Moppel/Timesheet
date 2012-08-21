@@ -43,8 +43,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.model.Project;
-import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.StorageSystemSetup;
@@ -443,7 +441,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
     				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
     				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
-    				storageService.updateTaskEntry(entry.getId(), entry.getDateTime(), false);
+    				storageService.updateTaskEntry(entry, entry.getDateTime(), false);
 		    		viewer.refresh(entry);
     			}
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
@@ -475,12 +473,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    	if (!selectedTask.equals(entry.getTask().getName())
 		    			|| !listDialog.getProject().equals(entry.getTask().getProject().getName())
 		    			|| !listDialog.getSystem().equals(entry.getTask().getProject().getSystem())
-		    			|| !listDialog.getComment().equals(entry.getComment())) {
-		    		Task task = new Task(selectedTask);
-		    		task.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
-		    		entry.setComment(listDialog.getComment());
-		    		entry.setTask(task);
-		    		storageService.updateTaskEntry(entry.getId(), selectedTask, listDialog.getProject(), listDialog.getSystem(), listDialog.getComment());
+		    			|| listDialog.getComment() != null && !listDialog.getComment().equals(entry.getComment())) {
+		    		storageService.updateTaskEntry(entry, selectedTask, listDialog.getProject(), listDialog.getSystem(), listDialog.getComment());
 		    		viewer.refresh(entry);
 					return selectedTask;
 		    	}				

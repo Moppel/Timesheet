@@ -39,6 +39,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 	
 	private static EntityManager em;
     private Map<String,String> submissionSystems;
+    private static LocalStorageService instance;
 
 	static {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
@@ -57,6 +58,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 		if (tasks.isEmpty()) em.persist(new Task(StorageService.BREAK));
 		submissionSystems = TimesheetApp.getSubmissionSystems();
 	}
+    
+    public static LocalStorageService getInstance() {
+    	if (instance == null)
+    		instance = new LocalStorageService();
+    	return instance;
+    }
 	
 	@Override
 	public void reload() {
@@ -121,8 +128,20 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public String[] getUsedCommentsForTask(String task, String project,	String system) {
-		// TODO Auto-generated method stub
-		return null;
+		List<String> comments = new ArrayList<String>();
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> results = em.createQuery("select t from TaskEntry t" +
+				" where t.task.name = :task" +
+				" and t.task.project.name = :project" +
+				" and t.task.project.system = :system")
+				.setParameter("task", task)
+				.setParameter("project", project)
+				.setParameter("system", system)
+				.getResultList();
+		for (TaskEntry entry : results)
+			if (entry.getComment() != null)
+				comments.add(entry.getComment());
+		return comments.toArray(new String[comments.size()]);
 	}
 
 	@Override
@@ -139,21 +158,18 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	@Override
-	public void updateTaskEntry(Long id, Date time, boolean wholeDate) {
+	public void updateTaskEntry(TaskEntry entry, Date time, boolean wholeDate) {
 		em.getTransaction().begin();
-		TaskEntry entry = em.find(TaskEntry.class, id);
 		entry.setDateTime(new Timestamp(time.getTime()));
 		em.persist(entry);
 		em.getTransaction().commit();
         Calendar cal = new GregorianCalendar();
         cal.setTime(time);
-		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
 	@Override
-	public void updateTaskEntry(Long id, String task, String project, String system, String comment) {
+	public void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment) {
 		em.getTransaction().begin();
-		TaskEntry entry = em.find(TaskEntry.class, id);
 		Task foundTask = findTaskByNameProjectAndSystem(task, project, system);
 		entry.setTask(foundTask);
 		entry.setComment(comment);

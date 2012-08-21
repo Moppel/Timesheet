@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -64,6 +65,7 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -610,25 +612,29 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public void updateTaskEntry(Long id, Date time, boolean wholeDate) {
-		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
+	public void updateTaskEntry(TaskEntry entry, Date time, boolean wholeDate) {
+		entry.setDateTime(new Timestamp(time.getTime()));
+		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(time));
         Calendar cal = new GregorianCalendar();
         //cal.setFirstDayOfWeek(Calendar.MONDAY);
         cal.setTime(time);
         int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
         if (wholeDate) {
-    		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
-            createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
+    		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(time));			
+            createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
         }
-        firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, weekNum));
 	}
 
-	public void updateTaskEntry(Long id, String task, String project, String system, String comment) {
+	public void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment) {
+		Task newTask = new Task(task);
+		newTask.setProject(new Project(project, system));
+		entry.setTask(newTask);
+		entry.setComment(comment);
 		if (CHECK_IN.equals(task) || BREAK.equals(task))
-			createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(TASK), task);
+			createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(TASK), task);
 		else
-			updateTask(getTaskLink(task, project, system), id.intValue());
-		createUpdateCellEntry(defaultWorksheet, id.intValue(), headingIndex.get(COMMENT), comment);
+			updateTask(getTaskLink(task, project, system), entry.getId().intValue());
+		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(COMMENT), comment);
 	}
 
 	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {

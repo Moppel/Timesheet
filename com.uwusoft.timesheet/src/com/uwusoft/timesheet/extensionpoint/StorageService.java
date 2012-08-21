@@ -77,21 +77,21 @@ public interface StorageService {
    
     /**
      * update date/time for task
-     * @param id the id of the task entry
+     * @param entry the task entry
      * @param time the time of the task entry
      * @param wholeDate true: set Date, Time and Week column, false: set only Time column
      */
-    void updateTaskEntry(Long id, Date time, boolean wholeDate);
+    void updateTaskEntry(TaskEntry entry, Date time, boolean wholeDate);
     
     /**
      * update task, project, system and comment
-     * @param id the id of the task entry
+     * @param entry the task entry
      * @param task task name
      * @param project project name
      * @param system system name
      * @param comment comment
      */
-    void updateTaskEntry(Long id, String task, String project, String system, String comment);
+    void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment);
 
     /**
      * only to be implemented for sequential storage system

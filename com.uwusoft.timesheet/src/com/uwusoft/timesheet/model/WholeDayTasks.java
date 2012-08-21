@@ -70,7 +70,7 @@ public class WholeDayTasks {
 				(new DateFormatSymbols().getWeekdays().length - 1
 				- preferenceStore.getString(TimesheetApp.NON_WORKING_DAYS).split(SubmissionService.separator).length));
 		
-		localStorageService = new LocalStorageService();
+		localStorageService = LocalStorageService.getInstance();
 	}
 
 	public void addNextTask(Date to, String name) {
