@@ -35,21 +35,17 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class LocalStorageService extends EventManager implements StorageService {
 
 	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
-	public static EntityManagerFactory factory;
-	
+	public static EntityManagerFactory factory;	
 	private static EntityManager em;
     private Map<String,String> submissionSystems;
     private static LocalStorageService instance;
 
-	static {
+    @SuppressWarnings("unchecked")
+	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		configOverrides.put("javax.persistence.jdbc.url",
 				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
-	}
-    
-    @SuppressWarnings("unchecked")
-	public LocalStorageService() {
 		em = factory.createEntityManager();
 		Query query = em.createQuery("select t from Task t where t.name = :name");
 		List<Task> tasks = query.setParameter("name", StorageService.CHECK_IN).getResultList();
@@ -190,8 +186,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 	public Date getLastTaskEntryDate() {
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
-				" where t.dateTime is not null" +
+				" where t.task.name <> :beginWDT" +
+				" and t.dateTime is not null" +
 				" order by t.dateTime desc")
+				.setParameter("beginWDT", WholeDayTasks.BEGIN_WDT)
 				.getResultList();
 		if (taskEntries.isEmpty()) return null;
 		return taskEntries.iterator().next().getDateTime();

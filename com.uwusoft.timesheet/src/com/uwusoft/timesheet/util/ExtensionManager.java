@@ -55,7 +55,7 @@ public class ExtensionManager<T> {
 	private T getFallbackService() {
 		if (fallbackServices.get(serviceId) == null) {
 			if (StorageService.SERVICE_ID.equals(serviceId))
-				fallbackServices.put(serviceId, new LocalStorageService());
+				fallbackServices.put(serviceId, LocalStorageService.getInstance());
 			else if (SubmissionService.SERVICE_ID.equals(serviceId))
 				fallbackServices.put(serviceId, new LocalSubmissionService());
 			else if (HolidayService.SERVICE_ID.equals(serviceId))
