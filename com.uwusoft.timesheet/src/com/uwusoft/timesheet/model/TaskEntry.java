@@ -21,8 +21,8 @@ public class TaskEntry {
 	private float total=0;
 	private boolean wholeDay=false;	
 	private boolean status = false;
-	
-    public static final String PROPERTY_TASK = "task";
+	private boolean syncStatus = false;
+	public static final String PROPERTY_TASK = "task";
 	
     /**
 	 * JPA requires a no-arg constructor
@@ -142,6 +142,11 @@ public class TaskEntry {
 
 	public void setStatus(boolean status) {
 		this.status = status;
+	}
+
+	
+    public void setSyncStatus(boolean syncStatus) {
+		this.syncStatus = syncStatus;
 	}
 
 	@Override

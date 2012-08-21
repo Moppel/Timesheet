@@ -19,6 +19,10 @@ import javax.persistence.Query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.common.EventManager;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
@@ -38,6 +42,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 	public static EntityManagerFactory factory;	
 	private static EntityManager em;
     private Map<String,String> submissionSystems;
+    private Job syncJob;
     private static LocalStorageService instance;
 
     @SuppressWarnings("unchecked")
@@ -53,6 +58,24 @@ public class LocalStorageService extends EventManager implements StorageService 
 		tasks = query.setParameter("name", StorageService.BREAK).getResultList();
 		if (tasks.isEmpty()) em.persist(new Task(StorageService.BREAK));
 		submissionSystems = TimesheetApp.getSubmissionSystems();
+		
+		syncJob = new Job("Synchronizing with storage system") {
+			protected IStatus run(IProgressMonitor monitor) {
+				List<TaskEntry> entries = em.createQuery("select t from TaskEntry t " +
+						"where t.syncStatus <> :status")
+						.setParameter("status", Boolean.TRUE)
+						.getResultList();
+				StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+						.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
+				for (TaskEntry entry : entries) {
+					storageService.createTaskEntry(entry);
+					em.getTransaction().begin();
+					entry.setSyncStatus(Boolean.TRUE);
+					em.getTransaction().commit();
+				}
+		        return Status.OK_STATUS;
+			}			
+		};
 	}
     
     public static LocalStorageService getInstance() {
@@ -226,8 +249,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 	@Override
 	public Set<String> submitEntries(int weekNum) {
 		return null;
-		// TODO Auto-generated method stub
-		
+		// TODO Auto-generated method stub		
 	}
 
 	public void submitFillTask(Date date) {
@@ -300,5 +322,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 		} catch (Exception e) {
 			return null;
 		}
+	}
+
+	public void synchronize() {
+		final StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+				.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));		
+		syncJob.schedule();
+		storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 	}
 }
