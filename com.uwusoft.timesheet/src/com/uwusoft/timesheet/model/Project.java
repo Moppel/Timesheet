@@ -16,6 +16,8 @@ public class Project {
 	private Long id;
 	private String name;
 	private String system;
+	@SuppressWarnings("unused")
+	private boolean syncStatus = false;
 	private Long externalId;
 	@OneToMany
 	private List<Task> tasks = new ArrayList<Task>();
@@ -65,6 +67,10 @@ public class Project {
 	
 	public void removeTask(Task task) {
 		tasks.remove(task);
+	}
+
+	public void setSyncStatus(boolean syncStatus) {
+		this.syncStatus = syncStatus;
 	}
 
 	public Long getExternalId() {

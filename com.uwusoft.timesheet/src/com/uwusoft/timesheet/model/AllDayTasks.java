@@ -15,7 +15,6 @@ import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
-import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class AllDayTasks {
 	private static AllDayTasks instance;
@@ -34,8 +33,11 @@ public class AllDayTasks {
 	private AllDayTasks() {
 		em = LocalStorageService.factory.createEntityManager();
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime desc")
-			.getResultList();
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true" +
+				" and t.syncStatus <> :status" +
+				" order by t.dateTime desc")
+				.setParameter("status", true)
+				.getResultList();
 		Date begin;
 		if (taskEntryList.isEmpty()) {
 			begin = BusinessDayUtil.getNextBusinessDay(new Date(), false);
@@ -47,17 +49,13 @@ public class AllDayTasks {
 			for (TaskEntry beginTask : beginTaskEntries) {
 				em.remove(beginTask);
 			}
-			@SuppressWarnings("unchecked")
-			List<Task> beginTasks = em.createQuery("select t from Task t where t.name = :name")
+			Task beginTask = (Task) em.createQuery("select t from Task t where t.name = :name")
 				.setParameter("name", BEGIN_ADT)
-				.getResultList();
-			Task beginTask;
-			if (beginTasks.isEmpty()) {
+				.getSingleResult();
+			if (beginTask == null) {
 				beginTask = new Task(BEGIN_ADT);
 				em.persist(beginTask);
 			}
-			else
-				beginTask = beginTasks.iterator().next();
 			em.persist(new TaskEntry(begin, beginTask));
 			em.getTransaction().commit();
 		}
@@ -100,11 +98,12 @@ public class AllDayTasks {
 	}
 
 	public void createTaskEntries(Date lastDate) {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-				.getService(preferenceStore.getString(StorageService.PROPERTY));
+		StorageService storageService = LocalStorageService.getInstance();
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime asc")
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime asc" +
+				" and t.syncStatus <> :status" +
+				" order by t.dateTime desc")
+				.setParameter("status", true)
 				.getResultList();
 		if (taskEntryList.isEmpty()) return;
 		

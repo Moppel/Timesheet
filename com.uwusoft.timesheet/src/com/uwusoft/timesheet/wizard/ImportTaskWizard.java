@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.custom.BusyIndicator;
 
-import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -29,10 +28,8 @@ public class ImportTaskWizard extends Wizard {
 		submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(system);
 		this.system = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
 				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (storageService == null)
-			this.storageService = new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+			this.storageService = LocalStorageService.getInstance();
 		else
 			this.storageService = storageService;
 		setNeedsProgressMonitor(true);

@@ -51,7 +51,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	
     private static final String timeFormat = "HH:mm";
 
-	private StorageService storageService;
+	private LocalStorageService storageService;
 	private TableViewer viewer;
 	private WeekComposite weekComposite;
 	

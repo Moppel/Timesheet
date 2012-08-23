@@ -14,6 +14,8 @@ public class Task {
 	private String name;
     @ManyToOne
 	private Project project;
+	@SuppressWarnings("unused")
+	private boolean syncStatus = false;
     private Long externalId;
 
 	/**
@@ -58,6 +60,10 @@ public class Task {
 		this.project = project;
 	}
 	
+	public void setSyncStatus(boolean syncStatus) {
+		this.syncStatus = syncStatus;
+	}
+
 	public Long getExternalId() {
 		return externalId;
 	}
