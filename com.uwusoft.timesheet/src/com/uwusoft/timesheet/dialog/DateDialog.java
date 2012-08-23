@@ -22,7 +22,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.AllDayTasks;
 
 public class DateDialog extends Dialog {
 
@@ -54,12 +54,12 @@ public class DateDialog extends Dialog {
         
         (new Label(composite, SWT.NULL)).setText("Task: ");
         taskCombo = new Combo(composite, SWT.READ_ONLY);
-        List<String> wholeDayTasks = new ArrayList<String>();
-        for (String wholeDayTask : WholeDayTasks.wholeDayTasks)
-        	wholeDayTasks.add(preferenceStore.getString(wholeDayTask));
-        taskCombo.setItems(wholeDayTasks.toArray(new String[wholeDayTasks.size()]));
-		for (int i = 0; i < wholeDayTasks.size(); i++) {
-			if (task.equals(wholeDayTasks.get(i))) {
+        List<String> allDayTasks = new ArrayList<String>();
+        for (String allDayTask : AllDayTasks.allDayTasks)
+        	allDayTasks.add(preferenceStore.getString(allDayTask));
+        taskCombo.setItems(allDayTasks.toArray(new String[allDayTasks.size()]));
+		for (int i = 0; i < allDayTasks.size(); i++) {
+			if (task.equals(allDayTasks.get(i))) {
 				taskCombo.select(i);
 				break;
 			}

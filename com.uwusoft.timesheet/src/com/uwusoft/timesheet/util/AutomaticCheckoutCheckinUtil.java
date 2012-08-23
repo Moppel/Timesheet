@@ -6,10 +6,8 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.ParameterizedCommand;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.commands.ICommandService;
@@ -20,16 +18,14 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
 import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.model.WholeDayTasks;
 
 public class AutomaticCheckoutCheckinUtil {
 	public static void execute() {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY))) return;
-		StorageService storageService = new ExtensionManager<StorageService>(
-				StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		LocalStorageService storageService = LocalStorageService.getInstance();
 		
 		Date startDate = TimesheetApp.startDate;
 		Date shutdownDate = TimesheetApp.shutDownDate;
@@ -64,12 +60,12 @@ public class AutomaticCheckoutCheckinUtil {
 			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
 			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
 			while (end.before(start)) { // create missing whole day tasks until last business day
-				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing whole day task",
-						preferenceStore.getString(WholeDayTasks.wholeDayTasks[0]), end);
+				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing all day task",
+						Activator.getDefault().getPreferenceStore().getString(AllDayTasks.allDayTasks[0]), end);
 				if (dateDialog.open() == Dialog.OK) {
 					do {
 						storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
-								WholeDayTasks.getInstance().getTotal(), true));
+								AllDayTasks.getInstance().getTotal(), true));
 					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
 				}
 			}

@@ -21,7 +21,6 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.StatusLineManager;
 import org.eclipse.jface.fieldassist.AutoCompleteField;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -57,6 +56,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.commands.CheckinHandler;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Task;
@@ -106,9 +106,7 @@ public class TaskListDialog extends ListDialog {
 
     public TaskListDialog(Shell shell, Task taskSelected, boolean showComment) {
         super(shell);
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		storageService = new ExtensionManager<StorageService>(
-                StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY));
+		storageService = LocalStorageService.getInstance();
 		Set<String> systemsList = TimesheetApp.getSubmissionSystems().keySet();
 		if (systemsList.isEmpty()) {
 			systemsList = new HashSet<String>();

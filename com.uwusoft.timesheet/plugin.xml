@@ -100,7 +100,7 @@
                </visibleWhen>
             </command>
             <menu
-                  commandId="Timesheet.wholeDayTask"
+                  commandId="Timesheet.allDayTask"
                   icon="icons/day_16.png"
                   label="Set all day task">
                <visibleWhen
@@ -219,7 +219,7 @@
                </visibleWhen>
             </command>
             <command
-                  commandId="Timesheet.wholeDayTask"
+                  commandId="Timesheet.allDayTask"
                   icon="icons/day_32.png"
                   label="Set all day task"
                   style="pulldown">
@@ -281,8 +281,8 @@
       </menuContribution>
       <menuContribution
             allPopups="false"
-            class="com.uwusoft.timesheet.commands.WholeDayTaskFactory"
-            locationURI="menu:Timesheet.wholeDayTask">
+            class="com.uwusoft.timesheet.commands.AllDayTaskFactory"
+            locationURI="menu:Timesheet.allDayTask">
       </menuContribution>
    </extension>
    <extension
@@ -374,8 +374,8 @@
          </commandParameter>
       </command>
       <command
-            defaultHandler="com.uwusoft.timesheet.commands.WholeDayTaskHandler"
-            id="Timesheet.wholeDayTask"
+            defaultHandler="com.uwusoft.timesheet.commands.AllDayTaskHandler"
+            id="Timesheet.allDayTask"
             name="All day">
          <commandParameter
                id="Timesheet.commands.task"

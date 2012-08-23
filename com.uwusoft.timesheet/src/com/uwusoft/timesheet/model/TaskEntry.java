@@ -19,9 +19,11 @@ public class TaskEntry {
 	private Task task;
 	private String comment;
 	private float total=0;
-	private boolean wholeDay=false;	
+	private boolean allDay=false;	
 	private boolean status = false;
+	@SuppressWarnings("unused")
 	private boolean syncStatus = false;
+	private Long rowNum;
 	public static final String PROPERTY_TASK = "task";
 	
     /**
@@ -57,7 +59,7 @@ public class TaskEntry {
 	 */
 	public TaskEntry(Date dateTime, Task task, float total, boolean wholeDay) {
 		this(dateTime, task, total);
-		this.wholeDay = wholeDay;
+		this.allDay = wholeDay;
 	}	
 	
 	/**
@@ -87,7 +89,7 @@ public class TaskEntry {
 		this(dateTime, new Task(task, new Project(project, system)), total);
 		this.id = id;
 		this.comment = comment;
-		this.wholeDay = wholeDay;
+		this.allDay = wholeDay;
 		this.status = status;
 	}
 	
@@ -132,8 +134,8 @@ public class TaskEntry {
 		this.total = total;
 	}
 
-	public boolean isWholeDay() {
-		return wholeDay;
+	public boolean isAllDay() {
+		return allDay;
 	}
 
 	public boolean isStatus() {
@@ -149,8 +151,16 @@ public class TaskEntry {
 		this.syncStatus = syncStatus;
 	}
 
+	public Long getRowNum() {
+		return rowNum;
+	}
+
+	public void setRowNum(Long rowNum) {
+		this.rowNum = rowNum;
+	}
+
 	@Override
 	public String toString() {
-		return "Task [Date=" + dateTime + ", task=" + task.getName() + (task.getProject() == null ? "" : " (project: " + task.getProject().getName() + ", system: " + task.getProject().getSystem() + ")") + ", total=" + total + ", wholeDay=" + wholeDay + "]";
+		return "Task [Date=" + dateTime + ", task=" + task.getName() + (task.getProject() == null ? "" : " (project: " + task.getProject().getName() + ", system: " + task.getProject().getSystem() + ")") + ", total=" + total + ", allDay=" + allDay + "]";
 	}
 }

@@ -16,6 +16,7 @@ public class Project {
 	private Long id;
 	private String name;
 	private String system;
+	private Long externalId;
 	@OneToMany
 	private List<Task> tasks = new ArrayList<Task>();
 
@@ -36,10 +37,6 @@ public class Project {
 
 	public Long getId() {
 		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public String getName() {
@@ -68,5 +65,13 @@ public class Project {
 	
 	public void removeTask(Task task) {
 		tasks.remove(task);
+	}
+
+	public Long getExternalId() {
+		return externalId;
+	}
+
+	public void setExternalId(Long externalId) {
+		this.externalId = externalId;
 	}
 }

@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -384,6 +385,24 @@ public class GoogleStorageService extends EventManager implements StorageService
         return projects;    	
     }
     
+	public Collection<SubmissionProject> getImportedProjects(String system) {
+		Map<String, SubmissionProject> projects = new LinkedHashMap<String, SubmissionProject>();
+		try {
+			for (ListEntry entry : service.getFeed(getListFeedUrl(system), ListFeed.class).getEntries()) {
+				String project = entry.getCustomElements().getValue(PROJECT);
+				if (projects.get(project) == null)
+					projects.put(project, new SubmissionProject(Long.parseLong(entry.getCustomElements().getValue(PROJECT+ID)), project));
+				projects.get(project).addTask(new SubmissionTask(Long.parseLong(entry.getCustomElements().getValue(ID)),
+						entry.getCustomElements().getValue(TASK)));
+			}
+		} catch (IOException e) {
+			MessageBox.setError(title, e.getMessage());
+		} catch (ServiceException e) {
+			MessageBox.setError(title, e.getResponseBody());
+		}
+		return projects.values();
+	}
+    
     public List<String> findTasksBySystemAndProject(String system, String project) {
     	List<String> tasks = new ArrayList<String>();
 		URL worksheetListFeedUrl = getListFeedUrl(system);
@@ -442,6 +461,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return taskEntries;
     }
     
+	@Override
     public String[] getUsedCommentsForTask(String task, String project, String system) {
 		if (StringUtils.isEmpty(task)) return new String[] {StringUtils.EMPTY};
 		Set<String> comments = new HashSet<String>();
@@ -463,7 +483,8 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return new String[comments.size()];
     }
     
-    public void createTaskEntry(TaskEntry task) {
+	@Override
+    public Long createTaskEntry(TaskEntry task) {
         try {
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			ListEntry timeEntry = new ListEntry();
@@ -487,7 +508,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			else {
 				if (task.getTotal() != 0) {
 					timeEntry.getCustomElements().setValueLocal(TOTAL, Float.toString(task.getTotal()));
-					if (task.isWholeDay())
+					if (task.isAllDay())
 						timeEntry.getCustomElements().setValueLocal(DAILY_TOTAL, Float.toString(task.getTotal()));
 				}
 				taskLink = getTaskLink(task.getTask().getName(), task.getTask().getProject().getName(), task.getTask().getProject().getSystem());
@@ -495,7 +516,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			if (task.getComment() != null) timeEntry.getCustomElements().setValueLocal(COMMENT, task.getComment());
 			service.insert(listFeedUrl, timeEntry);
 
-            if (!reloadWorksheets()) return;
+            if (!reloadWorksheets()) return null;
             
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "create task entry: " + task
             		+ (taskLink == null ? "" : " (task link: " + taskLink +")")));
@@ -503,7 +524,7 @@ public class GoogleStorageService extends EventManager implements StorageService
         	ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
         	if (feed.getTotalResults() == 1) {
     			MessageBox.setError(title, "Couldn't insert cell (Maybe there's an empty line in the spreadsheet)");
-    			return;
+    			return null;
         	}
             createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(ID), "=ROW()");
             
@@ -513,12 +534,14 @@ public class GoogleStorageService extends EventManager implements StorageService
 				if (task.getTotal() == 0)
 					createUpdateCellEntry(defaultWorksheet,	feed.getEntries().size() + 1, headingIndex.get(TOTAL), "=(R[0]C[-1]-R[-1]C[-1])*24"); // calculate task total
 			}
-			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
+        	feed = service.getFeed(listFeedUrl, ListFeed.class);
+            return Long.parseLong(feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements().getValue(ID));
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
 		}
+		return null;
     }
 
 	@Override
@@ -635,7 +658,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		createUpdateCellEntry(defaultWorksheet, entry.getId().intValue(), headingIndex.get(COMMENT), comment);
 	}
 
-	public void importTasks(String submissionSystem, List<SubmissionProject> projects) {
+	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {

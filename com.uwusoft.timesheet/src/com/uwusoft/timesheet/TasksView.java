@@ -16,7 +16,6 @@ import java.util.List;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -42,10 +41,9 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.util.ExtensionManager;
-import com.uwusoft.timesheet.util.StorageSystemSetup;
 import com.uwusoft.timesheet.util.WeekComposite;
 
 public class TasksView extends ViewPart implements PropertyChangeListener {
@@ -54,7 +52,6 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     private static final String timeFormat = "HH:mm";
 
 	private StorageService storageService;
-	private IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 	private TableViewer viewer;
 	private WeekComposite weekComposite;
 	
@@ -87,11 +84,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	public void createPartControl(Composite parent) {
 		parent.setLayout(new GridLayout(1, false));
 		
-		if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY)))
-			StorageSystemSetup.execute();
-		
-		storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-					.getService(preferenceStore.getString(StorageService.PROPERTY));
+		storageService = LocalStorageService.getInstance();
 		
         Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());        
@@ -172,13 +165,13 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
-		    	if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isWholeDay()) {
+		    	if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isAllDay()) {
 		    		return DateFormat.getDateInstance(DateFormat.SHORT).format(date);
 		    	}
 				return "";				
 			}
 			public Image getImage(Object obj) {
-		    	if (StorageService.CHECK_IN.equals(((TaskEntry) obj).getTask().getName()) || ((TaskEntry) obj).isWholeDay())
+		    	if (StorageService.CHECK_IN.equals(((TaskEntry) obj).getTask().getName()) || ((TaskEntry) obj).isAllDay())
 		    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/date.png").createImage();
 		    	return null;
 			}
@@ -217,11 +210,11 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 			public String getText(Object element) {
 				Timestamp date = ((TaskEntry) element).getDateTime();
 				if (date == null) return "Incomplete";
-				else if (!((TaskEntry) element).isWholeDay()) return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
+				else if (!((TaskEntry) element).isAllDay()) return DateFormat.getTimeInstance(DateFormat.SHORT).format(date);
 				return "";
 			}
 			public Image getImage(Object obj) {
-				if (!((TaskEntry) obj).isWholeDay() && ((TaskEntry) obj).getDateTime()!= null) return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();
+				if (!((TaskEntry) obj).isAllDay() && ((TaskEntry) obj).getDateTime()!= null) return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/clock.png").createImage();
 				return null;
 			}
             @Override public void update(ViewerCell cell) {
@@ -492,7 +485,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 	}
 
 	private Color getColor(final TableViewer viewer, Object element, boolean even) {
-		if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isWholeDay())
+		if (StorageService.CHECK_IN.equals(((TaskEntry) element).getTask().getName()) || ((TaskEntry) element).isAllDay())
 			return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_DARK_GRAY);
 		if( even ) return null;
 		return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_GRAY);

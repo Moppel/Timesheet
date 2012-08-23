@@ -22,7 +22,7 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.AllDayTasks;
 
 public class BusinessDayUtil {
 
@@ -117,7 +117,7 @@ public class BusinessDayUtil {
 				//if (holidayService.isValid(nextDay)) { // store holiday entry
 					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 							.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-					TaskEntry taskEntry = new TaskEntry(nextDay, task, WholeDayTasks.getInstance().getTotal(), true);
+					TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
 					taskEntry.setComment(holidayService.getName(nextDay));
 					storageService.createTaskEntry(taskEntry);
 				//}

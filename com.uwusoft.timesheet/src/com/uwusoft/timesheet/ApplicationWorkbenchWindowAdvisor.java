@@ -25,7 +25,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
-import com.uwusoft.timesheet.commands.WholeDayTaskFactory;
+import com.uwusoft.timesheet.commands.AllDayTaskFactory;
 import com.uwusoft.timesheet.util.AutomaticCheckoutCheckinUtil;
 
 public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
@@ -103,12 +103,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
                         trayMenu.add(new CommandContributionItem(p));
                     }
 
-                    MenuManager wholeDayTask = new MenuManager("Set all day task",
-                    		AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/day_16.png"), "Timesheet.wholeDayTask");
+                    MenuManager allDayTask = new MenuManager("Set all day task",
+                    		AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/day_16.png"), "Timesheet.allDayTask");
                     
-                    new WholeDayTaskFactory(wholeDayTask).createContributionItems(window, null);
+                    new AllDayTaskFactory(allDayTask).createContributionItems(window, null);
 
-                    trayMenu.add(wholeDayTask);
+                    trayMenu.add(allDayTask);
 
                     p = new CommandContributionItemParameter(window, null, "Timesheet.checkout", CommandContributionItem.STYLE_PUSH);
                     p.icon = AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/check_out_16.png");

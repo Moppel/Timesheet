@@ -12,16 +12,16 @@ import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.util.MessageBox;
 
-public class WholeDayTaskHandler extends AbstractHandler {
+public class AllDayTaskHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		
-		WholeDayTasks wholeDayTasks = WholeDayTasks.getInstance();
+		AllDayTasks wholeDayTasks = AllDayTasks.getInstance();
 		Date startDate = wholeDayTasks.getNextBegin();
 		String task = event.getParameter("Timesheet.commands.task");
 		DateDialog dateDialog;
@@ -32,7 +32,7 @@ public class WholeDayTaskHandler extends AbstractHandler {
 				wholeDayTasks.addNextTask(dateDialog.getTime(), dateDialog.getTask());
 			}
 		} catch (NotDefinedException e) {
-			MessageBox.setError("Whole day task", e.getLocalizedMessage());
+			MessageBox.setError("All day task", e.getLocalizedMessage());
 		}
 		return null;
 	}

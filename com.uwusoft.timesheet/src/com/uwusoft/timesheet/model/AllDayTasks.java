@@ -17,24 +17,24 @@ import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
-public class WholeDayTasks {
-	private static WholeDayTasks instance;
-	public static String BEGIN_WDT = "BEGIN_WDT";
+public class AllDayTasks {
+	private static AllDayTasks instance;
+	public static String BEGIN_ADT = "BEGIN_ADT";
 	private static LocalStorageService localStorageService;
-	public static String[] wholeDayTasks = {TimesheetApp.VACATION_TASK, TimesheetApp.TIL_TASK, TimesheetApp.SICK_TASK, TimesheetApp.HOLIDAY_TASK};
+	public static String[] allDayTasks = {TimesheetApp.VACATION_TASK, TimesheetApp.TIL_TASK, TimesheetApp.SICK_TASK, TimesheetApp.HOLIDAY_TASK};
 	private Date nextBegin;
 	private float total;
 	private EntityManager em;
 	
-	public static WholeDayTasks getInstance() {
-		if (instance == null) instance = new WholeDayTasks();
+	public static AllDayTasks getInstance() {
+		if (instance == null) instance = new AllDayTasks();
 		return instance;
 	}
 	
-	private WholeDayTasks() {
+	private AllDayTasks() {
 		em = LocalStorageService.factory.createEntityManager();
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime desc")
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime desc")
 			.getResultList();
 		Date begin;
 		if (taskEntryList.isEmpty()) {
@@ -42,18 +42,18 @@ public class WholeDayTasks {
 			em.getTransaction().begin();
 			@SuppressWarnings("unchecked")
 			List<TaskEntry> beginTaskEntries = em.createQuery("select t from TaskEntry t where t.task.name=:name")
-					.setParameter("name", BEGIN_WDT)
+					.setParameter("name", BEGIN_ADT)
 					.getResultList();
 			for (TaskEntry beginTask : beginTaskEntries) {
 				em.remove(beginTask);
 			}
 			@SuppressWarnings("unchecked")
 			List<Task> beginTasks = em.createQuery("select t from Task t where t.name = :name")
-				.setParameter("name", BEGIN_WDT)
+				.setParameter("name", BEGIN_ADT)
 				.getResultList();
 			Task beginTask;
 			if (beginTasks.isEmpty()) {
-				beginTask = new Task(BEGIN_WDT);
+				beginTask = new Task(BEGIN_ADT);
 				em.persist(beginTask);
 			}
 			else
@@ -104,13 +104,13 @@ public class WholeDayTasks {
 		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 				.getService(preferenceStore.getString(StorageService.PROPERTY));
 		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.wholeDay=true order by t.dateTime asc")
+		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime asc")
 				.getResultList();
 		if (taskEntryList.isEmpty()) return;
 		
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> beginTaskEntryList = em.createQuery("select t from TaskEntry t where t.task.name = :name")
-				.setParameter("name", BEGIN_WDT)
+				.setParameter("name", BEGIN_ADT)
 				.getResultList();
 		if (beginTaskEntryList.isEmpty()) return;
 		

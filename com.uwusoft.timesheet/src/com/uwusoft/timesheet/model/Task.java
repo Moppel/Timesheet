@@ -14,7 +14,8 @@ public class Task {
 	private String name;
     @ManyToOne
 	private Project project;
-	
+    private Long externalId;
+
 	/**
 	 * JPA requires a no-arg constructor
 	 */
@@ -41,10 +42,6 @@ public class Task {
 		return id;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public String getName() {
 		return name;
 	}
@@ -59,6 +56,14 @@ public class Task {
 
 	public void setProject(Project project) {
 		this.project = project;
+	}
+	
+	public Long getExternalId() {
+		return externalId;
+	}
+
+	public void setExternalId(Long externalId) {
+		this.externalId = externalId;
 	}
 
 	@Override

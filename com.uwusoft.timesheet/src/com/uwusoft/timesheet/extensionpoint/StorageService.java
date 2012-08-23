@@ -2,6 +2,7 @@ package com.uwusoft.timesheet.extensionpoint;
 
 import java.beans.PropertyChangeListener;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -45,6 +46,8 @@ public interface StorageService {
 
     List<String> getProjects(String system);
     
+    Collection<SubmissionProject> getImportedProjects(String system);
+    
     /**
      * full reload
      */
@@ -72,8 +75,9 @@ public interface StorageService {
      * store task
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task
      * @param task
+     * @return id of the created entry
      */
-    void createTaskEntry(TaskEntry task);
+    Long createTaskEntry(TaskEntry task);
    
     /**
      * update date/time for task
@@ -108,7 +112,7 @@ public interface StorageService {
     
     Date getLastTaskEntryDate();
     
-    void importTasks(String submissionSystem, List<SubmissionProject> projects);
+    void importTasks(String submissionSystem, Collection<SubmissionProject> projects);
     
     Set<String> submitEntries(int weekNum);
     

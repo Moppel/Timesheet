@@ -8,19 +8,17 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.services.ISourceProviderService;
 
-import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class CheckinHandler extends AbstractHandler {
@@ -28,10 +26,8 @@ public class CheckinHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		String startTime = event.getParameter("Timesheet.commands.startTime");
-		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-				.getService(preferenceStore.getString(StorageService.PROPERTY));
+		LocalStorageService storageService = LocalStorageService.getInstance();
 		Date startDate = new Date();
 		try {
 			if (startTime != null) startDate = StorageService.formatter.parse(startTime);
@@ -51,6 +47,7 @@ public class CheckinHandler extends AbstractHandler {
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
+			storageService.synchronize(null);
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 			commandStateService.setEnabled(true);

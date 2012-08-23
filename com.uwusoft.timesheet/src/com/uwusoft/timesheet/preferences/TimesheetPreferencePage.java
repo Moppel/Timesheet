@@ -20,7 +20,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
-import com.uwusoft.timesheet.model.WholeDayTasks;
+import com.uwusoft.timesheet.model.AllDayTasks;
 
 public class TimesheetPreferencePage extends FieldEditorPreferencePage
 		implements IWorkbenchPreferencePage {
@@ -46,7 +46,7 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
 		addField(new WeekdayListEditor(TimesheetApp.NON_WORKING_DAYS, "Non Working Days:",	getFieldEditorParent()));
-        for (String task : WholeDayTasks.wholeDayTasks)
+        for (String task : AllDayTasks.allDayTasks)
     		addField(new TaskFieldEditor(task, Messages.getString(task) + " task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getFieldEditorParent()));
