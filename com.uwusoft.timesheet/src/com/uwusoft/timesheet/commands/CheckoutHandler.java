@@ -39,7 +39,7 @@ public class CheckoutHandler extends AbstractHandler {
 				lastTask.getTask().display(), shutdownDate);
 		if (timeDialog.open() == Dialog.OK) {
 			storageService.updateTaskEntryDate(lastTask, true);
-			storageService.synchronize(lastTask);
+			storageService.synchronize(lastTask, false);
 			storageService.handleDayChange();
 			AllDayTasks.getInstance().createTaskEntries(timeDialog.getTime());
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);

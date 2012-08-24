@@ -435,6 +435,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
     				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
     				storageService.updateTaskEntryDate(entry, false);
+    				storageService.synchronize(null, true);
 		    		viewer.refresh(entry);
     			}
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
@@ -468,6 +469,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    			|| !listDialog.getSystem().equals(entry.getTask().getProject().getSystem())
 		    			|| listDialog.getComment() != null && !listDialog.getComment().equals(entry.getComment())) {
 		    		storageService.updateTaskEntry(entry, selectedTask, listDialog.getProject(), listDialog.getSystem(), listDialog.getComment());
+		    		storageService.synchronize(null, false);
 		    		viewer.refresh(entry);
 					return selectedTask;
 		    	}				
