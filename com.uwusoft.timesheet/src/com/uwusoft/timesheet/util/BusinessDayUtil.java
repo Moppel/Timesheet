@@ -18,11 +18,11 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.SingleSelectSystemDialog;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
+import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.model.AllDayTasks;
 
 public class BusinessDayUtil {
 
@@ -115,8 +115,7 @@ public class BusinessDayUtil {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
 				handleWeekAndYearChange(startDate, nextDay);
 				//if (holidayService.isValid(nextDay)) { // store holiday entry
-					StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-							.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
+					LocalStorageService storageService = LocalStorageService.getInstance();
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
 					taskEntry.setComment(holidayService.getName(nextDay));
 					storageService.createTaskEntry(taskEntry);
@@ -145,14 +144,10 @@ public class BusinessDayUtil {
 		cal.setTime(endDate);
 		int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
 		int endYear = cal.get(Calendar.YEAR);
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		if (startWeek != endWeek)
-			new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY)).handleWeekChange();
+			LocalStorageService.getInstance().handleWeekChange();
 		if (startYear != endYear)
-			new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(preferenceStore.getString(StorageService.PROPERTY))
-					.handleYearChange(startWeek);
+			LocalStorageService.getInstance().handleYearChange(startWeek);
 	}
 
 	/**

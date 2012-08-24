@@ -14,10 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.StatusLineManager;
 import org.eclipse.jface.fieldassist.AutoCompleteField;
 import org.eclipse.jface.fieldassist.TextContentAdapter;
@@ -73,7 +69,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
  */
 public class TaskListDialog extends ListDialog {
 
-    private StorageService storageService;
+    private LocalStorageService storageService;
     private SubmissionService submissionService;
     private Task taskSelected;
     private boolean showComment;

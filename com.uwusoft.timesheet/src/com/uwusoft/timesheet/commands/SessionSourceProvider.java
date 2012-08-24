@@ -3,14 +3,12 @@ package com.uwusoft.timesheet.commands;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 
-import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
-import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class SessionSourceProvider extends AbstractSourceProvider {
 	public final static String SESSION_STATE = "com.uwusoft.timesheet.commands.sourceprovider.active";
@@ -22,16 +20,10 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 
 	public SessionSourceProvider() {
 		super();
-		String storageSystem = Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY);
-		if (StringUtils.isEmpty(storageSystem))
-			enabled = false;
-		else {
-			StorageService storageService = new ExtensionManager<StorageService>(
-					StorageService.SERVICE_ID).getService(storageSystem);
-			TaskEntry lastTask = storageService.getLastTask();
-			enabled = lastTask != null;
-			breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
-		}
+		LocalStorageService storageService = LocalStorageService.getInstance();
+		TaskEntry lastTask = storageService.getLastTask();
+		enabled = lastTask != null;
+		breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
 	}
 
 	@Override

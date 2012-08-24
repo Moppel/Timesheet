@@ -10,13 +10,11 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
-import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.SubmissionDialog;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -25,9 +23,7 @@ public class SubmissionHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-				.getService(preferenceStore.getString(StorageService.PROPERTY));
+		LocalStorageService storageService = LocalStorageService.getInstance();
         
 		Calendar cal = new GregorianCalendar();
     	cal.setTime(new Date());
@@ -40,8 +36,7 @@ public class SubmissionHandler extends AbstractHandler {
 		if (lastTaskEntryDate != null) cal.setTime(lastTaskEntryDate);
 		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum, cal.get(Calendar.WEEK_OF_YEAR));
 		if (submissionDialog.open() == Dialog.OK) {
-			Set<String> systems = new ExtensionManager<StorageService>(StorageService.SERVICE_ID).getService(preferenceStore
-					.getString(StorageService.PROPERTY)).submitEntries(submissionDialog.getWeekNum());
+			Set<String> systems = storageService.submitEntries(submissionDialog.getWeekNum());
 			if (systems.isEmpty())
 				MessageBox.setMessage("Submission", "No more entries to submit for " + submissionDialog.getWeekNum());			
 			else {

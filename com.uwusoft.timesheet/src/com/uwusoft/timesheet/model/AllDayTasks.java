@@ -12,14 +12,13 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class AllDayTasks {
 	private static AllDayTasks instance;
 	public static String BEGIN_ADT = "BEGIN_ADT";
-	private static LocalStorageService localStorageService;
+	private static LocalStorageService storageService;
 	public static String[] allDayTasks = {TimesheetApp.VACATION_TASK, TimesheetApp.TIL_TASK, TimesheetApp.SICK_TASK, TimesheetApp.HOLIDAY_TASK};
 	private Date nextBegin;
 	private float total;
@@ -68,17 +67,17 @@ public class AllDayTasks {
 				(new DateFormatSymbols().getWeekdays().length - 1
 				- preferenceStore.getString(TimesheetApp.NON_WORKING_DAYS).split(SubmissionService.separator).length));
 		
-		localStorageService = LocalStorageService.getInstance();
+		storageService = LocalStorageService.getInstance();
 	}
 
 	public void addNextTask(Date to, String name) {
 		em.getTransaction().begin();
 		Task task = TimesheetApp.createTask(name);
-		Project project = localStorageService.findProjectByNameAndSystem(task.getProject().getName(), task.getProject().getSystem());
+		Project project = storageService.findProjectByNameAndSystem(task.getProject().getName(), task.getProject().getSystem());
 		if (project == null) em.persist(task.getProject());
 		else task.setProject(project);
 		
-		Task foundTask = localStorageService.findTaskByNameProjectAndSystem(
+		Task foundTask = storageService.findTaskByNameProjectAndSystem(
 				task.getName(), task.getProject().getName(), task.getProject().getSystem());
 		if (foundTask == null) em.persist(task);
 		else task = foundTask;
@@ -98,7 +97,6 @@ public class AllDayTasks {
 	}
 
 	public void createTaskEntries(Date lastDate) {
-		StorageService storageService = LocalStorageService.getInstance();
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime asc" +
 				" and t.syncStatus <> :status" +

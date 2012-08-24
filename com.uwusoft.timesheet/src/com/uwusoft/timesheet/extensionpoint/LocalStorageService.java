@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,32 +98,50 @@ public class LocalStorageService extends EventManager implements StorageService 
 				importTasks(system, storageService.getImportedProjects(system), true);
 		}
 		
-		List<TaskEntry> entries = em.createQuery("select t from TaskEntry t order by t.dateTime").getResultList();
-		Date endDate = new Date();
-		if (!entries.isEmpty())
-			endDate = entries.iterator().next().getDateTime();
+		em.getTransaction().begin();
+		List<TaskEntry> entries = em.createQuery("select t from TaskEntry t order by t.dateTime desc").getResultList();
 		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(endDate);
-		int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
-		if (endWeek != 1) {
-			for (int i = 1; i<= endWeek; i++) {
-				logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entries for week " + i));
-				cal.set(Calendar.WEEK_OF_YEAR, i + 1);
-				cal.setFirstDayOfWeek(Calendar.MONDAY);
-				cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-				Date startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
-				cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-				endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
-				for (TaskEntry entry : storageService.getTaskEntries(startDate, endDate)) {
-					entry.setRowNum(entry.getId());
-					entry.setSyncStatus(true);
-					logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
-					createTaskEntry(entry);
-				}
+		cal.setTime(new Date());
+		cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
+		Date startDate = cal.getTime();
+		if (!entries.isEmpty()) {
+			Iterator<TaskEntry> iterator = entries.iterator();
+			TaskEntry lastEntry = iterator.next();
+			while (lastEntry.getDateTime() == null) {
+				em.remove(lastEntry);
+				if (iterator.hasNext())
+					lastEntry = iterator.next();
 			}
-			TaskEntry lastTask = storageService.getLastTask();
-			if (lastTask != null) createTaskEntry(lastTask);
+			startDate = DateUtils.truncate(lastEntry.getDateTime(), Calendar.DATE);
+			do {
+				em.remove(lastEntry);
+				if (!iterator.hasNext()) break;
+				lastEntry = iterator.next();
+			} while (startDate.equals(DateUtils.truncate(lastEntry.getDateTime(), Calendar.DATE)));
 		}
+		em.getTransaction().commit();
+		cal.setTime(startDate);
+		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+		cal.setTime(new Date());
+		int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
+		for (int i = startWeek; i <= endWeek; i++) {
+			logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entries for week " + i));
+			cal.set(Calendar.WEEK_OF_YEAR, i + 1);
+			cal.setFirstDayOfWeek(Calendar.MONDAY);
+			cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+			for (TaskEntry entry : storageService.getTaskEntries(startDate, endDate)) {
+				entry.setRowNum(entry.getId());
+				entry.setSyncStatus(true);
+				logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
+				createTaskEntry(entry);
+			}		
+			cal.set(Calendar.WEEK_OF_YEAR, i + 2);
+			cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+			startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+		}
+		TaskEntry lastTask = storageService.getLastTask();
+		if (lastTask != null) createTaskEntry(lastTask);
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
 			@Override
@@ -189,11 +208,6 @@ public class LocalStorageService extends EventManager implements StorageService 
     	return instance;
     }
 	
-	@Override
-	public void reload() {
-	}
-
-	@Override
 	public List<String> getProjects(String system) {
 		List<String> projects = new ArrayList<String>();
 		for (Project project : getProjectList(system)) projects.add(project.getName());
@@ -208,7 +222,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 				.getResultList();
 	}
 
-	@Override
 	public Collection<SubmissionProject> getImportedProjects(String system) {
 		List<SubmissionProject> projects = new ArrayList<SubmissionProject>();
 		for (Project project : getProjectList(system)) {
@@ -220,7 +233,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return projects;
 	}
 	
-	@Override
 	public List<String> findTasksBySystemAndProject(String system, String project) {
 		List<Task> taskList = findTasksByProjectAndSystem(project, system);
 		List<String> tasks = new ArrayList<String>();
@@ -228,12 +240,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return tasks;
 	}
 
-	@Override
 	public void addPropertyChangeListener(PropertyChangeListener listener) {
 		addListenerObject(listener);
 	}
 
-	@Override
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		removeListenerObject(listener);
 	}
@@ -251,7 +261,6 @@ public class LocalStorageService extends EventManager implements StorageService 
     }
     
 	@SuppressWarnings("unchecked")
-	@Override
 	public List<TaskEntry> getTaskEntries(Date startDate, Date endDate) {
 		Query q = em.createQuery("select t from TaskEntry t" +
 				" where t.task.name <> :beginWDT" +
@@ -264,7 +273,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return q.getResultList();
 	}
 
-	@Override
 	public String[] getUsedCommentsForTask(String task, String project,	String system) {
 		Set<String> comments = new HashSet<String>();
 		@SuppressWarnings("unchecked")
@@ -282,7 +290,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return comments.toArray(new String[comments.size()]);
 	}
 
-	@Override
 	public Long createTaskEntry(TaskEntry task) {
 		em.getTransaction().begin();
 		Task foundTask = findTaskByNameProjectAndSystem(task.getTask().getName(),
@@ -297,14 +304,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return task.getRowNum();
 	}
 
-	@Override
 	public void updateTaskEntryDate(TaskEntry entry, boolean wholeDate) { // TODO synchronize
 		em.getTransaction().begin();
 		em.persist(entry);
 		em.getTransaction().commit();
 	}
 
-	@Override
 	public void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment) { // TODO synchronize
 		em.getTransaction().begin();
 		Task foundTask = findTaskByNameProjectAndSystem(task, project, system);
@@ -314,7 +319,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		em.getTransaction().commit();
 	}
 
-	@Override
 	public TaskEntry getLastTask() {
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t where t.dateTime is null order by t.id desc")
@@ -323,7 +327,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return taskEntries.iterator().next();
 	}
 
-	@Override
 	public Date getLastTaskEntryDate() {
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
@@ -336,22 +339,18 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return taskEntries.iterator().next().getDateTime();
 	}
 
-	@Override
 	public void handleDayChange() {
 		storageService.handleDayChange();
 	}
 
-	@Override
 	public void handleWeekChange() {
 		storageService.handleWeekChange();
 	}
 
-	@Override
 	public void handleYearChange(int lastWeek) {
 		storageService.handleYearChange(lastWeek);
 	}
 
-	@Override
 	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
 		importTasks(submissionSystem, projects, false);
 	}
@@ -387,7 +386,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		}
 	}
 
-	@Override
 	public Set<String> submitEntries(int weekNum) {
         Set<String> systems = new HashSet<String>();
         em.getTransaction().begin();
@@ -420,7 +418,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 						entry.getTask().getName(), entry.getTask().getProject().getName(), system);
 				submissionEntry.addSubmissionEntry(submissionTask, entry.getTotal());
 			}
-            entry.setStatus(true);
+            entry.setStatus(true); // TODO synchronize
             em.persist(entry);
 		}
         em.getTransaction().commit();
@@ -448,8 +446,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 			return null;
 		}
 	}
-
-	@Override
 	public void openUrl(String openBrowser) {
 		storageService.openUrl(openBrowser);
 	}
@@ -504,5 +500,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 		this.lastTaskEntry = lastTaskEntry;
 		syncEntriesJob.schedule();
 		storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
+	}
+
+	@Override
+	public void reload() {
+		// TODO Auto-generated method stub		
 	}
 }

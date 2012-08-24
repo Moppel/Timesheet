@@ -4,11 +4,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.eclipse.jface.preference.IPreferenceStore;
-
-import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 
 /**
  * container for all {@link com.uwusoft.timesheet.TaskSubmissionEntry}'s for one day 
@@ -20,9 +16,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class DailySubmissionEntry {
     private Date date;
     private Map<String, TaskSubmissionEntry> entries;
-	private static IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-	private static StorageService storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-			.getService(preferenceStore.getString(StorageService.PROPERTY));
+	private static LocalStorageService storageService = LocalStorageService.getInstance();
 
     public DailySubmissionEntry(Date date) {
         this.date = date;
