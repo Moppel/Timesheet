@@ -40,6 +40,7 @@ import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
+import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
 import com.uwusoft.timesheet.util.StorageSystemSetup;
 
@@ -98,7 +99,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 				importTasks(system, storageService.getImportedProjects(system), true);
 		}
 		
-		em.getTransaction().begin();
 		List<TaskEntry> entries = em.createQuery("select t from TaskEntry t order by t.dateTime desc").getResultList();
 		Calendar cal = GregorianCalendar.getInstance();
 		cal.setTime(new Date());
@@ -108,18 +108,11 @@ public class LocalStorageService extends EventManager implements StorageService 
 			Iterator<TaskEntry> iterator = entries.iterator();
 			TaskEntry lastEntry = iterator.next();
 			while (lastEntry.getDateTime() == null) {
-				em.remove(lastEntry);
 				if (iterator.hasNext())
 					lastEntry = iterator.next();
 			}
-			startDate = DateUtils.truncate(lastEntry.getDateTime(), Calendar.DATE);
-			do {
-				em.remove(lastEntry);
-				if (!iterator.hasNext()) break;
-				lastEntry = iterator.next();
-			} while (startDate.equals(DateUtils.truncate(lastEntry.getDateTime(), Calendar.DATE)));
+			startDate = BusinessDayUtil.getNextBusinessDay(lastEntry.getDateTime(), false);
 		}
-		em.getTransaction().commit();
 		cal.setTime(startDate);
 		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
 		cal.setTime(new Date());
@@ -140,8 +133,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 			cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 			startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 		}
-		TaskEntry lastTask = storageService.getLastTask();
-		if (lastTask != null) createTaskEntry(lastTask);
+		if (getLastTask() == null) {
+			TaskEntry lastTask = storageService.getLastTask();
+			if (lastTask != null) createTaskEntry(lastTask);
+		}
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
 			@Override
@@ -176,24 +171,24 @@ public class LocalStorageService extends EventManager implements StorageService 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				em.getTransaction().begin();
-				List<Project> projects = em.createQuery("select p from Project p " +
-						"where p.system = :system " +
-						"and p.syncStatus = :syncStatus")
-						.setParameter("system", submissionSystem)
+				List<Task> tasks = em.createQuery("select t from Task t " +
+						"where t.syncStatus = :syncStatus")
 						.setParameter("syncStatus", false)
 						.getResultList();
-				List<SubmissionProject> submissionProjects = new ArrayList<SubmissionProject>();
-				for (Project project : projects) {
-					SubmissionProject submissionProject = new SubmissionProject(project.getExternalId(), project.getName());
-					for (Task task : project.getTasks())
-						submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
-					submissionProjects.add(submissionProject);					
+				Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
+				for (Task task : tasks) {
+					SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
+					if (submissionProject == null)
+						submissionProject = new SubmissionProject(task.getProject().getExternalId(), task.getProject().getName());
+					submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
+					submissionProjects.put(submissionProject.getName(), submissionProject);					
 				}
 				if (!submissionProjects.isEmpty()) {
-					storageService.importTasks(submissionSystem, submissionProjects);
-					for (Project project : projects) {
-						project.setSyncStatus(true);
-						em.persist(project);
+					storageService.importTasks(submissionSystem, submissionProjects.values());
+					for (Task task : tasks) {
+						task.setSyncStatus(true);
+						task.getProject().setSyncStatus(true);
+						em.persist(task);
 					}
 				}
 				em.getTransaction().commit();
@@ -504,6 +499,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	@Override
 	public void reload() {
-		// TODO Auto-generated method stub		
+		storageService.reload();		
 	}
 }
