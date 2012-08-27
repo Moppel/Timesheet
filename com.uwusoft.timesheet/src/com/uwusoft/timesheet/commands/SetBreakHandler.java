@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -24,7 +25,8 @@ public class SetBreakHandler extends AbstractHandler {
 		TaskEntry lastTask = storageService.getLastTask();
 		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), StorageService.BREAK, new Date());
 		if (timeDialog.open() == Dialog.OK) {
-			storageService.updateTaskEntryDate(lastTask, true);
+			lastTask.setDateTime(new Timestamp(timeDialog.getTime().getTime()));
+			storageService.updateTaskEntry(lastTask);
 			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
 			storageService.createTaskEntry(task);				
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);

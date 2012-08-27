@@ -55,7 +55,6 @@ public class LocalStorageService extends EventManager implements StorageService 
     private StorageService storageService;
     private String submissionSystem;
     private TaskEntry lastTaskEntry;
-    private boolean onlyDate;
     private ILog logger;
 
     @SuppressWarnings("unchecked")
@@ -148,11 +147,8 @@ public class LocalStorageService extends EventManager implements StorageService 
 			protected IStatus run(IProgressMonitor monitor) {
 				if (lastTaskEntry != null) {
 					em.getTransaction().begin();
-					TaskEntry lastEntry = storageService.getLastTask();
-					if (lastEntry != null) {
-						lastEntry.setDateTime(lastTaskEntry.getDateTime());
-						storageService.updateTaskEntryDate(lastEntry, true);
-					}
+					if (storageService.getLastTask() != null)
+						storageService.updateTaskEntry(lastTaskEntry);
 					lastTaskEntry.setSyncStatus(true);
 					em.persist(lastTaskEntry);
 					em.getTransaction().commit();
@@ -165,20 +161,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 				monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
 				int i = 0;
 				for (TaskEntry entry : entries) {
-					if(entry.getRowNum() == null) { 
-						Long rowNum = storageService.createTaskEntry(entry);
-						monitor.worked(++i);
-						entry.setRowNum(rowNum);
-					} else {
-						if (onlyDate)
-							entry.setTotal(storageService.updateTaskEntryDate(entry, false));
-						else
-							storageService.updateTaskEntry(entry, entry.getTask().getName(),
-								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
-								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem(), entry.getComment());
-					}					
+					if(entry.getRowNum() == null) 
+						entry.setRowNum(storageService.createTaskEntry(entry));
+					else
+						storageService.updateTaskEntry(entry);
 					entry.setSyncStatus(true);
 					em.persist(entry);
+					monitor.worked(++i);
 				}
 				em.getTransaction().commit();
 				monitor.done();
@@ -318,20 +307,27 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return task.getRowNum();
 	}
 
-	public Float updateTaskEntryDate(TaskEntry entry, boolean wholeDate) {
+	public void updateTaskEntry(TaskEntry entry) {
 		em.getTransaction().begin();
-		entry.setSyncStatus(false);
-		em.persist(entry);
-		em.getTransaction().commit();
-		return new Float(entry.getTotal());
-	}
-
-	public void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment) {
-		em.getTransaction().begin();
-		Task foundTask = findTaskByNameProjectAndSystem(task, project, system);
+		Task foundTask = findTaskByNameProjectAndSystem(entry.getTask().getName(),
+				entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+				entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem());
 		entry.setTask(foundTask);
-		entry.setComment(comment);
 		entry.setSyncStatus(false);
+		@SuppressWarnings("unchecked")
+		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
+				" where t.rowNum = :rowNum")
+				.setParameter("rowNum", entry.getRowNum() - 1) // select previous entry
+				.getResultList();
+		if (!taskEntries.isEmpty()) {
+			Calendar calendar1 = Calendar.getInstance();
+			Calendar calendar2 = Calendar.getInstance();
+			calendar1.setTime(entry.getDateTime());
+			calendar2.setTime(taskEntries.iterator().next().getDateTime());
+			Float minutes = (calendar1.getTimeInMillis() - calendar2.getTimeInMillis()) / 60000.0f;
+			int hours = new Float(minutes / 60).intValue();
+			entry.setTotal(hours + (minutes - hours * 60) * 0.06f);
+		}
 		em.persist(entry);
 		em.getTransaction().commit();
 	}
@@ -513,9 +509,8 @@ public class LocalStorageService extends EventManager implements StorageService 
 		}
 	}
 
-	public void synchronize(TaskEntry lastTaskEntry, boolean onlyDate) {
+	public void synchronize(TaskEntry lastTaskEntry) {
 		this.lastTaskEntry = lastTaskEntry;
-		this.onlyDate = onlyDate;
 		syncEntriesJob.schedule();
 		storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 	}

@@ -43,6 +43,8 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
+import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.WeekComposite;
 
@@ -434,8 +436,8 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
     				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
     				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
     				entry.setDateTime(new Timestamp(newCal.getTimeInMillis()));
-    				storageService.updateTaskEntryDate(entry, false);
-    				storageService.synchronize(null, true);
+    				storageService.updateTaskEntry(entry);
+    				storageService.synchronize(null);
 		    		viewer.refresh(entry);
     			}
 				return new SimpleDateFormat(timeFormat).format(timeDialog.getTime());
@@ -468,8 +470,12 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    			|| !listDialog.getProject().equals(entry.getTask().getProject().getName())
 		    			|| !listDialog.getSystem().equals(entry.getTask().getProject().getSystem())
 		    			|| listDialog.getComment() != null && !listDialog.getComment().equals(entry.getComment())) {
-		    		storageService.updateTaskEntry(entry, selectedTask, listDialog.getProject(), listDialog.getSystem(), listDialog.getComment());
-		    		storageService.synchronize(null, false);
+		    		Task newTask = new Task(selectedTask);
+		    		newTask.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+		    		entry.setTask(newTask);
+		    		entry.setComment(listDialog.getComment());
+		    		storageService.updateTaskEntry(entry);
+		    		storageService.synchronize(null);
 		    		viewer.refresh(entry);
 					return selectedTask;
 		    	}				

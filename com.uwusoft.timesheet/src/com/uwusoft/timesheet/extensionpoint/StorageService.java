@@ -75,27 +75,15 @@ public interface StorageService {
      * store task
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task
      * @param task
-     * @return id of the created entry
+     * @return row number of the created entry
      */
-    Long createTaskEntry(TaskEntry task);
+    Long createTaskEntry(TaskEntry entry);
    
     /**
-     * update date/time for task
+     * update task entry
      * @param entry the task entry
-     * @param wholeDate true: set Date, Time and Week column, false: set only Time column
-     * @return TODO
      */
-    Float updateTaskEntryDate(TaskEntry entry, boolean wholeDate);
-    
-    /**
-     * update task, project, system and comment
-     * @param entry the task entry
-     * @param task task name
-     * @param project project name
-     * @param system system name
-     * @param comment comment
-     */
-    void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment);
+    void updateTaskEntry(TaskEntry entry);
 
     /**
      * only to be implemented for sequential storage system

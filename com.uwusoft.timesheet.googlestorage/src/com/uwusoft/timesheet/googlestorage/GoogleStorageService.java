@@ -65,7 +65,6 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
-import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -634,37 +633,20 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public Float updateTaskEntryDate(TaskEntry entry, boolean wholeDate) {
+	public void updateTaskEntry(TaskEntry entry) {
 		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
-        if (wholeDate) {
-            Calendar cal = new GregorianCalendar();
-            //cal.setFirstDayOfWeek(Calendar.MONDAY);
-            cal.setTime(entry.getDateTime());
-            int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
-    		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
-            createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
-        }
-		try {
-			ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
-	        return Float.parseFloat(feed.getEntries().get(entry.getRowNum().intValue() - 2).getCustomElements().getValue(TOTAL));
-		} catch (IOException e) {
-			MessageBox.setError(title, e.getMessage());
-		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getResponseBody());
-		}
-		return null;
-	}
-
-	public void updateTaskEntry(TaskEntry entry, String task, String project, String system, String comment) {
-		Task newTask = new Task(task);
-		newTask.setProject(new Project(project, system));
-		entry.setTask(newTask);
-		entry.setComment(comment);
-		if (CHECK_IN.equals(task) || BREAK.equals(task))
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TASK), task);
+        Calendar cal = new GregorianCalendar();
+        //cal.setFirstDayOfWeek(Calendar.MONDAY);
+        cal.setTime(entry.getDateTime());
+        int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
+    	createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
+        createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
+		if (CHECK_IN.equals(entry.getTask().getName()) || BREAK.equals(entry.getTask().getName()))
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TASK), entry.getTask().getName());
 		else
-			updateTask(getTaskLink(task, project, system), entry.getRowNum().intValue());
-		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(COMMENT), comment);
+			updateTask(getTaskLink(entry.getTask().getName(), entry.getTask().getProject().getName(), entry.getTask().getProject().getSystem()),
+					entry.getRowNum().intValue());
+		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(COMMENT), entry.getComment());
 	}
 
 	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {

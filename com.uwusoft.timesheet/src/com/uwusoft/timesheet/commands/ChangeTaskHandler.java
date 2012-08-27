@@ -60,7 +60,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return;
 			lastTaskEntry.setDateTime(new Timestamp(listDialog.getTime().getTime()));
-			storageService.updateTaskEntryDate(lastTaskEntry, true);
+			storageService.updateTaskEntry(lastTaskEntry);
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTaskEntry.getTask()));
 			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
 			
@@ -74,7 +74,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				commandStateService.setBreak(true); // currently the only task without project is the break
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);				
-			storageService.synchronize(lastTaskEntry, false);
+			storageService.synchronize(lastTaskEntry);
 			commandStateService.setEnabled(true);
 		}
 	}

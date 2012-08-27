@@ -47,7 +47,7 @@ public class CheckinHandler extends AbstractHandler {
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHECKIN);
-			storageService.synchronize(null, false);
+			storageService.synchronize(null);
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 			commandStateService.setEnabled(true);
