@@ -318,7 +318,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 			calendar2.setTime(taskEntries.iterator().next().getDateTime());
 			Float minutes = (calendar1.getTimeInMillis() - calendar2.getTimeInMillis()) / 60000.0f;
 			int hours = new Float(minutes / 60).intValue();
-			entry.setTotal(hours + (minutes - hours * 60) * 0.06f);
+			entry.setTotal(hours + (minutes - hours * 60) / 60.0f);
 		}
 		em.persist(entry);
 		em.getTransaction().commit();
