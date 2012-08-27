@@ -43,8 +43,6 @@ import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.model.Project;
-import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.WeekComposite;
 
@@ -470,9 +468,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 		    			|| !listDialog.getProject().equals(entry.getTask().getProject().getName())
 		    			|| !listDialog.getSystem().equals(entry.getTask().getProject().getSystem())
 		    			|| listDialog.getComment() != null && !listDialog.getComment().equals(entry.getComment())) {
-		    		Task newTask = new Task(selectedTask);
-		    		newTask.setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
-		    		entry.setTask(newTask);
+		    		entry.setTask(storageService.findTaskByNameProjectAndSystem(selectedTask, listDialog.getProject(), listDialog.getSystem()));
 		    		entry.setComment(listDialog.getComment());
 		    		storageService.updateTaskEntry(entry);
 		    		storageService.synchronize(null);

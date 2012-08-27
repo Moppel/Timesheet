@@ -21,7 +21,6 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.MessageBox;
@@ -62,14 +61,12 @@ public class ChangeTaskHandler extends AbstractHandler {
 			lastTaskEntry.setDateTime(new Timestamp(listDialog.getTime().getTime()));
 			storageService.updateTaskEntry(lastTaskEntry);
             logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "change last task: " + lastTaskEntry.getTask()));
-			TaskEntry task = new TaskEntry(null, new Task(selectedTask));
+			TaskEntry task = new TaskEntry(null, storageService.findTaskByNameProjectAndSystem(selectedTask, listDialog.getProject(), listDialog.getSystem()));
 			
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
-			if (listDialog.getProject() != null) {
-				task.getTask().setProject(new Project(listDialog.getProject(), listDialog.getSystem()));
+			if (listDialog.getProject() != null)
 				commandStateService.setBreak(false);
-			}
 			else
 				commandStateService.setBreak(true); // currently the only task without project is the break
 			task.setComment(listDialog.getComment());

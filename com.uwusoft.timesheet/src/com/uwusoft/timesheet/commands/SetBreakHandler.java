@@ -14,7 +14,6 @@ import org.eclipse.ui.services.ISourceProviderService;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
-import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 
 public class SetBreakHandler extends AbstractHandler {
@@ -27,8 +26,9 @@ public class SetBreakHandler extends AbstractHandler {
 		if (timeDialog.open() == Dialog.OK) {
 			lastTask.setDateTime(new Timestamp(timeDialog.getTime().getTime()));
 			storageService.updateTaskEntry(lastTask);
-			TaskEntry task = new TaskEntry(null, new Task(StorageService.BREAK));
-			storageService.createTaskEntry(task);				
+			TaskEntry task = new TaskEntry(null, storageService.findTaskByNameProjectAndSystem(StorageService.BREAK, null, null));
+			storageService.createTaskEntry(task);
+			storageService.synchronize(lastTask);
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);

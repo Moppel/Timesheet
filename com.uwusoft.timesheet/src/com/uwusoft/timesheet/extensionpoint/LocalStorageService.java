@@ -295,10 +295,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	public Long createTaskEntry(TaskEntry task) {
 		em.getTransaction().begin();
-		Task foundTask = findTaskByNameProjectAndSystem(task.getTask().getName(),
-				task.getTask().getProject() == null ? null : task.getTask().getProject().getName(),
-						task.getTask().getProject() == null ? null : task.getTask().getProject().getSystem());
-		task.setTask(foundTask);
 		em.persist(task);
 		em.getTransaction().commit();
         Calendar cal = new GregorianCalendar();
@@ -309,10 +305,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	public void updateTaskEntry(TaskEntry entry) {
 		em.getTransaction().begin();
-		Task foundTask = findTaskByNameProjectAndSystem(entry.getTask().getName(),
-				entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
-				entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem());
-		entry.setTask(foundTask);
 		entry.setSyncStatus(false);
 		@SuppressWarnings("unchecked")
 		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
@@ -330,6 +322,9 @@ public class LocalStorageService extends EventManager implements StorageService 
 		}
 		em.persist(entry);
 		em.getTransaction().commit();
+        Calendar cal = new GregorianCalendar();
+        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
+		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
 	public TaskEntry getLastTask() {
