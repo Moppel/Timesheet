@@ -634,6 +634,10 @@ public class GoogleStorageService extends EventManager implements StorageService
     }
 
 	public void updateTaskEntry(TaskEntry entry) {
+		if (entry.isStatus()) {
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(SUBMISSION_STATUS), SUBMISSION_STATUS_TRUE);
+			return;
+		}
 		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
         Calendar cal = new GregorianCalendar();
         //cal.setFirstDayOfWeek(Calendar.MONDAY);

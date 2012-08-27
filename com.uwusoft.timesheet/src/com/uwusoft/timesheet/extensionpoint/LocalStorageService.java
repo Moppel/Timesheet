@@ -318,7 +318,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 			calendar2.setTime(taskEntries.iterator().next().getDateTime());
 			Float minutes = (calendar1.getTimeInMillis() - calendar2.getTimeInMillis()) / 60000.0f;
 			int hours = new Float(minutes / 60).intValue();
-			entry.setTotal(hours + (minutes - hours * 60) / 60.0f);
+			entry.setTotal(hours + (minutes - hours * 60) / 60.0f); // TODO correct total calculation
 		}
 		em.persist(entry);
 		em.getTransaction().commit();
@@ -413,7 +413,7 @@ public class LocalStorageService extends EventManager implements StorageService 
         DailySubmissionEntry submissionEntry = new DailySubmissionEntry(lastDate);
         
         for (TaskEntry entry : entries) {
-        	Date date = DateUtils.truncate(entry.getDateTime(), Calendar.DATE);
+        	/*Date date = DateUtils.truncate(entry.getDateTime(), Calendar.DATE);
             if (!date.equals(lastDate)) { // another day
             	submissionEntry.submitEntries();
             	submissionEntry = new DailySubmissionEntry(date);
@@ -425,11 +425,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 				SubmissionEntry submissionTask = new SubmissionEntry(entry.getTask().getProject().getExternalId(), entry.getTask().getExternalId(),
 						entry.getTask().getName(), entry.getTask().getProject().getName(), system);
 				submissionEntry.addSubmissionEntry(submissionTask, entry.getTotal());
-			}
-            entry.setStatus(true); // TODO synchronize
+			}*/
+            entry.setStatus(true);
+            entry.setSyncStatus(false);
             em.persist(entry);
 		}
         em.getTransaction().commit();
+        storageService.submitEntries(weekNum); // TODO
 		return systems;
 	}
 
