@@ -18,7 +18,6 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Path;
@@ -65,7 +64,6 @@ public class LocalStorageService extends EventManager implements StorageService 
     private TaskEntry lastTaskEntry;
     private ILog logger;
 
-    @SuppressWarnings("unchecked")
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		configOverrides.put("javax.persistence.jdbc.url",
@@ -73,20 +71,26 @@ public class LocalStorageService extends EventManager implements StorageService 
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		em = factory.createEntityManager();
 		
-		Query query = em.createQuery("select t from Task t where t.name = :name");
-		List<Task> tasks = query.setParameter("name", StorageService.CHECK_IN).getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<Task> taskQuery = criteria.createQuery(Task.class);
+		Root<Task> taskRoot = taskQuery.from(Task.class);
+		
+		taskQuery.where(criteria.equal(taskRoot.get(Task_.name), StorageService.CHECK_IN));
+		List<Task> tasks = em.createQuery(taskQuery).getResultList(); 
 		if (tasks.isEmpty()) {
 			Task task = new Task(StorageService.CHECK_IN);
 			task.setSyncStatus(true);
 			em.persist(task);
 		}
-		tasks = query.setParameter("name", StorageService.BREAK).getResultList();
+		taskQuery.where(criteria.equal(taskRoot.get(Task_.name), StorageService.BREAK));
+		tasks = em.createQuery(taskQuery).getResultList();
 		if (tasks.isEmpty()) {
 			Task task = new Task(StorageService.BREAK);
 			task.setSyncStatus(true);
 			em.persist(task);
 		}
-		tasks = query.setParameter("name", AllDayTasks.BEGIN_ADT).getResultList();
+		taskQuery.where(criteria.equal(taskRoot.get(Task_.name), AllDayTasks.BEGIN_ADT));
+		tasks = em.createQuery(taskQuery).getResultList();
 		if (tasks.isEmpty()) {
 			Task task = new Task(AllDayTasks.BEGIN_ADT);
 			task.setSyncStatus(true);
@@ -107,7 +111,10 @@ public class LocalStorageService extends EventManager implements StorageService 
 				importTasks(system, storageService.getImportedProjects(system), true);
 		}
 		
-		List<TaskEntry> entries = em.createQuery("select t from TaskEntry t order by t.dateTime desc").getResultList();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+		query.orderBy(criteria.desc(taskEntry.get(TaskEntry_.dateTime)));
+		List<TaskEntry> entries = em.createQuery(query).getResultList();
 		Calendar cal = GregorianCalendar.getInstance();
 		cal.setTime(new Date());
 		cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
@@ -162,10 +169,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 					em.getTransaction().commit();
 				}
 				em.getTransaction().begin();
-				List<TaskEntry> entries = em.createQuery("select t from TaskEntry t " +
-						"where t.syncStatus <> :status")
-						.setParameter("status", true)
-						.getResultList();
+				
+				CriteriaBuilder criteria = em.getCriteriaBuilder();
+				CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+				Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+				query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
+				List<TaskEntry> entries = em.createQuery(query).getResultList();
+				
 				monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
 				int i = 0;
 				for (TaskEntry entry : entries) {
@@ -187,10 +197,13 @@ public class LocalStorageService extends EventManager implements StorageService 
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				em.getTransaction().begin();
-				List<Task> tasks = em.createQuery("select t from Task t " +
-						"where t.syncStatus = :syncStatus")
-						.setParameter("syncStatus", false)
-						.getResultList();
+				
+				CriteriaBuilder criteria = em.getCriteriaBuilder();
+				CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+				Root<Task> rootTask = query.from(Task.class);
+				query.where(criteria.notEqual(rootTask.get(Task_.syncStatus), true));
+				List<Task> tasks = em.createQuery(query).getResultList();
+				
 				Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
 				for (Task task : tasks) {
 					SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
@@ -225,12 +238,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 		return projects;
 	}
 
-	@SuppressWarnings("unchecked")
 	private List<Project> getProjectList(String system) {
-		return em.createQuery("select p from Project p " +
-				"where p.system = :system")
-				.setParameter("system", system)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<Project> query = criteria.createQuery(Project.class);
+		Root<Project> project = query.from(Project.class);
+		query.where(criteria.equal(project.get(Project_.system), system));
+		return em.createQuery(query).getResultList();
 	}
 
 	public Collection<SubmissionProject> getImportedProjects(String system) {
@@ -284,15 +297,15 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	public String[] getUsedCommentsForTask(String task, String project,	String system) {
 		Set<String> comments = new HashSet<String>();
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> results = em.createQuery("select t from TaskEntry t" +
-				" where t.task.name = :task" +
-				" and t.task.project.name = :project" +
-				" and t.task.project.system = :system")
-				.setParameter("task", task)
-				.setParameter("project", project)
-				.setParameter("system", system)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+		Path<Task> rootTask = taskEntry.get(TaskEntry_.task);
+		Path<Project> rootProject = rootTask.get(Task_.project);
+		query.where(criteria.and(criteria.equal(rootTask.get(Task_.name), task),
+				criteria.equal(rootProject.get(Project_.name), project),
+				criteria.equal(rootProject.get(Project_.system), system)));
+		List<TaskEntry> results = em.createQuery(query).getResultList();
 		for (TaskEntry entry : results)
 			if (entry.getComment() != null)
 				comments.add(entry.getComment());
