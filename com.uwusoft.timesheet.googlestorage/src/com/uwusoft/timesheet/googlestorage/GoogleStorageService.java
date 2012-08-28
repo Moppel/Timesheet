@@ -728,14 +728,14 @@ public class GoogleStorageService extends EventManager implements StorageService
 	    return worksheet;
 	}
 
-	public Set<String> submitEntries(int weekNum) {
+	public Set<String> submitEntries(Date startDate, Date endDate) {
         Set<String> systems = new HashSet<String>();
 		try {
             if (!reloadWorksheets()) return systems;
     		
             ListQuery query = new ListQuery(listFeedUrl);
     		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"" + SUBMISSION_STATUS_TRUE + "\" and "
-    								+ WEEK.toLowerCase() + " = \"" + weekNum + "\"");
+    								+ WEEK.toLowerCase() + " = \"" + startDate + "\""); // TODO
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
             
             if (listEntries.isEmpty()) return systems;

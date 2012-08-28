@@ -1,5 +1,7 @@
 package com.uwusoft.timesheet.dialog;
 
+import java.util.Date;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -33,4 +35,12 @@ public class SubmissionDialog extends Dialog {
     public int getWeekNum() {
 		return weekComposite.getWeekNum();
 	}
+    
+    public Date getStartDate() {
+    	return weekComposite.getStartDate();
+    }
+
+    public Date getEndDate() {
+    	return weekComposite.getEndDate();
+    }
 }

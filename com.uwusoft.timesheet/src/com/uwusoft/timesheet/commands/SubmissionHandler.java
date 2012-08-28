@@ -36,7 +36,7 @@ public class SubmissionHandler extends AbstractHandler {
 		if (lastTaskEntryDate != null) cal.setTime(lastTaskEntryDate);
 		SubmissionDialog submissionDialog = new SubmissionDialog(Display.getDefault(), weekNum, cal.get(Calendar.WEEK_OF_YEAR));
 		if (submissionDialog.open() == Dialog.OK) {
-			Set<String> systems = storageService.submitEntries(submissionDialog.getWeekNum());
+			Set<String> systems = storageService.submitEntries(submissionDialog.getStartDate(), submissionDialog.getEndDate());
 			storageService.synchronize(null);
 			if (systems.isEmpty())
 				MessageBox.setMessage("Submission", "No more entries to submit for " + submissionDialog.getWeekNum());			

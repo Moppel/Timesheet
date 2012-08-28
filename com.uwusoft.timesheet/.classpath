@@ -6,7 +6,8 @@
 	<classpathentry kind="lib" path="lib/commons/commons-lang3-3.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/persistence/derby.jar"/>
 	<classpathentry kind="lib" path="lib/persistence/eclipselink.jar"/>
-	<classpathentry kind="lib" path="lib/persistence/javax.persistence_1.0.0.jar"/>
 	<classpathentry kind="lib" path="lib/SystemShutdownTimeCapture.jar"/>
+	<classpathentry kind="lib" path="lib/persistence/javax.persistence_2.0.3.v201010191057.jar"/>
+	<classpathentry kind="lib" path="lib/persistence/hibernate-jpamodelgen-1.2.0.Final.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

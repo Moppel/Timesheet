@@ -19,6 +19,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,8 +41,11 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Project_;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
+import com.uwusoft.timesheet.model.TaskEntry_;
+import com.uwusoft.timesheet.model.Task_;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
@@ -263,17 +271,15 @@ public class LocalStorageService extends EventManager implements StorageService 
         }
     }
     
-	@SuppressWarnings("unchecked")
 	public List<TaskEntry> getTaskEntries(Date startDate, Date endDate) {
-		Query q = em.createQuery("select t from TaskEntry t" +
-				" where t.task.name <> :beginWDT" +
-				" and t.dateTime >= :startDate" +
-				" and t.dateTime <= :endDate" +
-				" order by t.id")
-				.setParameter("beginWDT", AllDayTasks.BEGIN_ADT)
-				.setParameter("startDate", new Timestamp(startDate.getTime()))
-				.setParameter("endDate", new Timestamp(endDate.getTime()));
-		return q.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		Path<Task> task = entry.get(TaskEntry_.task);
+		query.where(criteria.and(criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
+				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
+				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
+		return em.createQuery(query).getResultList();
 	}
 
 	public String[] getUsedCommentsForTask(String task, String project,	String system) {
@@ -333,21 +339,24 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	public TaskEntry getLastTask() {
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t where t.dateTime is null order by t.id desc")
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		query.orderBy(criteria.desc(entry.get(TaskEntry_.id)));
+		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
 		return taskEntries.iterator().next();
 	}
 
 	public Date getLastTaskEntryDate() {
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
-				" where t.task.name <> :beginWDT" +
-				" and t.dateTime is not null" +
-				" order by t.dateTime desc")
-				.setParameter("beginWDT", AllDayTasks.BEGIN_ADT)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		Path<Task> task = entry.get(TaskEntry_.task);
+		query.where(criteria.and(criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
+				entry.get(TaskEntry_.dateTime).isNotNull()));
+		query.orderBy(criteria.desc(entry.get(TaskEntry_.dateTime)));
+		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
 		return taskEntries.iterator().next().getDateTime();
 	}
@@ -399,41 +408,45 @@ public class LocalStorageService extends EventManager implements StorageService 
 		}
 	}
 
-	public Set<String> submitEntries(int weekNum) {
+	public Set<String> submitEntries(Date startDate, Date endDate) {
         Set<String> systems = new HashSet<String>();
         em.getTransaction().begin();
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> entries = em.createQuery("select t from TaskEntry t " +
-				"where t.status <> :status " +
-				"and t.task.name <> :name " +
-				"and t.dateTime is not null " +
-				"order by t.dateTime")
-				.setParameter("status", true)
-				.setParameter("name", StorageService.CHECK_IN)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		Path<Task> task = entry.get(TaskEntry_.task);
+		query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
+				criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
+				criteria.notEqual(task.get(Task_.name), StorageService.CHECK_IN),
+				criteria.notEqual(task.get(Task_.name), StorageService.BREAK),
+				entry.get(TaskEntry_.dateTime).isNotNull(),
+				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
+				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
+		query.orderBy(criteria.asc(entry.get(TaskEntry_.dateTime)));
 		
+		List<TaskEntry> entries = em.createQuery(query).getResultList();
         if (entries.isEmpty()) return systems;
         
 		Date lastDate = DateUtils.truncate(entries.iterator().next().getDateTime(), Calendar.DATE);
         DailySubmissionEntry submissionEntry = new DailySubmissionEntry(lastDate);
         
-        for (TaskEntry entry : entries) {
-        	Date date = DateUtils.truncate(entry.getDateTime(), Calendar.DATE);
+        for (TaskEntry taskEntry : entries) {
+        	Date date = DateUtils.truncate(taskEntry.getDateTime(), Calendar.DATE);
             if (!date.equals(lastDate)) { // another day
             	submissionEntry.submitEntries();
             	submissionEntry = new DailySubmissionEntry(date);
                 lastDate = date;
             }
-			String system = entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem();
+			String system = taskEntry.getTask().getProject() == null ? null : taskEntry.getTask().getProject().getSystem();
             if (submissionSystems.containsKey(system)) {
 				systems.add(system);
-				SubmissionEntry submissionTask = new SubmissionEntry(entry.getTask().getProject().getExternalId(), entry.getTask().getExternalId(),
-						entry.getTask().getName(), entry.getTask().getProject().getName(), system);
-				submissionEntry.addSubmissionEntry(submissionTask, entry.getTotal());
+				SubmissionEntry submissionTask = new SubmissionEntry(taskEntry.getTask().getProject().getExternalId(), taskEntry.getTask().getExternalId(),
+						taskEntry.getTask().getName(), taskEntry.getTask().getProject().getName(), system);
+				submissionEntry.addSubmissionEntry(submissionTask, taskEntry.getTotal());
 			}
-            entry.setStatus(true);
-            entry.setSyncStatus(false);
-            em.persist(entry);
+            taskEntry.setStatus(true);
+            taskEntry.setSyncStatus(false);
+            em.persist(taskEntry);
 		}
         em.getTransaction().commit();
 		return systems;
@@ -466,45 +479,40 @@ public class LocalStorageService extends EventManager implements StorageService 
 	
 	public Project findProjectByNameAndSystem(String name, String system) {
 		try {	
-			return (Project) em.createQuery(
-				"select p from Project p where p.name = :name "
-				+ "and p.system = :system")
-				.setParameter("name", name)
-				.setParameter("system", system)
-				.getSingleResult();
+			CriteriaBuilder criteria = em.getCriteriaBuilder();
+			CriteriaQuery<Project> query = criteria.createQuery(Project.class);
+			Root<Project> project = query.from(Project.class);
+			query.where(criteria.and(criteria.equal(project.get(Project_.name), name),
+					criteria.equal(project.get(Project_.system), system)));
+			return (Project) em.createQuery(query).getSingleResult();
 		} catch (Exception e) {
 			return null;
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<Task> findTasksByProjectAndSystem(String project, String system) {
-		return em.createQuery(
-				"select t from Task t " +
-				"where t.project.name = :project " +
-				"and t.project.system = :system")
-				.setParameter("project", project)
-				.setParameter("system", system)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+		Root<Task> task = query.from(Task.class);
+		Path<Project> proj = task.get(Task_.project);
+		query.where(criteria.and(criteria.equal(proj.get(Project_.name), project),
+				criteria.equal(proj.get(Project_.system), system)));
+		return em.createQuery(query).getResultList();
 	}
 	
 	public Task findTaskByNameProjectAndSystem(String name, String project, String system) {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+		Root<Task> task = query.from(Task.class);
+		Path<Project> proj = task.get(Task_.project);
+		Predicate p = criteria.equal(task.get(Task_.name), name);
+		if (project == null)
+			query.where(p);
+		else
+			query.where(criteria.and(p, criteria.equal(proj.get(Project_.name), project),
+					criteria.equal(proj.get(Project_.system), system)));			
 		try {
-			StringBuilder builder = new StringBuilder("select t from Task t " +
-													  "where t.name = :name");
-			if (project != null) {
-				builder.append(" and t.project.name = :project" +
-						" and t.project.system = :system");
-			}
-			Query query = em.createQuery(builder.toString())
-				.setParameter("name", name);
-				
-			if (project != null) {
-				query.setParameter("project", project)
-					 .setParameter("system", system);
-			}
-			return (Task) query.getSingleResult();
-			
+			return em.createQuery(query).getSingleResult();
 		} catch (Exception e) {
 			return null;
 		}
