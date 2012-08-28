@@ -295,6 +295,9 @@ public class LocalStorageService extends EventManager implements StorageService 
 
 	public Long createTaskEntry(TaskEntry task) {
 		em.getTransaction().begin();
+		task.setTask(findTaskByNameProjectAndSystem(task.getTask().getName(),
+				task.getTask().getProject() == null ? null : task.getTask().getProject().getName(),
+						task.getTask().getProject() == null ? null : task.getTask().getProject().getSystem()));
 		em.persist(task);
 		em.getTransaction().commit();
         Calendar cal = new GregorianCalendar();
@@ -311,7 +314,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 				" where t.rowNum = :rowNum")
 				.setParameter("rowNum", entry.getRowNum() - 1) // select previous entry
 				.getResultList();
-		if (!taskEntries.isEmpty()) {
+		if (!taskEntries.isEmpty() && entry.getDateTime() != null) {
 			Calendar calendar1 = Calendar.getInstance();
 			Calendar calendar2 = Calendar.getInstance();
 			calendar1.setTime(entry.getDateTime());

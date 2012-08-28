@@ -638,13 +638,15 @@ public class GoogleStorageService extends EventManager implements StorageService
 			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(SUBMISSION_STATUS), SUBMISSION_STATUS_TRUE);
 			return;
 		}
-		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
-        Calendar cal = new GregorianCalendar();
-        //cal.setFirstDayOfWeek(Calendar.MONDAY);
-        cal.setTime(entry.getDateTime());
-        int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
-    	createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
-        createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
+		if (entry.getDateTime() != null) {
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
+			Calendar cal = new GregorianCalendar();
+			//cal.setFirstDayOfWeek(Calendar.MONDAY);
+			cal.setTime(entry.getDateTime());
+			int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
+		}
 		if (CHECK_IN.equals(entry.getTask().getName()) || BREAK.equals(entry.getTask().getName()))
 			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TASK), entry.getTask().getName());
 		else
