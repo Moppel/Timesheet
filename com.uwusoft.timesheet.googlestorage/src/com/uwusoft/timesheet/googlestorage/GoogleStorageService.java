@@ -735,7 +735,8 @@ public class GoogleStorageService extends EventManager implements StorageService
     		
             ListQuery query = new ListQuery(listFeedUrl);
     		query.setSpreadsheetQuery(SUBMISSION_STATUS.toLowerCase() + " != \"" + SUBMISSION_STATUS_TRUE + "\" and "
-    								+ WEEK.toLowerCase() + " = \"" + startDate + "\""); // TODO
+    								+ DATE.toLowerCase() + " >= " + new SimpleDateFormat(dateFormat).format(startDate)
+    			            		+ " and " + DATE.toLowerCase() + " <= " + new SimpleDateFormat(dateFormat).format(endDate));
 	        List<ListEntry> listEntries = service.query(query, ListFeed.class).getEntries();
             
             if (listEntries.isEmpty()) return systems;
@@ -745,9 +746,8 @@ public class GoogleStorageService extends EventManager implements StorageService
             for (ListEntry listEntry : listEntries) {
             	CustomElementCollection elements = listEntry.getCustomElements();
 	            String task = elements.getValue(TASK);
-	            if (SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task)) {
+	            if (SUBMISSION_STATUS_TRUE.equals(elements.getValue(SUBMISSION_STATUS)) || task == null || CHECK_IN.equals(task) || BREAK.equals(task))
 	            	continue;
-	            }
 	            if (elements.getValue(DATE) == null) continue;
 	            Date date = new SimpleDateFormat(dateFormat).parse(elements.getValue(DATE));
 	            if (!date.equals(lastDate)) { // another day
