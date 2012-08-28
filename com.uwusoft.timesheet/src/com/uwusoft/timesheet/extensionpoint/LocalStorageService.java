@@ -309,24 +309,26 @@ public class LocalStorageService extends EventManager implements StorageService 
 	public void updateTaskEntry(TaskEntry entry) {
 		em.getTransaction().begin();
 		entry.setSyncStatus(false);
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntries = em.createQuery("select t from TaskEntry t" +
-				" where t.rowNum = :rowNum")
-				.setParameter("rowNum", entry.getRowNum() - 1) // select previous entry
-				.getResultList();
-		if (!taskEntries.isEmpty() && entry.getDateTime() != null) {
-			Calendar calendar1 = Calendar.getInstance();
-			Calendar calendar2 = Calendar.getInstance();
-			calendar1.setTime(entry.getDateTime());
-			calendar2.setTime(taskEntries.iterator().next().getDateTime());
-			Calendar calendar3 = Calendar.getInstance();
-			calendar3.setTime(new Date(calendar1.getTimeInMillis() - calendar2.getTimeInMillis()));
-			entry.setTotal(calendar3.get(Calendar.HOUR_OF_DAY) + (calendar3.get(Calendar.MINUTE) - calendar3.get(Calendar.HOUR_OF_DAY) * 60) / 60.0f);
+        Calendar cal = new GregorianCalendar();
+		if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
+			try {
+				TaskEntry previousEntry = (TaskEntry) em.createQuery("select t from TaskEntry t" +
+						" where t.rowNum = :rowNum")
+						.setParameter("rowNum", entry.getRowNum() - 1)
+						.getSingleResult();
+				Calendar entryCalendar = Calendar.getInstance();
+				Calendar previousEntryCalendar = Calendar.getInstance();
+				entryCalendar.setTime(entry.getDateTime());
+				previousEntryCalendar.setTime(previousEntry.getDateTime());
+				Calendar totalCalendar = Calendar.getInstance();
+				totalCalendar.setTime(new Date(entryCalendar.getTimeInMillis() - previousEntryCalendar.getTimeInMillis()));
+				entry.setTotal(totalCalendar.get(Calendar.MINUTE) / 60.0f);
+				cal.setTime(entry.getDateTime());
+			} catch (Exception e) {}
 		}
+		else cal.setTime(new Date());
 		em.persist(entry);
 		em.getTransaction().commit();
-        Calendar cal = new GregorianCalendar();
-        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
