@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,22 +110,16 @@ public class LocalStorageService extends EventManager implements StorageService 
 				importTasks(system, storageService.getImportedProjects(system), true);
 		}
 		
-		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
-		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
-		query.orderBy(criteria.desc(taskEntry.get(TaskEntry_.dateTime)));
-		List<TaskEntry> entries = em.createQuery(query).getResultList();
 		Calendar cal = GregorianCalendar.getInstance();
 		cal.setTime(new Date());
 		cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
 		Date startDate = cal.getTime();
-		if (!entries.isEmpty()) {
-			Iterator<TaskEntry> iterator = entries.iterator();
-			TaskEntry lastEntry = iterator.next();
-			while (lastEntry.getDateTime() == null) {
-				if (iterator.hasNext())
-					lastEntry = iterator.next();
-			}
-			startDate = BusinessDayUtil.getNextBusinessDay(lastEntry.getDateTime(), false);
+		Date lastTaskEntryDate = getLastTaskEntryDate();
+		if (lastTaskEntryDate != null) {
+			for (TaskEntry entry : storageService.getTaskEntries(DateUtils.truncate(lastTaskEntryDate, Calendar.DATE),
+					DateUtils.truncate(lastTaskEntryDate, Calendar.DATE)))
+				createOrUpdate(entry);
+			startDate = BusinessDayUtil.getNextBusinessDay(lastTaskEntryDate, false);
 		}
 		cal.setTime(startDate);
 		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
@@ -330,25 +323,58 @@ public class LocalStorageService extends EventManager implements StorageService 
 		entry.setSyncStatus(false);
         Calendar cal = new GregorianCalendar();
 		if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
-			try {
-				TaskEntry previousEntry = (TaskEntry) em.createQuery("select t from TaskEntry t" +
-						" where t.rowNum = :rowNum")
-						.setParameter("rowNum", entry.getRowNum() - 1)
-						.getSingleResult();
-				Calendar entryCalendar = Calendar.getInstance();
-				Calendar previousEntryCalendar = Calendar.getInstance();
-				entryCalendar.setTime(entry.getDateTime());
-				previousEntryCalendar.setTime(previousEntry.getDateTime());
-				Calendar totalCalendar = Calendar.getInstance();
-				totalCalendar.setTime(new Date(entryCalendar.getTimeInMillis() - previousEntryCalendar.getTimeInMillis()));
-				entry.setTotal(totalCalendar.get(Calendar.MINUTE) / 60.0f);
-				cal.setTime(entry.getDateTime());
-			} catch (Exception e) {}
+			entry.setTotal(calculateTotal(entry));
+			cal.setTime(entry.getDateTime());
 		}
 		else cal.setTime(new Date());
 		em.persist(entry);
 		em.getTransaction().commit();
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
+	}
+
+	private Float calculateTotal(TaskEntry entry) {
+		try {
+			CriteriaBuilder criteria = em.getCriteriaBuilder();
+			CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+			Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+			query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getRowNum() - 1));
+			TaskEntry previousEntry = (TaskEntry) em.createQuery(query).getSingleResult();
+			Calendar entryCalendar = Calendar.getInstance();
+			Calendar previousEntryCalendar = Calendar.getInstance();
+			entryCalendar.setTime(entry.getDateTime());
+			previousEntryCalendar.setTime(previousEntry.getDateTime());
+			Calendar totalCalendar = Calendar.getInstance();
+			totalCalendar.setTime(new Date(entryCalendar.getTimeInMillis() - previousEntryCalendar.getTimeInMillis()));
+			return totalCalendar.get(Calendar.HOUR) - 1 + totalCalendar.get(Calendar.MINUTE) / 60.0f;
+		} catch (Exception e) {}
+		return 0.0f;
+	}
+
+    private void createOrUpdate(TaskEntry entry) {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+		query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getId()));
+		try {
+			TaskEntry availableEntry = (TaskEntry) em.createQuery(query).getSingleResult();
+			if (availableEntry != null) {
+				em.getTransaction().begin();
+				availableEntry.setDateTime(entry.getDateTime());
+				if (!StorageService.CHECK_IN.equals(entry.getTask().getName())) {
+					availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+									entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+					availableEntry.setTotal(calculateTotal(availableEntry));
+				}
+				availableEntry.setComment(entry.getComment());
+				em.persist(availableEntry);
+				em.getTransaction().commit();
+			}
+			else
+				createTaskEntry(entry);
+		} catch (Exception e) {
+			createTaskEntry(entry);
+		}
 	}
 
 	public TaskEntry getLastTask() {
@@ -517,13 +543,14 @@ public class LocalStorageService extends EventManager implements StorageService 
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
 		Root<Task> task = query.from(Task.class);
-		Path<Project> proj = task.get(Task_.project);
 		Predicate p = criteria.equal(task.get(Task_.name), name);
 		if (project == null)
 			query.where(p);
-		else
+		else {
+			Path<Project> proj = task.get(Task_.project);
 			query.where(criteria.and(p, criteria.equal(proj.get(Project_.name), project),
-					criteria.equal(proj.get(Project_.system), system)));			
+					criteria.equal(proj.get(Project_.system), system)));
+		}
 		try {
 			return em.createQuery(query).getSingleResult();
 		} catch (Exception e) {
