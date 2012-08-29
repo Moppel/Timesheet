@@ -70,6 +70,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		em = factory.createEntityManager();
 		
+		em.getTransaction().begin();
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<Task> taskQuery = criteria.createQuery(Task.class);
 		Root<Task> taskRoot = taskQuery.from(Task.class);
@@ -95,6 +96,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 			task.setSyncStatus(true);
 			em.persist(task);
 		}
+		em.getTransaction().commit();
 		
 		submissionSystems = TimesheetApp.getSubmissionSystems();
         logger = Activator.getDefault().getLog();
