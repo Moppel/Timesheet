@@ -39,7 +39,7 @@ public class SubmissionHandler extends AbstractHandler {
 			Set<String> systems = storageService.submitEntries(submissionDialog.getStartDate(), submissionDialog.getEndDate());
 			storageService.synchronize(null);
 			if (systems.isEmpty())
-				MessageBox.setMessage("Submission", "No more entries to submit for " + submissionDialog.getWeekNum());			
+				MessageBox.setMessage("Submission", "No more entries to submit for week " + submissionDialog.getWeekNum());			
 			else {
 				MessageBox.setMessage("Submission", "Submission of week " + submissionDialog.getWeekNum() + " successful!");
 				Map<String, String> submissionSystems = TimesheetApp.getSubmissionSystems();
