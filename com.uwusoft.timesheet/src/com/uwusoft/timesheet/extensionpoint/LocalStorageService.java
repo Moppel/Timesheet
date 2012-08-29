@@ -456,8 +456,8 @@ public class LocalStorageService extends EventManager implements StorageService 
 		Path<Task> task = entry.get(TaskEntry_.task);
 		query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
 				criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				criteria.notEqual(task.get(Task_.name), StorageService.CHECK_IN),
-				criteria.notEqual(task.get(Task_.name), StorageService.BREAK),
+				//criteria.notEqual(task.get(Task_.name), StorageService.CHECK_IN),
+				//criteria.notEqual(task.get(Task_.name), StorageService.BREAK),
 				entry.get(TaskEntry_.dateTime).isNotNull(),
 				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
 				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
