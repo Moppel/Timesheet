@@ -9,8 +9,6 @@ import org.eclipse.core.runtime.Platform;
 
 import com.uwusoft.timesheet.extensionpoint.EmptyHolidayService;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
-import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
-import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.submission.LocalSubmissionService;
 
@@ -54,9 +52,7 @@ public class ExtensionManager<T> {
 	@SuppressWarnings("unchecked")
 	private T getFallbackService() {
 		if (fallbackServices.get(serviceId) == null) {
-			if (StorageService.SERVICE_ID.equals(serviceId))
-				fallbackServices.put(serviceId, LocalStorageService.getInstance());
-			else if (SubmissionService.SERVICE_ID.equals(serviceId))
+			if (SubmissionService.SERVICE_ID.equals(serviceId))
 				fallbackServices.put(serviceId, new LocalSubmissionService());
 			else if (HolidayService.SERVICE_ID.equals(serviceId))
 				fallbackServices.put(serviceId, new EmptyHolidayService());

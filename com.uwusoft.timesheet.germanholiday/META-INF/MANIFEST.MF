@@ -8,3 +8,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  com.uwusoft.timesheet;bundle-version="1.0.0"
+Bundle-ClassPath: lib/hibernate-jpamodelgen-1.2.0.Final.jar,
+ .

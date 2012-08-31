@@ -17,5 +17,6 @@
 	<classpathentry kind="lib" path="lib/google/gdata-media-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/google/guava-11.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/google/jsr305.jar"/>
+	<classpathentry kind="lib" path="lib/javax.persistence_2.0.4.v201112161009.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

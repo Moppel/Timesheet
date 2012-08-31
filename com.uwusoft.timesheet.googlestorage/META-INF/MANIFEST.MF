@@ -22,4 +22,5 @@ Bundle-ClassPath: lib/google/gdata-base-1.0.jar,
  lib/google/guava-11.0.2.jar,
  lib/google/jsr305.jar,
  lib/commons/commons-lang3-3.0.1.jar,
+ lib/javax.persistence_2.0.4.v201112161009.jar,
  .

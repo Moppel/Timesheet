@@ -143,13 +143,11 @@ public class LocalStorageService extends EventManager implements StorageService 
 			cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 			startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 		}
-		if (getLastTask() == null) {
-			TaskEntry lastTask = storageService.getLastTask();
-			if (lastTask != null) {
-				lastTask.setRowNum(lastTask.getId());
-				lastTask.setSyncStatus(true);
-				createTaskEntry(lastTask);
-			}
+		TaskEntry lastTask = storageService.getLastTask();
+		if (lastTask != null) {
+			lastTask.setRowNum(lastTask.getId());
+			lastTask.setSyncStatus(true);
+			createOrUpdate(lastTask);
 		}
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
@@ -372,9 +370,12 @@ public class LocalStorageService extends EventManager implements StorageService 
 				em.persist(availableEntry);
 				em.getTransaction().commit();
 			}
-			else
+			else {
+				entry.setRowNum(entry.getId());
 				createTaskEntry(entry);
+			}
 		} catch (Exception e) {
+			entry.setRowNum(entry.getId());
 			createTaskEntry(entry);
 		}
 	}
@@ -383,6 +384,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		query.where(criteria.isNull(entry.get(TaskEntry_.dateTime)));
 		query.orderBy(criteria.desc(entry.get(TaskEntry_.id)));
 		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
@@ -566,7 +568,6 @@ public class LocalStorageService extends EventManager implements StorageService 
 		storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 	}
 
-	@Override
 	public void reload() {
 		storageService.reload();		
 	}
