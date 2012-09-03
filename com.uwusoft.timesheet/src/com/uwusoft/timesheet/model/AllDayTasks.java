@@ -6,6 +6,10 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Root;
 
 import org.eclipse.jface.preference.IPreferenceStore;
 
@@ -31,31 +35,32 @@ public class AllDayTasks {
 	
 	private AllDayTasks() {
 		em = LocalStorageService.factory.createEntityManager();
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true" +
-				" and t.syncStatus <> :status" +
-				" order by t.dateTime desc")
-				.setParameter("status", true)
-				.getResultList();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		query.where(criteria.greaterThan(entry.get(TaskEntry_.dateTime), new Date()));
+		query.orderBy(criteria.desc(entry.get(TaskEntry_.dateTime)));
+		List<TaskEntry> taskEntryList = em.createQuery(query).getResultList();
 		Date begin;
+		storageService = LocalStorageService.getInstance();
 		if (taskEntryList.isEmpty()) {
 			begin = BusinessDayUtil.getNextBusinessDay(new Date(), false);
 			em.getTransaction().begin();
-			@SuppressWarnings("unchecked")
-			List<TaskEntry> beginTaskEntries = em.createQuery("select t from TaskEntry t where t.task.name=:name")
-					.setParameter("name", BEGIN_ADT)
-					.getResultList();
+			query = criteria.createQuery(TaskEntry.class);
+			Path<Task> task = entry.get(TaskEntry_.task);
+			query.where(criteria.equal(task.get(Task_.name), BEGIN_ADT));
+			List<TaskEntry> beginTaskEntries = em.createQuery(query).getResultList();
 			for (TaskEntry beginTask : beginTaskEntries) {
 				em.remove(beginTask);
 			}
-			Task beginTask = (Task) em.createQuery("select t from Task t where t.name = :name")
-				.setParameter("name", BEGIN_ADT)
-				.getSingleResult();
+			Task beginTask = storageService.findTaskByNameProjectAndSystem(BEGIN_ADT, null, null);
 			if (beginTask == null) {
 				beginTask = new Task(BEGIN_ADT);
 				em.persist(beginTask);
 			}
-			em.persist(new TaskEntry(begin, beginTask));
+			TaskEntry taskEntry = new TaskEntry(begin, beginTask);
+			taskEntry.setSyncStatus(true);
+			em.persist(taskEntry);
 			em.getTransaction().commit();
 		}
 		else
@@ -66,8 +71,6 @@ public class AllDayTasks {
 		total = new Float(preferenceStore.getInt(TimesheetApp.WORKING_HOURS) /
 				(new DateFormatSymbols().getWeekdays().length - 1
 				- preferenceStore.getString(TimesheetApp.NON_WORKING_DAYS).split(SubmissionService.separator).length));
-		
-		storageService = LocalStorageService.getInstance();
 	}
 
 	public void addNextTask(Date to, String name) {
@@ -83,6 +86,7 @@ public class AllDayTasks {
 		else task = foundTask;
 		
 		TaskEntry taskEntry = new TaskEntry(to, task, total, true);
+		taskEntry.setSyncStatus(true);
 		em.persist(taskEntry);
 		em.getTransaction().commit();
 		
@@ -97,21 +101,22 @@ public class AllDayTasks {
 	}
 
 	public void createTaskEntries(Date lastDate) {
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> taskEntryList = em.createQuery("select t from TaskEntry t where t.allDay=true order by t.dateTime asc" +
-				" and t.syncStatus <> :status" +
-				" order by t.dateTime desc")
-				.setParameter("status", true)
-				.getResultList();
+		em.getTransaction().begin();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+		Root<TaskEntry> entry = query.from(TaskEntry.class);
+		query.where(criteria.and(criteria.equal(entry.get(TaskEntry_.allDay), true),
+				criteria.greaterThan(entry.get(TaskEntry_.dateTime), new Date())));
+		query.orderBy(criteria.asc(entry.get(TaskEntry_.dateTime)));
+		List<TaskEntry> taskEntryList = em.createQuery(query).getResultList();
 		if (taskEntryList.isEmpty()) return;
 		
-		@SuppressWarnings("unchecked")
-		List<TaskEntry> beginTaskEntryList = em.createQuery("select t from TaskEntry t where t.task.name = :name")
-				.setParameter("name", BEGIN_ADT)
-				.getResultList();
+		query = criteria.createQuery(TaskEntry.class);
+		Path<Task> task = entry.get(TaskEntry_.task);
+		query.where(criteria.equal(task.get(Task_.name), BEGIN_ADT));
+		List<TaskEntry> beginTaskEntryList = em.createQuery(query).getResultList();
 		if (beginTaskEntryList.isEmpty()) return;
 		
-		em.getTransaction().begin();
 		TaskEntry beginTaskEntry = beginTaskEntryList.iterator().next();
 		Date begin = beginTaskEntry.getDateTime();
 		em.remove(beginTaskEntry);
@@ -120,13 +125,13 @@ public class AllDayTasks {
 		for (TaskEntry taskEntry : taskEntryList) {
 			end = new Date(taskEntry.getDateTime().getTime());
 			do {
-				taskEntry.setDateTime(new Timestamp(begin.getTime()));
-				storageService.createTaskEntry(taskEntry);
+				storageService.createTaskEntry(new TaskEntry(new Timestamp(begin.getTime()), taskEntry.getTask(), taskEntry.getTotal(), true));
 				// MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin, true)).after(end));
 			em.remove(taskEntry);
 		}
 		em.getTransaction().commit();
+		storageService.synchronize(null);
 	}
 
 	public float getTotal() {

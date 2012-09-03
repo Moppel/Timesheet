@@ -306,12 +306,14 @@ public class LocalStorageService extends EventManager implements StorageService 
 	}
 
 	public Long createTaskEntry(TaskEntry task) {
-		em.getTransaction().begin();
+		boolean active = false;
+		if (em.getTransaction().isActive())	active = true;
+		else em.getTransaction().begin();
 		task.setTask(findTaskByNameProjectAndSystem(task.getTask().getName(),
 				task.getTask().getProject() == null ? null : task.getTask().getProject().getName(),
 						task.getTask().getProject() == null ? null : task.getTask().getProject().getSystem()));
 		em.persist(task);
-		em.getTransaction().commit();
+		if (!active) em.getTransaction().commit();
         Calendar cal = new GregorianCalendar();
         cal.setTime(task.getDateTime() == null ? new Date() : task.getDateTime());
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
