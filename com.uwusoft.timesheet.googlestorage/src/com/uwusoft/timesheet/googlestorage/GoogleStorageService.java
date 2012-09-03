@@ -439,6 +439,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		            time.setTime(new SimpleDateFormat(timeFormat).parse(elements.getValue(TIME)));
 		            date.set(Calendar.HOUR, time.get(Calendar.HOUR));
 		            date.set(Calendar.MINUTE, time.get(Calendar.MINUTE));
+		            date.set(Calendar.AM_PM, time.get(Calendar.AM_PM));
 	            }
 	            
 	            String task = elements.getValue(TASK);
