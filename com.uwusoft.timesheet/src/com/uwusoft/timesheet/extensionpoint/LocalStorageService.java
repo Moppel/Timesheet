@@ -399,7 +399,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 		Root<TaskEntry> entry = query.from(TaskEntry.class);
 		Path<Task> task = entry.get(TaskEntry_.task);
 		query.where(criteria.and(criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				entry.get(TaskEntry_.dateTime).isNotNull()));
+				criteria.lessThan(entry.get(TaskEntry_.dateTime), BusinessDayUtil.getNextBusinessDay(new Date(), false))));
 		query.orderBy(criteria.desc(entry.get(TaskEntry_.dateTime)));
 		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
