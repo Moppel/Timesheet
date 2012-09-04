@@ -136,7 +136,7 @@ public class TasksView extends ViewPart implements PropertyChangeListener {
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
 		String[] titles = { "Date", "Time", "Task", "Project", "Total" };
-		int[] bounds = { 80, 80, 300, 300, 60 };
+		int[] bounds = { 80, 81, 300, 300, 60 };
         
 		final OptimizedIndexSearcher searcher = new OptimizedIndexSearcher();
 
