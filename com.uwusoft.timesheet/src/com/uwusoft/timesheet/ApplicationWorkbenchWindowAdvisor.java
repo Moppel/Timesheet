@@ -63,7 +63,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		trayItem = initTaskItem();
 		// Some OS might not support tray items
 		if (trayItem != null) {
-			window.getShell().setVisible(false); // initially minimize to system tray
+			// window.getShell().setVisible(false); // initially minimize to system tray
 			hookPopupMenu();
 		}
 		AutomaticCheckoutCheckinUtil.execute();

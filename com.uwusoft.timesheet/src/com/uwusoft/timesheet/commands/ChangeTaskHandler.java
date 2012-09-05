@@ -71,6 +71,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 				commandStateService.setBreak(true); // currently the only task without project is the break
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);				
+			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			storageService.synchronize(lastTaskEntry);
 			commandStateService.setEnabled(true);
 		}
