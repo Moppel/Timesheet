@@ -3,6 +3,7 @@ package com.uwusoft.timesheet.extensionpoint;
 import java.util.Collection;
 import java.util.List;
 
+
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 
 public interface ImportTaskService {
@@ -16,5 +17,5 @@ public interface ImportTaskService {
      */
     List<String> findTasksBySystemAndProject(String system, String project);
 
-    void importTasks(String submissionSystem, Collection<SubmissionProject> projects);
+    boolean importTasks(String submissionSystem, Collection<SubmissionProject> projects);
 }

@@ -191,12 +191,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					submissionProjects.put(submissionProject.getName(), submissionProject);					
 				}
 				if (!submissionProjects.isEmpty()) {
-					storageService.importTasks(submissionSystem, submissionProjects.values());
-					for (Task task : tasks) {
-						task.setSyncStatus(true);
-						task.getProject().setSyncStatus(true);
-						em.persist(task);
-					}
+					if (storageService.importTasks(submissionSystem, submissionProjects.values()))
+						for (Task task : tasks) {
+							task.setSyncStatus(true);
+							task.getProject().setSyncStatus(true);
+							em.persist(task);
+						}
 				}
 				em.getTransaction().commit();
 		        return Status.OK_STATUS;
@@ -472,8 +472,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		storageService.handleYearChange(lastWeek);
 	}
 
-	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
+	public boolean importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
 		importTasks(submissionSystem, projects, false);
+		return true;
 	}
 	
 	private void importTasks(String submissionSystem, Collection<SubmissionProject> projects, boolean isSynchronized) {

@@ -656,28 +656,22 @@ public class GoogleStorageService extends EventManager implements StorageService
 		}
 	}
 
-	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
+	public boolean importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
 		try {
 			URL worksheetListFeedUrl = null;
 			if ((worksheetListFeedUrl = getListFeedUrl(submissionSystem)) != null) {
 				for (SubmissionProject project : projects) {
 					ListQuery query = new ListQuery(worksheetListFeedUrl);
 					query.setSpreadsheetQuery(PROJECT.toLowerCase() + " = \"" + project.getName() + "\"");
-					try {
-						ListFeed feed = service.query(query, ListFeed.class);
-						List<ListEntry> listEntries = feed.getEntries();
-						List<SubmissionTask> tasks = new ArrayList<SubmissionTask>(project.getTasks());
+					ListFeed feed = service.query(query, ListFeed.class);
+					List<ListEntry> listEntries = feed.getEntries();
+					List<SubmissionTask> tasks = new ArrayList<SubmissionTask>(project.getTasks());
 						
-						for (ListEntry entry : listEntries) // collect available tasks
-							for (SubmissionTask task : tasks)
-								if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
-									tasks.remove(task);							
-						project.setTasks(tasks);
-					} catch (IOException e) {
-						MessageBox.setError(title, e.getMessage());
-					} catch (ServiceException e) {
-						MessageBox.setError(title, e.getResponseBody());
-					}
+					for (ListEntry entry : listEntries) // collect available tasks
+						for (SubmissionTask task : tasks)
+							if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
+								tasks.remove(task);							
+					project.setTasks(tasks);
 				}
 			}
 			else {
@@ -705,10 +699,13 @@ public class GoogleStorageService extends EventManager implements StorageService
 					}
 				}
 			}
+			return true;
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
+			return false;
 		} catch (ServiceException e) {
 			MessageBox.setError(title, e.getResponseBody());
+			return false;
 		}
 	}
 
