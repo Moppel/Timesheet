@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -187,8 +186,6 @@ public class GoogleStorageService extends EventManager implements StorageService
     	        	cal.setTime(lastTaskEntryDate);
     			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
     		}
-		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
@@ -309,7 +306,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		}
 	}
 
-	private void reloadHeadingIndex() throws IOException, ServiceException, MalformedURLException {
+	private void reloadHeadingIndex() throws IOException, ServiceException {
 		CellFeed cellFeed = service.getFeed(factory.getCellFeedUrl(spreadsheetKey, "1", "private", "full"), CellFeed.class);
 		headingIndex.clear();
 		for (CellEntry entry : cellFeed.getEntries()) {
@@ -327,8 +324,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 	        worksheets = feed.getEntries();
 	        defaultWorksheet = worksheets.get(0);
 	        worksheets.remove(defaultWorksheet); // only task and project sheets remaining
-		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
@@ -484,7 +479,7 @@ public class GoogleStorageService extends EventManager implements StorageService
     }
     
 	@Override
-    public Long createTaskEntry(TaskEntry task) {
+    public Long createTaskEntry(TaskEntry task) throws CoreException {
         try {
 			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
 			ListEntry timeEntry = new ListEntry();
@@ -537,11 +532,10 @@ public class GoogleStorageService extends EventManager implements StorageService
         	feed = service.getFeed(listFeedUrl, ListFeed.class);
             return Long.parseLong(feed.getEntries().get(feed.getEntries().size() - 1).getCustomElements().getValue(ID));
 		} catch (IOException e) {
-			MessageBox.setError(title, e.getMessage());
+	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getMessage(), null));
 		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getResponseBody());
+	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getResponseBody(), null));
 		}
-		return null;
     }
 
 	@Override
@@ -580,7 +574,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return null;
 	}
 	
-	private void updateTask(String taskLink, int row) {
+	private void updateTask(String taskLink, int row) throws IOException, ServiceException {
 		createUpdateCellEntry(defaultWorksheet,	row,
 				headingIndex.get(TASK), "=" + taskLink);
 		createUpdateCellEntry(defaultWorksheet,	row,
@@ -634,26 +628,32 @@ public class GoogleStorageService extends EventManager implements StorageService
         }        
     }
 
-	public void updateTaskEntry(TaskEntry entry) {
-		if (entry.isStatus()) {
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(SUBMISSION_STATUS), SUBMISSION_STATUS_TRUE);
-			return;
+	public void updateTaskEntry(TaskEntry entry) throws CoreException {
+		try {
+			if (entry.isStatus()) {
+				createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(SUBMISSION_STATUS), SUBMISSION_STATUS_TRUE);
+				return;
+			}
+			if (entry.getDateTime() != null) {
+				createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
+				Calendar cal = new GregorianCalendar();
+				//cal.setFirstDayOfWeek(Calendar.MONDAY);
+				cal.setTime(entry.getDateTime());
+				int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
+				createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
+				createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
+			}
+			if (CHECK_IN.equals(entry.getTask().getName()) || BREAK.equals(entry.getTask().getName()))
+				createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TASK), entry.getTask().getName());
+			else
+				updateTask(getTaskLink(entry.getTask().getName(), entry.getTask().getProject().getName(), entry.getTask().getProject().getSystem()),
+						entry.getRowNum().intValue());
+			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(COMMENT), entry.getComment());
+		} catch (IOException e) {
+	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getMessage(), null));
+		} catch (ServiceException e) {
+	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getResponseBody(), null));
 		}
-		if (entry.getDateTime() != null) {
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TIME), new SimpleDateFormat(timeFormat).format(entry.getDateTime()));
-			Calendar cal = new GregorianCalendar();
-			//cal.setFirstDayOfWeek(Calendar.MONDAY);
-			cal.setTime(entry.getDateTime());
-			int weekNum = cal.get(Calendar.WEEK_OF_YEAR);
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(DATE), new SimpleDateFormat(dateFormat).format(entry.getDateTime()));			
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(WEEK), Integer.toString(weekNum));
-		}
-		if (CHECK_IN.equals(entry.getTask().getName()) || BREAK.equals(entry.getTask().getName()))
-			createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(TASK), entry.getTask().getName());
-		else
-			updateTask(getTaskLink(entry.getTask().getName(), entry.getTask().getProject().getName(), entry.getTask().getProject().getSystem()),
-					entry.getRowNum().intValue());
-		createUpdateCellEntry(defaultWorksheet, entry.getRowNum().intValue(), headingIndex.get(COMMENT), entry.getComment());
 	}
 
 	public void importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
@@ -705,8 +705,6 @@ public class GoogleStorageService extends EventManager implements StorageService
 					}
 				}
 			}
-		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getMessage());
 		} catch (IOException e) {
 			MessageBox.setError(title, e.getMessage());
 		} catch (ServiceException e) {
@@ -714,8 +712,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		}
 	}
 
-	private WorksheetEntry createWorksheet(String system, List<String> headings) throws IOException,
-			ServiceException, MalformedURLException {
+	private WorksheetEntry createWorksheet(String system, List<String> headings) throws IOException, ServiceException {
 		WorksheetEntry newWorksheet = new WorksheetEntry();
 		newWorksheet.setTitle(new PlainTextConstruct(system));
 		newWorksheet.setColCount(6);
@@ -796,8 +793,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return system.substring(system.indexOf("=") + 1);
 	}
 
-	private String getInputValue(int row, int col) throws IOException, ServiceException,
-			MalformedURLException {
+	private String getInputValue(int row, int col) throws IOException, ServiceException {
 		CellEntry cellEntry = service.getEntry(new URL(defaultWorksheet.getCellFeedUrl().toString()
 				+ "/" + "R" + row + "C" + col), CellEntry.class);
 		return cellEntry.getCell().getInputValue();
@@ -920,18 +916,10 @@ public class GoogleStorageService extends EventManager implements StorageService
 		return null;
 	}
 	
-    private void createUpdateCellEntry(WorksheetEntry worksheet, int row, int col, String value) {
-		try {
+    private void createUpdateCellEntry(WorksheetEntry worksheet, int row, int col, String value) throws IOException, ServiceException {
 			CellEntry entry = service.getEntry(new URL(worksheet.getCellFeedUrl().toString() + "/" + "R" + row + "C" + col), CellEntry.class);
 	        entry.changeInputValueLocal(value);
 	        entry.update();
-		} catch (MalformedURLException e) {
-			MessageBox.setError(title, e.getMessage());
-		} catch (IOException e) {
-			MessageBox.setError(title, e.getMessage());
-		} catch (ServiceException e) {
-			MessageBox.setError(title, e.getResponseBody());
-		}
     }
 
 	@Override

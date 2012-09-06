@@ -26,6 +26,7 @@ import javax.persistence.criteria.Root;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.commands.common.EventManager;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -49,9 +50,10 @@ import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.ExtensionManager;
+import com.uwusoft.timesheet.util.MessageBox;
 import com.uwusoft.timesheet.util.StorageSystemSetup;
 
-public class LocalStorageService extends EventManager implements StorageService {
+public class LocalStorageService extends EventManager implements ImportTaskService {
 
 	private static final String PERSISTENCE_UNIT_NAME = "timesheet";
 	public static EntityManagerFactory factory;	
@@ -119,16 +121,7 @@ public class LocalStorageService extends EventManager implements StorageService 
 					}
 					monitor.done();
 					final int lastWeek = cal.get(Calendar.WEEK_OF_YEAR) - 2;
-			        synchronized (getListeners()) {
-			    		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-			    			public void run() {
-			    				if (!PlatformUI.getWorkbench().getDisplay().isDisposed())
-			    					for (Object listener : getListeners()) {
-			    						((PropertyChangeListener) listener).propertyChange(new PropertyChangeEvent(this, PROPERTY_WEEK, null, lastWeek));
-			    					}    
-			    			}
-			    		});
-			        }
+					firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, lastWeek));
 				}
 		        return Status.OK_STATUS;
 			}
@@ -140,34 +133,38 @@ public class LocalStorageService extends EventManager implements StorageService 
 			protected IStatus run(IProgressMonitor monitor) {
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;
-				if (lastTaskEntry != null) {
+				try {
+					if (lastTaskEntry != null) {
+						em.getTransaction().begin();
+						if (storageService.getLastTask() != null)
+							storageService.updateTaskEntry(lastTaskEntry);
+						lastTaskEntry.setSyncStatus(true);
+						em.persist(lastTaskEntry);
+						em.getTransaction().commit();
+					}
 					em.getTransaction().begin();
-					if (storageService.getLastTask() != null)
-						storageService.updateTaskEntry(lastTaskEntry);
-					lastTaskEntry.setSyncStatus(true);
-					em.persist(lastTaskEntry);
-					em.getTransaction().commit();
-				}
-				em.getTransaction().begin();
-				
-				CriteriaBuilder criteria = em.getCriteriaBuilder();
-				CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
-				Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
-				query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
-				List<TaskEntry> entries = em.createQuery(query).getResultList();
-				
-				monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
-				for (TaskEntry entry : entries) {
-					if(entry.getRowNum() == null) 
-						entry.setRowNum(storageService.createTaskEntry(entry));
-					else
-						storageService.updateTaskEntry(entry);
-					entry.setSyncStatus(true);
-					em.persist(entry);
-					monitor.worked(1);
+					CriteriaBuilder criteria = em.getCriteriaBuilder();
+					CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+					Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+					query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
+					List<TaskEntry> entries = em.createQuery(query).getResultList();
+
+					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
+					for (TaskEntry entry : entries) {
+						if (entry.getRowNum() == null)
+							entry.setRowNum(storageService.createTaskEntry(entry));
+						else
+							storageService.updateTaskEntry(entry);
+						entry.setSyncStatus(true);
+						em.persist(entry);
+						monitor.worked(1);
+					}
+					monitor.done();
+				} catch (CoreException e) {
+					MessageBox.setError("Remote storage service", e.getMessage());
+					return Status.CANCEL_STATUS;
 				}
 				em.getTransaction().commit();
-				monitor.done();
 		        return Status.OK_STATUS;
 			}			
 		};
@@ -214,17 +211,17 @@ public class LocalStorageService extends EventManager implements StorageService 
 			CriteriaQuery<Task> taskQuery = criteria.createQuery(Task.class);
 			Root<Task> taskRoot = taskQuery.from(Task.class);
 			
-			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), StorageService.CHECK_IN));
+			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), CHECK_IN));
 			List<Task> tasks = em.createQuery(taskQuery).getResultList(); 
 			if (tasks.isEmpty()) {
-				Task task = new Task(StorageService.CHECK_IN);
+				Task task = new Task(CHECK_IN);
 				task.setSyncStatus(true);
 				em.persist(task);
 			}
-			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), StorageService.BREAK));
+			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), BREAK));
 			tasks = em.createQuery(taskQuery).getResultList();
 			if (tasks.isEmpty()) {
-				Task task = new Task(StorageService.BREAK);
+				Task task = new Task(BREAK);
 				task.setSyncStatus(true);
 				em.persist(task);
 			}
@@ -314,9 +311,14 @@ public class LocalStorageService extends EventManager implements StorageService 
 		}
 
         synchronized (getListeners()) {
-        	for (Object listener : getListeners()) {
-        		((PropertyChangeListener) listener).propertyChange(event);
-        	}    
+    		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+    			public void run() {
+    				if (!PlatformUI.getWorkbench().getDisplay().isDisposed())
+    					for (Object listener : getListeners()) {
+    						((PropertyChangeListener) listener).propertyChange(event);
+    					}
+    			}
+        	});    
         }
     }
     
@@ -514,8 +516,8 @@ public class LocalStorageService extends EventManager implements StorageService 
 		Path<Task> task = entry.get(TaskEntry_.task);
 		query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
 				criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				//criteria.notEqual(task.get(Task_.name), StorageService.CHECK_IN),
-				//criteria.notEqual(task.get(Task_.name), StorageService.BREAK),
+				//criteria.notEqual(task.get(Task_.name), CHECK_IN),
+				//criteria.notEqual(task.get(Task_.name), BREAK),
 				entry.get(TaskEntry_.dateTime).isNotNull(),
 				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
 				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));

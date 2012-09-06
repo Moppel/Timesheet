@@ -8,6 +8,7 @@ import org.eclipse.jface.wizard.IWizardPage;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.swt.custom.BusyIndicator;
 
+import com.uwusoft.timesheet.extensionpoint.ImportTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
@@ -18,7 +19,7 @@ import com.uwusoft.timesheet.util.ExtensionManager;
 public class ImportTaskWizard extends Wizard {
 
 	private SubmissionService submissionService;
-	private StorageService storageService;
+	private ImportTaskService storageService;
 	private List<SubmissionProject> projects;
 	private String system;
 

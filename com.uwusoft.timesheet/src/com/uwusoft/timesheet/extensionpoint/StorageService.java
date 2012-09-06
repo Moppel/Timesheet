@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.runtime.CoreException;
+
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 
@@ -17,7 +19,7 @@ import com.uwusoft.timesheet.submission.model.SubmissionProject;
  * @version $Revision: $, $Date: Aug 15, 2011
  * @since Aug 15, 2011
  */
-public interface StorageService {
+public interface StorageService extends ImportTaskService {
 	public static final String SERVICE_ID = "com.uwusoft.timesheet.storageservice";
 	public static final String SERVICE_NAME = "storage";
 	public static final String PROPERTY = "storage.system";
@@ -38,11 +40,7 @@ public interface StorageService {
     public static final String ID = "ID";
     public static final String OVERTIME = "Overtime";
     public static final String SUBMISSION_STATUS = "SubmissionStatus";
-    public static final String CHECK_IN = "Check in";
-    public static final String BREAK = "Break";
 	public static SimpleDateFormat formatter = new SimpleDateFormat("MM/dd/yyyy HH:mm");
-	
-	public static final String PROPERTY_WEEK = "week";
 
     List<String> getProjects(String system);
     
@@ -53,11 +51,6 @@ public interface StorageService {
      */
     void reload();
     
-    /**
-     * @return a list of tasks assigned to name of special time management system
-     */
-    List<String> findTasksBySystemAndProject(String system, String project);
-
     void addPropertyChangeListener(PropertyChangeListener listener);
     
     void removePropertyChangeListener(PropertyChangeListener listener);
@@ -76,14 +69,16 @@ public interface StorageService {
      * the (temporary) total of the task will be calculated by: end time - end time of the previous task
      * @param task
      * @return row number of the created entry
+     * @throws CoreException TODO
      */
-    Long createTaskEntry(TaskEntry entry);
+    Long createTaskEntry(TaskEntry entry) throws CoreException;
    
     /**
      * update task entry
      * @param entry the task entry
+     * @throws CoreException TODO
      */
-    void updateTaskEntry(TaskEntry entry);
+    void updateTaskEntry(TaskEntry entry) throws CoreException;
 
     /**
      * only to be implemented for sequential storage system
@@ -100,8 +95,6 @@ public interface StorageService {
     TaskEntry getLastTask();
     
     Date getLastTaskEntryDate();
-    
-    void importTasks(String submissionSystem, Collection<SubmissionProject> projects);
     
     Set<String> submitEntries(Date startDate, Date endDate);
     
