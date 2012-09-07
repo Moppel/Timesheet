@@ -23,7 +23,7 @@ public class SessionSourceProvider extends AbstractSourceProvider {
 		LocalStorageService storageService = LocalStorageService.getInstance();
 		TaskEntry lastTask = storageService.getLastTask();
 		enabled = lastTask != null;
-		breakSet = enabled && StorageService.BREAK.equals(lastTask.getTask().getName());
+		breakSet = enabled && StorageService.BREAK.equals(lastTask == null ? "" : lastTask.getTask().getName());
 	}
 
 	@Override

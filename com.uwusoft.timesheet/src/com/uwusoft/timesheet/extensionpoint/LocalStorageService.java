@@ -234,7 +234,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			}
 			em.getTransaction().commit();
 			for (String system : submissionSystems.keySet()) {
-				if (getProjects(system).isEmpty()) {
+				if (!StringUtils.isEmpty(system) && getProjects(system).isEmpty()) {
 					if (getStorageService() != null)
 						importTasks(system, storageService.getImportedProjects(system), true);
 				}
@@ -247,13 +247,15 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					createTaskEntry(lastTask);
 				}
 				Date date = storageService.getLastTaskEntryDate();
-				List<TaskEntry> entries = storageService.getTaskEntries(date, date);
-				for (TaskEntry entry : entries) {
-					entry.setRowNum(entry.getId());
-					entry.setSyncStatus(true);
-					createTaskEntry(entry);
+				if (date != null) {
+					List<TaskEntry> entries = storageService.getTaskEntries(date, date);
+					for (TaskEntry entry : entries) {
+						entry.setRowNum(entry.getId());
+						entry.setSyncStatus(true);
+						createTaskEntry(entry);
+					}
+					return DateUtils.truncate(date, Calendar.DATE);
 				}
-				return DateUtils.truncate(date, Calendar.DATE);
 			}
 		}
 		return new Date();
