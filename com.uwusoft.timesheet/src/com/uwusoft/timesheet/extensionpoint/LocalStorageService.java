@@ -133,6 +133,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			protected IStatus run(IProgressMonitor monitor) {
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;
+				boolean active = false;
 				try {
 					if (lastTaskEntry != null) {
 						em.getTransaction().begin();
@@ -142,7 +143,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						em.persist(lastTaskEntry);
 						em.getTransaction().commit();
 					}
-					em.getTransaction().begin();
+					if (em.getTransaction().isActive())	active = true;
+					else em.getTransaction().begin();
 					CriteriaBuilder criteria = em.getCriteriaBuilder();
 					CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 					Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
@@ -164,7 +166,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					MessageBox.setError("Remote storage service", e.getMessage());
 					return Status.CANCEL_STATUS;
 				}
-				em.getTransaction().commit();
+				if (!active) em.getTransaction().commit();
 		        return Status.OK_STATUS;
 			}			
 		};
@@ -550,6 +552,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
             taskEntry.setSyncStatus(false);
             em.persist(taskEntry);
 		}
+    	submissionEntry.submitEntries();
         em.getTransaction().commit();
 		return systems;
 	}

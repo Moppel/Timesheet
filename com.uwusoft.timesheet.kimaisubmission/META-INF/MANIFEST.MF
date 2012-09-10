@@ -18,4 +18,5 @@ Bundle-ClassPath: lib/tires-kimai.jar,
  lib/json-simple-1.1.jar,
  lib/commons/commons-lang3-3.0.1.jar,
  lib/commons/commons-logging-1.1.1.jar,
+ lib/hibernate-jpamodelgen-1.2.0.Final.jar,
  .
