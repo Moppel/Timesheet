@@ -377,35 +377,34 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public void updateTaskEntry(TaskEntry entry) {
-		em.getTransaction().begin();
+		boolean active = false;
+		if (em.getTransaction().isActive())	active = true;
+		else em.getTransaction().begin();
 		entry.setSyncStatus(false);
         Calendar cal = new GregorianCalendar();
 		if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
-			entry.setTotal(calculateTotal(entry));
+			calculateTotal(entry);
 			cal.setTime(entry.getDateTime());
 		}
 		else cal.setTime(new Date());
 		em.persist(entry);
-		em.getTransaction().commit();
+		if (!active) em.getTransaction().commit();
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
-	private Float calculateTotal(TaskEntry entry) {
+	private void calculateTotal(TaskEntry entry) {
 		try {
 			CriteriaBuilder criteria = em.getCriteriaBuilder();
 			CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 			Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
 			query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getRowNum() - 1));
 			TaskEntry previousEntry = (TaskEntry) em.createQuery(query).getSingleResult();
-			Calendar entryCalendar = Calendar.getInstance();
-			Calendar previousEntryCalendar = Calendar.getInstance();
-			entryCalendar.setTime(entry.getDateTime());
-			previousEntryCalendar.setTime(previousEntry.getDateTime());
-			Calendar totalCalendar = Calendar.getInstance();
-			totalCalendar.setTime(new Date(entryCalendar.getTimeInMillis() - previousEntryCalendar.getTimeInMillis()));
-			return totalCalendar.get(Calendar.HOUR) - 1 + totalCalendar.get(Calendar.MINUTE) / 60.0f;
+			entry.setTotal((entry.getDateTime().getTime() - previousEntry.getDateTime().getTime()) / 1000f / 60f / 60f);
+			query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getRowNum() + 1));
+			TaskEntry nextEntry = (TaskEntry) em.createQuery(query).getSingleResult();
+			if (nextEntry.getDateTime() != null && !CHECK_IN.equals(nextEntry.getTask().getName()) && !BREAK.equals(nextEntry.getTask().getName()))
+				nextEntry.setTotal((nextEntry.getDateTime().getTime() - entry.getDateTime().getTime()) / 1000f / 60f / 60f);
 		} catch (Exception e) {}
-		return 0.0f;
 	}
 
     protected void createOrUpdate(TaskEntry entry) {
@@ -422,7 +421,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
 								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
 				if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName()))
-					availableEntry.setTotal(calculateTotal(availableEntry));
+					calculateTotal(availableEntry);
 				availableEntry.setComment(entry.getComment());
 				em.persist(availableEntry);
 				em.getTransaction().commit();
