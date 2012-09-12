@@ -64,6 +64,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private static StorageService storageService;
     private String submissionSystem;
     private TaskEntry lastTaskEntry;
+    private boolean handleDayChange;
     private ILog logger;
 
 	private LocalStorageService() {
@@ -137,8 +138,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				try {
 					if (lastTaskEntry != null) {
 						em.getTransaction().begin();
-						if (storageService.getLastTask() != null)
+						if (storageService.getLastTask() != null) {
 							storageService.updateTaskEntry(lastTaskEntry);
+							if (handleDayChange) storageService.handleDayChange();
+						}
 						lastTaskEntry.setSyncStatus(true);
 						em.persist(lastTaskEntry);
 						em.getTransaction().commit();
@@ -355,40 +358,43 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return comments.toArray(new String[comments.size()]);
 	}
 
-	public Long createTaskEntry(TaskEntry task) {
+	public void createTaskEntry(TaskEntry task) {
 		createTaskEntry(task, true);
-		return task.getRowNum();
 	}
 	
-	private void createTaskEntry(TaskEntry task, boolean firePropertyChangeEvent) {
+	private void createTaskEntry(TaskEntry entry, boolean firePropertyChangeEvent) {
 		boolean active = false;
-		if (em.getTransaction().isActive())	active = true;
-		else em.getTransaction().begin();
-		task.setTask(findTaskByNameProjectAndSystem(task.getTask().getName(),
-				task.getTask().getProject() == null ? null : task.getTask().getProject().getName(),
-						task.getTask().getProject() == null ? null : task.getTask().getProject().getSystem()));
-		em.persist(task);
-		if (!active) em.getTransaction().commit();
+		synchronized (entry) {
+			if (em.getTransaction().isActive())	active = true;
+			else em.getTransaction().begin();
+			entry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+					entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+			em.persist(entry);
+			if (!active) em.getTransaction().commit();
+		}
 		if (firePropertyChangeEvent) {
 	        Calendar cal = new GregorianCalendar();
-	        cal.setTime(task.getDateTime() == null ? new Date() : task.getDateTime());
+	        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
 			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 		}
 	}
 
 	public void updateTaskEntry(TaskEntry entry) {
 		boolean active = false;
-		if (em.getTransaction().isActive())	active = true;
-		else em.getTransaction().begin();
-		entry.setSyncStatus(false);
         Calendar cal = new GregorianCalendar();
-		if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
-			calculateTotal(entry);
-			cal.setTime(entry.getDateTime());
+		synchronized (entry) {
+			if (em.getTransaction().isActive())	active = true;
+			else em.getTransaction().begin();
+			entry.setSyncStatus(false);
+			if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
+				calculateTotal(entry);
+				cal.setTime(entry.getDateTime());
+			}
+			else cal.setTime(new Date());
+			em.persist(entry);
+			if (!active) em.getTransaction().commit();
 		}
-		else cal.setTime(new Date());
-		em.persist(entry);
-		if (!active) em.getTransaction().commit();
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
@@ -458,11 +464,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
 		return taskEntries.iterator().next().getDateTime();
-	}
-
-	public void handleDayChange() {
-		if (getStorageService() == null) return;
-		storageService.handleDayChange();
 	}
 
 	public void handleWeekChange() {
@@ -624,9 +625,18 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 	}
 
+	public void synchronize() {
+		synchronize(null);
+	}
+	
 	public void synchronize(TaskEntry lastTaskEntry) {
+		synchronize(lastTaskEntry, false);
+	}
+	
+	public void synchronize(TaskEntry lastTaskEntry, boolean handleDayChange) {
 		if (getStorageService() == null) return;
 		this.lastTaskEntry = lastTaskEntry;
+		this.handleDayChange = handleDayChange;
 		syncEntriesJob.schedule();
 	}
 

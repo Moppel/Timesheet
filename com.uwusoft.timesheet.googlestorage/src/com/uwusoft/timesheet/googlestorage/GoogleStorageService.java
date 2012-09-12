@@ -583,7 +583,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 
     public void handleDayChange() {
         try {
-            if (!reloadWorksheets()) return;
+			listFeedUrl = factory.getListFeedUrl(spreadsheetKey, "1", "private", "full");
             ListFeed feed = service.getFeed(listFeedUrl, ListFeed.class);
             List<ListEntry> listEntries = feed.getEntries();			
             int rowsOfDay = 0;

@@ -131,7 +131,7 @@ public class AllDayTasks {
 			em.remove(taskEntry);
 		}
 		em.getTransaction().commit();
-		storageService.synchronize(null);
+		storageService.synchronize();
 	}
 
 	public float getTotal() {
