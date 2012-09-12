@@ -137,14 +137,16 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				boolean active = false;
 				try {
 					if (lastTaskEntry != null) {
-						em.getTransaction().begin();
-						if (storageService.getLastTask() != null) {
-							storageService.updateTaskEntry(lastTaskEntry);
-							if (handleDayChange) storageService.handleDayChange();
+						synchronized (lastTaskEntry) {
+							em.getTransaction().begin();
+							if (storageService.getLastTask() != null) {
+								storageService.updateTaskEntry(lastTaskEntry);
+								if (handleDayChange) storageService.handleDayChange();
+							}
+							lastTaskEntry.setSyncStatus(true);
+							em.persist(lastTaskEntry);
+							em.getTransaction().commit();
 						}
-						lastTaskEntry.setSyncStatus(true);
-						em.persist(lastTaskEntry);
-						em.getTransaction().commit();
 					}
 					if (em.getTransaction().isActive())	active = true;
 					else em.getTransaction().begin();
@@ -155,14 +157,16 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					List<TaskEntry> entries = em.createQuery(query).getResultList();
 
 					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
-					for (TaskEntry entry : entries) {
-						if (entry.getRowNum() == null)
-							entry.setRowNum(storageService.createTaskEntry(entry));
-						else
-							storageService.updateTaskEntry(entry);
-						entry.setSyncStatus(true);
-						em.persist(entry);
-						monitor.worked(1);
+					synchronized (entries) {
+						for (TaskEntry entry : entries) {
+							if (entry.getRowNum() == null)
+								entry.setRowNum(storageService.createTaskEntry(entry));
+							else
+								storageService.updateTaskEntry(entry);
+							entry.setSyncStatus(true);
+							em.persist(entry);
+							monitor.worked(1);
+						}
 					}
 					monitor.done();
 				} catch (CoreException e) {
@@ -647,8 +651,13 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	
 	private StorageService getStorageService() {
 		if (storageService == null)
-			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-					.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
+    		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+    			public void run() {
+    				if (!PlatformUI.getWorkbench().getDisplay().isDisposed())
+    					storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+    						.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
+    			}
+    		});
 		return storageService;
 	}
 }
