@@ -33,6 +33,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.Activator;
@@ -69,7 +70,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
-		if (Activator.googleDrive.exists())
+		if (Activator.googleDrive.exists() && Activator.getDefault().getPreferenceStore() instanceof PreferenceStore)
 			configOverrides.put("javax.persistence.jdbc.url",
 					"jdbc:derby:" + Activator.googleDrive.getAbsolutePath() + "/Timesheet/Databases/timesheet;create=true");
 		else

@@ -24,6 +24,8 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
+	public static final String USE_GOOGLE_DRIVE = "storage.googledrive";
+	
 	public static final File googleDrive
 		= new File(new JFileChooser().getFileSystemView().getDefaultDirectory().getAbsolutePath() + File.separator + "Google Drive");
 	
@@ -66,7 +68,7 @@ public class Activator extends AbstractUIPlugin {
 	public IPreferenceStore getPreferenceStore() {
         if (preferenceStore == null) {
         	preferenceStore = super.getPreferenceStore();
-        	if (googleDrive.exists()) {
+        	if (googleDrive.exists() && preferenceStore.getBoolean(USE_GOOGLE_DRIVE)) { // TODO first setup of Use Google Drive
         		File settings = new File(googleDrive.getAbsolutePath() + File.separator + "Timesheet" + File.separator + "Settings");
         		preferenceStore = new PreferenceStore(settings.getAbsolutePath() + File.separator + PLUGIN_ID + ".prefs");
         		try {

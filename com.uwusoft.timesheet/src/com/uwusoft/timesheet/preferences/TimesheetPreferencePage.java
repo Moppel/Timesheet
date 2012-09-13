@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -13,6 +14,7 @@ import org.eclipse.jface.preference.IntegerFieldEditor;
 import org.eclipse.jface.preference.StringFieldEditor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.Messages;
@@ -38,6 +40,8 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 
 	@Override
 	protected void createFieldEditors() {
+		if (Activator.googleDrive.exists() && getPreferenceStore() instanceof ScopedPreferenceStore)
+			addField(new BooleanFieldEditor(Activator.USE_GOOGLE_DRIVE, "Use Google Drive", getFieldEditorParent()));
 		addField(new ComboFieldEditor(StorageService.PROPERTY, "Storage System:", getSystemArray(StorageService.SERVICE_ID,
 				StorageService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new ComboFieldEditor(HolidayService.PROPERTY, "Holiday System:", getSystemArray(HolidayService.SERVICE_ID,
