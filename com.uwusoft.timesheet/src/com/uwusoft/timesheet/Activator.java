@@ -1,8 +1,17 @@
 package com.uwusoft.timesheet;
 
+import java.io.File;
+import java.io.IOException;
+
+import javax.swing.JFileChooser;
+
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+
+import com.uwusoft.timesheet.util.MessageBox;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -15,6 +24,11 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
+	public static final File googleDrive
+		= new File(new JFileChooser().getFileSystemView().getDefaultDirectory().getAbsolutePath() + File.separator + "Google Drive");
+	
+    private IPreferenceStore preferenceStore;
+    
     /**
 	 * The constructor
 	 */
@@ -46,6 +60,24 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static Activator getDefault() {
 		return plugin;
+	}
+
+	@Override
+	public IPreferenceStore getPreferenceStore() {
+        if (preferenceStore == null) {
+        	preferenceStore = super.getPreferenceStore();
+        	if (googleDrive.exists()) {
+        		File settings = new File(googleDrive.getAbsolutePath() + File.separator + "Timesheet" + File.separator + "Settings");
+        		preferenceStore = new PreferenceStore(settings.getAbsolutePath() + File.separator + PLUGIN_ID + ".prefs");
+        		try {
+        			if (settings.exists())
+        				((PreferenceStore) preferenceStore).load();
+        		} catch (IOException e) {
+        			MessageBox.setError("Preferences", e.getMessage());
+        		}
+        	}
+        }
+        return preferenceStore;
 	}
 
 	/**

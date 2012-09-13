@@ -69,8 +69,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
-		configOverrides.put("javax.persistence.jdbc.url",
-				"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/test/timesheet;create=true"); // TODO
+		if (Activator.googleDrive.exists())
+			configOverrides.put("javax.persistence.jdbc.url",
+					"jdbc:derby:" + Activator.googleDrive.getAbsolutePath() + "/Timesheet/Databases/timesheet;create=true");
+		else
+			configOverrides.put("javax.persistence.jdbc.url",
+					"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		em = factory.createEntityManager();
 				
@@ -651,13 +655,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	
 	private StorageService getStorageService() {
 		if (storageService == null)
-    		PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-    			public void run() {
-    				if (!PlatformUI.getWorkbench().getDisplay().isDisposed())
-    					storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-    						.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-    			}
-    		});
+			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+    				.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
 		return storageService;
 	}
 }
