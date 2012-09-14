@@ -28,7 +28,7 @@ public class SetBreakHandler extends AbstractHandler {
 			storageService.updateTaskEntry(lastTask);
 			TaskEntry task = new TaskEntry(null, storageService.findTaskByNameProjectAndSystem(StorageService.BREAK, null, null));
 			storageService.createTaskEntry(task);
-			storageService.synchronize(lastTask);
+			storageService.synchronize();
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 			SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);

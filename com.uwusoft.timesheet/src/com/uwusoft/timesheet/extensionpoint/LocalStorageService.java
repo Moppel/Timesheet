@@ -64,8 +64,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private static LocalStorageService instance;
     private static StorageService storageService;
     private String submissionSystem;
-    private TaskEntry lastTaskEntry;
-    private boolean handleDayChange;
     private ILog logger;
 
 	private LocalStorageService() {
@@ -141,29 +139,20 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					return Status.CANCEL_STATUS;
 				boolean active = false;
 				try {
-					if (lastTaskEntry != null) {
-						synchronized (lastTaskEntry) {
-							em.getTransaction().begin();
-							if (storageService.getLastTask() != null) {
-								storageService.updateTaskEntry(lastTaskEntry);
-								if (handleDayChange) storageService.handleDayChange();
-							}
-							lastTaskEntry.setSyncStatus(true);
-							em.persist(lastTaskEntry);
-							em.getTransaction().commit();
-						}
-					}
 					if (em.getTransaction().isActive())	active = true;
 					else em.getTransaction().begin();
 					CriteriaBuilder criteria = em.getCriteriaBuilder();
 					CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 					Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
 					query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
+					query.orderBy(criteria.asc(taskEntry.get(TaskEntry_.dateTime)));
 					List<TaskEntry> entries = em.createQuery(query).getResultList();
 
 					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
 					synchronized (entries) {
 						for (TaskEntry entry : entries) {
+							if (CHECK_IN.equals(entry.getTask().getName()))
+								storageService.handleDayChange();
 							if (entry.getRowNum() == null)
 								entry.setRowNum(storageService.createTaskEntry(entry));
 							else
@@ -635,20 +624,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public void synchronize() {
-		synchronize(null);
-	}
-	
-	public void synchronize(TaskEntry lastTaskEntry) {
-		synchronize(lastTaskEntry, false);
-	}
-	
-	public void synchronize(TaskEntry lastTaskEntry, boolean handleDayChange) {
 		if (getStorageService() == null) return;
-		this.lastTaskEntry = lastTaskEntry;
-		this.handleDayChange = handleDayChange;
 		syncEntriesJob.schedule();
 	}
-
+	
 	public void reload() {
 		if (getStorageService() == null) return;
 		storageService.reload();		

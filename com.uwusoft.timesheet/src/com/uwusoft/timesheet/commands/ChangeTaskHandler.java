@@ -72,7 +72,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 			task.setComment(listDialog.getComment());
 			storageService.createTaskEntry(task);				
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
-			storageService.synchronize(lastTaskEntry);
+			storageService.synchronize();
 			commandStateService.setEnabled(true);
 		}
 	}
