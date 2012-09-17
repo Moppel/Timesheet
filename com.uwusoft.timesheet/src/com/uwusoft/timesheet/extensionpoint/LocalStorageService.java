@@ -30,6 +30,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -65,6 +66,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private static StorageService storageService;
     private String submissionSystem;
     private ILog logger;
+    private QualifiedName HANDLE_DAY_CHANGE = new QualifiedName(Activator.PLUGIN_ID, "handleDayChange");
 
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
@@ -151,8 +153,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
 					synchronized (entries) {
 						for (TaskEntry entry : entries) {
-							if (CHECK_IN.equals(entry.getTask().getName()))
-								storageService.handleDayChange();
 							if (entry.getRowNum() == null)
 								entry.setRowNum(storageService.createTaskEntry(entry));
 							else
@@ -161,6 +161,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 							em.persist(entry);
 							monitor.worked(1);
 						}
+						if ((Boolean) getProperty(HANDLE_DAY_CHANGE))
+							storageService.handleDayChange();
 					}
 					monitor.done();
 				} catch (CoreException e) {
@@ -624,7 +626,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public void synchronize() {
+		synchronize(false);
+	}
+	
+	public void synchronize(boolean handleDayChange) {
 		if (getStorageService() == null) return;
+		syncEntriesJob.setProperty(HANDLE_DAY_CHANGE, handleDayChange);
 		syncEntriesJob.schedule();
 	}
 	
