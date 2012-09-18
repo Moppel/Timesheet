@@ -38,6 +38,7 @@ import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
@@ -72,10 +73,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		if (Activator.googleDrive.exists() && Activator.getDefault().getPreferenceStore() instanceof PreferenceStore)
 			configOverrides.put("javax.persistence.jdbc.url",
-					"jdbc:derby:" + Activator.googleDrive.getAbsolutePath() + "/Timesheet/Databases/timesheet;create=true");
+					"jdbc:derby:" + Activator.timesheetPath + "/Databases/timesheet;create=true");
 		else
 			configOverrides.put("javax.persistence.jdbc.url",
-					"jdbc:derby:" + System.getProperty("user.home") + "/.eclipse/databases/timesheet;create=true");
+					"jdbc:derby:" + SystemShutdownTimeCaptureService.lckDir + "/databases/timesheet;create=true");
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		em = factory.createEntityManager();
 				

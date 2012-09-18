@@ -49,6 +49,7 @@ public class TimesheetApp implements IApplication {
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
     public static Date startDate, shutDownDate;
+	public static File settings;
     
 	/* (non-Javadoc)
 	 * @see org.eclipse.equinox.app.IApplication#start(org.eclipse.equinox.app.IApplicationContext)
@@ -58,10 +59,15 @@ public class TimesheetApp implements IApplication {
 		startDate = new Date(mx.getStartTime());
 		shutDownDate = startDate;
 
-		String settingsPath = Activator.getDefault().getStateLocation().toPortableString()
+		Activator.getDefault().getPreferenceStore();
+		String settingsPath;
+		if (Activator.settings == null)
+			settingsPath = Activator.getDefault().getStateLocation().toPortableString()
 				.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/"); // how to get path of settings?
+		else
+			settingsPath = Activator.settings.getAbsolutePath() + File.separator;
 		
-		File tmp = new File(settingsPath + "/" + SystemShutdownTimeCaptureService.tmpFile);
+		File tmp = new File(settingsPath + SystemShutdownTimeCaptureService.tmpFile);
 		try {
 			if (tmp.exists()) {
 				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
@@ -87,7 +93,6 @@ public class TimesheetApp implements IApplication {
 			command.add("-jar");
 			command.add(currentJar.getPath());
 			command.add(settingsPath);
-			command.add(Activator.PLUGIN_ID + ".prefs");
 
 			final ProcessBuilder builder = new ProcessBuilder(command);
 			builder.start();
@@ -98,7 +103,8 @@ public class TimesheetApp implements IApplication {
 		}
 		
 		try {
-			RandomAccessFile lockFile = new RandomAccessFile(new File(settingsPath + "timesheet.lck"), "rw");
+			RandomAccessFile lockFile = new RandomAccessFile(new File(SystemShutdownTimeCaptureService.lckDir
+					+ File.separator + "timesheet.lck"), "rw");
 	        FileChannel channel = lockFile.getChannel();
 	        FileLock lock = channel.tryLock();
 	        if (lock == null) {
