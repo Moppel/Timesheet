@@ -28,8 +28,7 @@ public class Activator extends AbstractUIPlugin {
 	
 	public static final File googleDrive
 		= new File(new JFileChooser().getFileSystemView().getDefaultDirectory().getAbsolutePath() + File.separator + "Google Drive");
-	public static String timesheetPath;
-	public static File settings;	
+	public static String timesheetPath, settingsPath;	
     private IPreferenceStore preferenceStore;
     
     /**
@@ -71,11 +70,11 @@ public class Activator extends AbstractUIPlugin {
         	preferenceStore = super.getPreferenceStore();
         	if (googleDrive.exists() && preferenceStore.getBoolean(USE_GOOGLE_DRIVE)) { // TODO first setup of Use Google Drive
         		timesheetPath = googleDrive.getAbsolutePath() + File.separator + "Timesheet";
-        		settings = new File(timesheetPath + File.separator + "Settings");
-        		preferenceStore = new PreferenceStore(settings.getAbsolutePath() + File.separator + PLUGIN_ID + ".prefs");
+        		settingsPath = timesheetPath + File.separator + "Settings";
+    			preferenceStore = new PreferenceStore(settingsPath + File.separator + PLUGIN_ID + ".prefs");
         		try {
-        			if (settings.exists())
-        				((PreferenceStore) preferenceStore).load();
+               		if (new File(settingsPath).exists())
+               			((PreferenceStore) preferenceStore).load();
         		} catch (IOException e) {
         			MessageBox.setError("Preferences", e.getMessage());
         		}

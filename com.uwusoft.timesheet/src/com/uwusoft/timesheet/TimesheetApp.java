@@ -61,11 +61,11 @@ public class TimesheetApp implements IApplication {
 
 		Activator.getDefault().getPreferenceStore();
 		String settingsPath;
-		if (Activator.settings == null)
+		if (Activator.settingsPath == null)
 			settingsPath = Activator.getDefault().getStateLocation().toPortableString()
 				.replaceFirst(".metadata/.plugins/.*", ".metadata/.plugins/org.eclipse.core.runtime/.settings/"); // how to get path of settings?
 		else
-			settingsPath = Activator.settings.getAbsolutePath() + File.separator;
+			settingsPath = Activator.settingsPath + File.separator;
 		
 		File tmp = new File(settingsPath + SystemShutdownTimeCaptureService.tmpFile);
 		try {
