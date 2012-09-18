@@ -71,19 +71,23 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		Calendar cal = new GregorianCalendar();
+		cal.setTime(new Date());
+		String timesheetName = StorageService.TIMESHEET_PREFIX + cal.get(Calendar.YEAR);
 		if (Activator.googleDrive.exists() && Activator.getDefault().getPreferenceStore() instanceof PreferenceStore)
 			configOverrides.put("javax.persistence.jdbc.url",
-					"jdbc:derby:" + Activator.timesheetPath + "/Databases/timesheet;create=true");
+					"jdbc:derby:" + Activator.timesheetPath + "/Databases/" + timesheetName + ";create=true");
 		else
 			configOverrides.put("javax.persistence.jdbc.url",
-					"jdbc:derby:" + SystemShutdownTimeCaptureService.lckDir + "/databases/timesheet;create=true");
+					"jdbc:derby:" + SystemShutdownTimeCaptureService.lckDir + "/databases/" + timesheetName + ";create=true");
 		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
 		em = factory.createEntityManager();
 				
 		submissionSystems = TimesheetApp.getSubmissionSystems();
         logger = Activator.getDefault().getLog();
 		
-        if (StringUtils.isEmpty(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY)))
+        if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY)))
 			StorageSystemSetup.execute();
 				
 		final Date lastTaskEntryDate = getLastTaskEntryDate();

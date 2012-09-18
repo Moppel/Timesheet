@@ -27,6 +27,7 @@ public interface StorageService extends ImportTaskService {
 	public static final String OPEN_BROWSER_CHANGE_TASK = "openbrowser.changetask";
 	public static final String USERNAME = "user.name";
 	public static final String PASSWORD = "user.password";
+    public static final String TIMESHEET_PREFIX = "Timesheet";
 
 	public static final String DATE = "Date";
     public static final String TIME = "Time";

@@ -85,7 +85,7 @@ import com.uwusoft.timesheet.util.SecurePreferencesManager;
 public class GoogleStorageService extends EventManager implements StorageService {
 
 	public static final String PREFIX = "google.";
-    public static final String SPREADSHEET_KEY="google.spreadsheet.key";
+    public static final String SPREADSHEET_KEY = "google.spreadsheet.key";
 
     private static final String dateFormat = "MM/dd/yyyy";
     private static final String timeFormat = "HH:mm";
@@ -243,7 +243,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 			Calendar cal = new GregorianCalendar();
 			cal.setTime(new Date());
 			if (lastWeek != 0) cal.add(Calendar.YEAR, 1);
-			String name = "Timesheet " + cal.get(Calendar.YEAR);
+			String name = TIMESHEET_PREFIX + " " + cal.get(Calendar.YEAR);
 			newDocument.setTitle(new PlainTextConstruct(name));
 
 			spreadsheetKey = docsService.insert(new URL("https://docs.google.com/feeds/default/private/full/"), newDocument).getDocId();
