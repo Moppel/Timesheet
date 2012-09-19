@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
@@ -123,6 +124,7 @@ public class TimesheetApp implements IApplication {
 		if (returnCode == PlatformUI.RETURN_RESTART) {
 			return IApplication.EXIT_RESTART;
 		}
+		LocalStorageService.getInstance().waitUntilJobsFinished();
 		return IApplication.EXIT_OK;
 	}
 

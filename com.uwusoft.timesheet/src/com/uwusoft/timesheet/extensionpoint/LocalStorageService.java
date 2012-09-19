@@ -32,6 +32,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
@@ -68,6 +69,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private String submissionSystem;
     private ILog logger;
     private QualifiedName HANDLE_DAY_CHANGE = new QualifiedName(Activator.PLUGIN_ID, "handleDayChange");
+    private static ISchedulingRule mutex = new Mutex();
 
 	private LocalStorageService() {
 		Map<String, Object> configOverrides = new HashMap<String, Object>();
@@ -137,6 +139,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		        return Status.OK_STATUS;
 			}
 		};
+		firstImportJob.setRule(mutex);
 		firstImportJob.schedule();
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
@@ -178,6 +181,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		        return Status.OK_STATUS;
 			}			
 		};
+		syncEntriesJob.setRule(mutex);
 		
 		syncTasksJob = new Job("Synchronizing tasks") {
 			@Override
@@ -212,6 +216,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		        return Status.OK_STATUS;
 			}			
 		};
+		syncTasksJob.setRule(mutex);
 	}
 
 	private Date importLastEntryDate(final Date lastTaskEntryDate) {
@@ -662,5 +667,26 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
     				.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
 		return storageService;
+	}
+	
+	public void waitUntilJobsFinished() {
+		try {
+			firstImportJob.join();
+			syncTasksJob.join();
+			syncEntriesJob.join();
+		} catch (InterruptedException e) {
+			MessageBox.setError("Remote storage service", e.getMessage());
+		}
+	}
+	
+	// see http://stackoverflow.com/a/9110269: 
+	private static class Mutex implements ISchedulingRule {
+        public boolean contains(ISchedulingRule rule) {
+            return (rule == this);
+        }
+
+        public boolean isConflicting(ISchedulingRule rule) {
+            return (rule == this);
+        }
 	}
 }

@@ -22,7 +22,7 @@ public class MessageBox {
 		if (toolTip != null) return toolTip;
 		try {
 			IWorkbench workbench = PlatformUI.getWorkbench();
-			shell = new Shell(workbench.getDisplay(), SWT.NO_TRIM | SWT.ON_TOP);
+			shell = new Shell(workbench.getDisplay(), SWT.NO_TRIM | SWT.ON_TOP); // TODO Invalid thread access?
 			if (workbench.getDisplay().getSystemTray().getItemCount() > 0) {
 				ToolTip tip = new ToolTip(shell, SWT.BALLOON | SWT.ICON_INFORMATION);
 				workbench.getDisplay().getSystemTray().getItem(0).setToolTip(tip);
