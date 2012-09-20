@@ -35,7 +35,7 @@ public class ExtensionManager<T> {
 					try {
 						services.get(serviceId).put(contributorName, e.createExecutableExtension("class"));
 					} catch (CoreException e1) {
-						MessageBox.setError(this.getClass().getSimpleName(), e1.getMessage() + "\nTry to load fall back service");
+						//MessageBox.setError(this.getClass().getSimpleName(), e1.getMessage() + "\nTry to load fall back service");
 						return getFallbackService();
 					}
 			}
