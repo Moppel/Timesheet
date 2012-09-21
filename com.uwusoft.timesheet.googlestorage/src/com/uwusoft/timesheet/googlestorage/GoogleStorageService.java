@@ -129,10 +129,10 @@ public class GoogleStorageService extends EventManager implements StorageService
     
     private boolean authenticate(boolean lastSuccess) throws CoreException {
         try {
-			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-			SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
-	    	String userName = preferenceStore.getString(PREFIX + USERNAME);
-	    	String password = secureProps.getProperty(PREFIX + PASSWORD);
+			final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+			final SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
+	    	final String userName = preferenceStore.getString(PREFIX + USERNAME);
+	    	final String password = secureProps.getProperty(PREFIX + PASSWORD);
 	    	if (lastSuccess && !StringUtils.isEmpty(userName) && !StringUtils.isEmpty(password)) {
 	        	service.setUserCredentials(userName, password);
 	        	docsService.setUserCredentials(userName, password);
@@ -140,21 +140,30 @@ public class GoogleStorageService extends EventManager implements StorageService
 	        	return true;
 	    	}
 	    	
-	    	Display display = Display.getDefault();
-	    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
-			if (loginDialog.open() == Dialog.OK) {
-		    	userName = loginDialog.getUser();
-		    	password = loginDialog.getPassword();
-	        	service.setUserCredentials(userName, password);
-	        	docsService.setUserCredentials(userName, password);
-	        	preferenceStore.setValue(PREFIX + USERNAME, userName);
-	        	if (loginDialog.isStorePassword())
-	        		secureProps.storeProperty(PREFIX + PASSWORD, password);
-	        	else
-	        		secureProps.removeProperty(PREFIX + PASSWORD);
-	            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
-	        	return true;
-			}
+	    	final Display display = Display.getDefault();
+	    	display.syncExec(new Runnable() {
+				@Override
+				public void run() {
+			    	LoginDialog loginDialog = new LoginDialog(display, "Google Log in", message, userName, password);
+					if (loginDialog.open() == Dialog.OK) {
+			        	message = null;
+			        	try {
+							service.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+				        	docsService.setUserCredentials(loginDialog.getUser(), loginDialog.getPassword());
+						} catch (AuthenticationException e) {
+							message = e.getMessage();
+						}
+			        	preferenceStore.setValue(PREFIX + USERNAME, loginDialog.getUser());
+			        	if (loginDialog.isStorePassword())
+			        		secureProps.storeProperty(PREFIX + PASSWORD, loginDialog.getPassword());
+			        	else
+			        		secureProps.removeProperty(PREFIX + PASSWORD);
+			            spreadsheetKey = preferenceStore.getString(SPREADSHEET_KEY);
+					}
+					else message = "Not logged in";
+				}
+	    	});
+	    	if (message == null) return true;
 		} catch (AuthenticationException e) {
 			message = e.getMessage();
 			return false;

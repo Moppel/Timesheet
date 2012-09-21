@@ -36,7 +36,6 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.Activator;
@@ -665,14 +664,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	
 	private StorageService getStorageService() {
 		if (storageService == null) {
-			Display.getDefault().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
-		    				.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
-					if (storageService == null) MessageBox.setError("Storage service", "Can't reach remote storage service");
-				}				
-			});
+			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
+					.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));
+			if (storageService == null) MessageBox.setError("Storage service", "Can't reach remote storage service");
 		}
 		return storageService;
 	}
