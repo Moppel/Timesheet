@@ -72,18 +72,11 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private static ISchedulingRule mutex = new Mutex();
 
 	private LocalStorageService() {
-		Map<String, Object> configOverrides = new HashMap<String, Object>();
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		Calendar cal = new GregorianCalendar();
 		cal.setTime(new Date());
 		String timesheetName = StorageService.TIMESHEET_PREFIX + cal.get(Calendar.YEAR);
-		String dataBasePath;
-		if (Activator.googleDrive.exists() && Activator.getDefault().getPreferenceStore() instanceof PreferenceStore)
-			dataBasePath = Activator.timesheetPath + "/Databases/" + timesheetName;
-		else
-			dataBasePath = SystemShutdownTimeCaptureService.lckDir + "/databases/" + timesheetName;
-		configOverrides.put("javax.persistence.jdbc.url", "jdbc:derby:" + dataBasePath + ";create=true");
-		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, configOverrides);
+		factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, getConfigOverrides(timesheetName));
 		em = factory.createEntityManager();
 				
 		submissionSystems = TimesheetApp.getSubmissionSystems();
@@ -217,6 +210,17 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			}			
 		};
 		syncTasksJob.setRule(mutex);
+	}
+
+	private Map<String, Object> getConfigOverrides(String timesheetName) {
+		Map<String, Object> configOverrides = new HashMap<String, Object>();
+		String dataBasePath;
+		if (Activator.googleDrive.exists() && Activator.getDefault().getPreferenceStore() instanceof PreferenceStore)
+			dataBasePath = Activator.timesheetPath + "/Databases/" + timesheetName;
+		else
+			dataBasePath = SystemShutdownTimeCaptureService.lckDir + "/databases/" + timesheetName;
+		configOverrides.put("javax.persistence.jdbc.url", "jdbc:derby:" + dataBasePath + ";create=true");
+		return configOverrides;
 	}
 
 	private Date importLastEntryDate(final Date lastTaskEntryDate) {
@@ -496,6 +500,24 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	public void handleYearChange(int lastWeek) {
 		if (getStorageService() == null) return;
 		storageService.handleYearChange(lastWeek);
+		if (lastWeek != 0) {
+			CriteriaBuilder criteria = em.getCriteriaBuilder();
+			CriteriaQuery<Project> query = criteria.createQuery(Project.class);
+			List<Project> projects = em.createQuery(query).getResultList();
+			Calendar cal = new GregorianCalendar();
+			cal.setTime(new Date());
+			cal.add(Calendar.YEAR, 1);
+			factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, getConfigOverrides(StorageService.TIMESHEET_PREFIX + cal.get(Calendar.YEAR)));
+			em = factory.createEntityManager();
+			em.getTransaction().begin();
+			// TODO maybe roll over tasks and projects to new year
+			for (Project project : projects) {
+				em.persist(project);
+				for (Task task : project.getTasks())
+					em.persist(task);
+			}
+			em.getTransaction().commit();
+		}
 	}
 
 	public boolean importTasks(String submissionSystem, Collection<SubmissionProject> projects) {
