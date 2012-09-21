@@ -483,9 +483,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> entry = query.from(TaskEntry.class);
-		Path<Task> task = entry.get(TaskEntry_.task);
-		query.where(criteria.and(criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				criteria.lessThan(entry.get(TaskEntry_.dateTime), BusinessDayUtil.getNextBusinessDay(new Date(), false)))); // date < tomorrow
+		query.where(entry.get(TaskEntry_.rowNum).isNotNull()); // only synchronized
 		query.orderBy(criteria.desc(entry.get(TaskEntry_.dateTime)));
 		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
