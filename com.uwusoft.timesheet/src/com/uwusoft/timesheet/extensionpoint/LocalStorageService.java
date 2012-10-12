@@ -30,7 +30,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.QualifiedName;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
@@ -68,7 +67,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private static StorageService storageService;
     private String submissionSystem;
     private ILog logger;
-    private QualifiedName HANDLE_DAY_CHANGE = new QualifiedName(Activator.PLUGIN_ID, "handleDayChange");
     private static ISchedulingRule mutex = new Mutex();
 
 	private LocalStorageService() {
@@ -113,12 +111,14 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 						if (endDate != null && !endDate.before(importedEndDate))
 							endDate = BusinessDayUtil.getPreviousBusinessDay(importedEndDate);
+						if (startDate != null && startDate.after(endDate))
+							startDate = endDate;
 						List<TaskEntry> entries = storageService.getTaskEntries(startDate, endDate);
 						for (TaskEntry entry : entries) {
 							entry.setRowNum(entry.getId());
 							entry.setSyncStatus(true);
 							logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
-							createTaskEntry(entry, false);
+							createOrUpdate(entry);
 						}
 						cal.set(Calendar.WEEK_OF_YEAR, i + 2);
 						cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
@@ -152,8 +152,34 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					List<TaskEntry> entries = em.createQuery(query).getResultList();
 
 					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
+					Calendar cal = new GregorianCalendar();
+					cal.setFirstDayOfWeek(Calendar.MONDAY);
+					TaskEntry lastEntry = null;
+					int startDay = 0;
+					int startWeek = 0;
+					int endDay = 0;
+					int endWeek = 0;
 					synchronized (entries) {
 						for (TaskEntry entry : entries) {
+							if (lastEntry != null && lastEntry.getDateTime() != null) {
+								cal.setTime(lastEntry.getDateTime());
+								startDay = cal.get(Calendar.DAY_OF_YEAR);
+								startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+							}
+							if (entry.getDateTime() != null) {
+								cal.setTime(entry.getDateTime());
+								endDay = cal.get(Calendar.DAY_OF_YEAR);
+								endWeek = cal.get(Calendar.WEEK_OF_YEAR);								
+							}
+							else {
+								endDay = startDay;
+								endWeek = startWeek;
+							}
+							if (startDay != endDay)
+								storageService.handleDayChange();
+							if (startWeek != endWeek)
+								storageService.handleWeekChange();
+							
 							if (entry.getRowNum() == null)
 								entry.setRowNum(storageService.createTaskEntry(entry));
 							else
@@ -161,9 +187,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 							entry.setSyncStatus(true);
 							em.persist(entry);
 							monitor.worked(1);
+							lastEntry = entry;
 						}
-						if ((Boolean) getProperty(HANDLE_DAY_CHANGE))
-							storageService.handleDayChange();
 					}
 					monitor.done();
 				} catch (CoreException e) {
@@ -272,6 +297,26 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						entry.setRowNum(entry.getId());
 						entry.setSyncStatus(true);
 						createTaskEntry(entry);
+					}
+					return DateUtils.truncate(date, Calendar.DATE);
+				}
+			}
+		}
+		else {
+			if (getStorageService() != null) {
+				TaskEntry lastTask = storageService.getLastTask();
+				if (lastTask != null && getLastTask() != null && !lastTask.getId().equals(getLastTask().getRowNum())) {
+					lastTask.setRowNum(lastTask.getId());
+					lastTask.setSyncStatus(true);
+					createTaskEntry(lastTask);
+					Date date = storageService.getLastTaskEntryDate();
+					if (date != null && date.after(lastTaskEntryDate)) {
+						List<TaskEntry> entries = storageService.getTaskEntries(date, date);
+						for (TaskEntry entry : entries) {
+							entry.setRowNum(entry.getId());
+							entry.setSyncStatus(true);
+							createOrUpdate(entry);
+						}
 					}
 					return DateUtils.truncate(date, Calendar.DATE);
 				}
@@ -483,16 +528,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> entry = query.from(TaskEntry.class);
-		query.where(entry.get(TaskEntry_.rowNum).isNotNull()); // only synchronized
+		query.where(criteria.and(entry.get(TaskEntry_.rowNum).isNotNull(), // only synchronized
+				entry.get(TaskEntry_.dateTime).isNotNull()));
 		query.orderBy(criteria.desc(entry.get(TaskEntry_.dateTime)));
 		List<TaskEntry> taskEntries = em.createQuery(query).getResultList();
 		if (taskEntries.isEmpty()) return null;
 		return taskEntries.iterator().next();		
-	}
-
-	public void handleWeekChange() {
-		if (getStorageService() == null) return;
-		storageService.handleWeekChange();
 	}
 
 	public void handleYearChange(int lastWeek) {
@@ -515,6 +556,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					em.persist(task);
 			}
 			em.getTransaction().commit();
+			syncTasksJob.schedule();
 		}
 	}
 
@@ -668,12 +710,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public void synchronize() {
-		synchronize(false);
-	}
-	
-	public void synchronize(boolean handleDayChange) {
 		if (getStorageService() == null) return;
-		syncEntriesJob.setProperty(HANDLE_DAY_CHANGE, handleDayChange);
 		syncEntriesJob.schedule();
 	}
 	
