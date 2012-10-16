@@ -107,13 +107,13 @@ public class BusinessDayUtil {
 		Date nextDay = DateUtils.truncate(addDays(startDate, 1), Calendar.DATE);
 		// If tomorrow is a valid business day, return it
 		if (isBusinessDay(nextDay)) {
-			if (createHoliday) handleWeekAndYearChange(startDate, nextDay);
+			if (createHoliday) handleYearChange(startDate, nextDay);
 			return nextDay;
 		}
 		// Else we recursively call our function until we find one.
 		else {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
-				handleWeekAndYearChange(startDate, nextDay);
+				handleYearChange(startDate, nextDay);
 				//if (holidayService.isValid(nextDay)) { // store holiday entry
 					LocalStorageService storageService = LocalStorageService.getInstance();
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
@@ -133,19 +133,14 @@ public class BusinessDayUtil {
 			return getPreviousBusinessDay(lastDay);
 	}
 
-	/**
-	 */
-	private static void handleWeekAndYearChange(Date startDate, Date endDate) {
+	private static void handleYearChange(Date startDate, Date endDate) {
 		Calendar cal = new GregorianCalendar();
 		cal.setFirstDayOfWeek(Calendar.MONDAY);
 		cal.setTime(startDate);
 		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
 		int startYear = cal.get(Calendar.YEAR);
 		cal.setTime(endDate);
-		int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
 		int endYear = cal.get(Calendar.YEAR);
-		if (startWeek != endWeek)
-			LocalStorageService.getInstance().handleWeekChange();
 		if (startYear != endYear)
 			LocalStorageService.getInstance().handleYearChange(startWeek);
 	}

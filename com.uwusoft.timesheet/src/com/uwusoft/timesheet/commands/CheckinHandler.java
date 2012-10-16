@@ -37,8 +37,6 @@ public class CheckinHandler extends AbstractHandler {
 		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(),
 				TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK), startDate, title);
 		if (listDialog.open() == Dialog.OK) {
-			if (Boolean.toString(Boolean.TRUE).equals(event.getParameter("Timesheet.commands.storeWeekTotal")))
-				storageService.handleWeekChange(); // store Week and Overtime
 			storageService.createTaskEntry(new TaskEntry(listDialog.getTime(), new Task(StorageService.CHECK_IN)));
 		    String selectedTask = listDialog.getTask();
 			if (StringUtils.isEmpty(selectedTask)) return null;
