@@ -477,25 +477,27 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
 		query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getId()));
-		try {
-			TaskEntry availableEntry = (TaskEntry) em.createQuery(query).getSingleResult();
-			if (availableEntry != null) {
+		List<TaskEntry> availableEntries = em.createQuery(query).getResultList();
+		if (availableEntries.size() == 1) {
+			TaskEntry availableEntry = availableEntries.iterator().next();
+			em.getTransaction().begin();
+			availableEntry.setDateTime(entry.getDateTime());
+			availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+					entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+			if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName()))
+				calculateTotal(availableEntry);
+			availableEntry.setComment(entry.getComment());
+			em.persist(availableEntry);
+			em.getTransaction().commit();
+		}
+		else {
+			if (availableEntries.size() > 1) {
 				em.getTransaction().begin();
-				availableEntry.setDateTime(entry.getDateTime());
-				availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
-						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
-								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
-				if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName()))
-					calculateTotal(availableEntry);
-				availableEntry.setComment(entry.getComment());
-				em.persist(availableEntry);
+				for (TaskEntry availableEntry : availableEntries)
+					em.remove(availableEntry);
 				em.getTransaction().commit();
 			}
-			else {
-				entry.setRowNum(entry.getId());
-				createTaskEntry(entry);
-			}
-		} catch (Exception e) {
 			entry.setRowNum(entry.getId());
 			createTaskEntry(entry);
 		}
