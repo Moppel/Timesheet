@@ -153,14 +153,14 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
 					Calendar cal = new GregorianCalendar();
 					cal.setFirstDayOfWeek(Calendar.MONDAY);
-					TaskEntry lastEntry = null;
+					TaskEntry lastEntry = getLastTaskEntry();
 					int startDay = 0;
 					int startWeek = 0;
 					int endDay = 0;
 					int endWeek = 0;
 					synchronized (entries) {
 						for (TaskEntry entry : entries) {
-							if (lastEntry != null && lastEntry.getDateTime() != null) {
+							if (lastEntry.getDateTime() != null) {
 								cal.setTime(lastEntry.getDateTime());
 								startDay = cal.get(Calendar.DAY_OF_YEAR);
 								startWeek = cal.get(Calendar.WEEK_OF_YEAR);
