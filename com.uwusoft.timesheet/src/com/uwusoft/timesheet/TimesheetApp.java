@@ -13,7 +13,6 @@ import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -74,10 +73,8 @@ public class TimesheetApp implements IApplication {
 				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
 				String line = time.readLine();
 				time.close();
-				if (line != null) {
-					SimpleDateFormat formatter = SystemShutdownTimeCaptureService.formatter;
-					shutDownDate = formatter.parse(line);
-				}
+				if (line != null)
+					shutDownDate = SystemShutdownTimeCaptureService.formatter.parse(line);
 			} else
 				tmp.createNewFile();
 		} catch (ParseException e) {

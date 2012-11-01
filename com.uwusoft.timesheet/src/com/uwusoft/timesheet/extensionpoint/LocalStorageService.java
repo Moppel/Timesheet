@@ -2,6 +2,10 @@ package com.uwusoft.timesheet.extensionpoint;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -176,9 +180,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 							}
 							
 							if (entry.getRowNum() == null) { 
-								if (startDay != 0 && startDay != endDay)
+								if (!lastEntry.isAllDay() && startDay != 0 && startDay < endDay)
 									storageService.handleDayChange();
-								if (startWeek != 0 && startWeek != endWeek)
+								if (startWeek != 0 && startWeek < endWeek)
 									storageService.handleWeekChange();
 								entry.setRowNum(storageService.createTaskEntry(entry));
 							}
@@ -446,10 +450,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			if (em.getTransaction().isActive())	active = true;
 			else em.getTransaction().begin();
 			entry.setSyncStatus(false);
-			if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName())) {
-				calculateTotal(entry);
+			if (calculateTotal(entry))
 				cal.setTime(entry.getDateTime());
-			}
 			else cal.setTime(new Date());
 			em.persist(entry);
 			if (!active) em.getTransaction().commit();
@@ -457,7 +459,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 	}
 
-	private void calculateTotal(TaskEntry entry) {
+	private boolean calculateTotal(TaskEntry entry) {
+		if (entry.getDateTime() == null || entry.isAllDay() || CHECK_IN.equals(entry.getTask().getName()) || BREAK.equals(entry.getTask().getName()))
+			return false;
 		try {
 			CriteriaBuilder criteria = em.getCriteriaBuilder();
 			CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
@@ -467,9 +471,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			entry.setTotal((entry.getDateTime().getTime() - previousEntry.getDateTime().getTime()) / 1000f / 60f / 60f);
 			query.where(criteria.equal(taskEntry.get(TaskEntry_.rowNum), entry.getRowNum() + 1));
 			TaskEntry nextEntry = (TaskEntry) em.createQuery(query).getSingleResult();
-			if (nextEntry.getDateTime() != null && !CHECK_IN.equals(nextEntry.getTask().getName()) && !BREAK.equals(nextEntry.getTask().getName()))
+			if (nextEntry.getDateTime() != null && !nextEntry.isAllDay() && !CHECK_IN.equals(nextEntry.getTask().getName()) && !BREAK.equals(nextEntry.getTask().getName()))
 				nextEntry.setTotal((nextEntry.getDateTime().getTime() - entry.getDateTime().getTime()) / 1000f / 60f / 60f);
 		} catch (Exception e) {}
+		return true;
 	}
 
     protected void createOrUpdate(TaskEntry entry) {
@@ -485,7 +490,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
 					entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
 							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
-			if (entry.getDateTime() != null && !CHECK_IN.equals(entry.getTask().getName()) && !BREAK.equals(entry.getTask().getName()))
 				calculateTotal(availableEntry);
 			availableEntry.setComment(entry.getComment());
 			em.persist(availableEntry);
@@ -599,6 +603,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public Set<String> submitEntries(Date startDate, Date endDate) {
+		waitUntilJobsFinished();
         Set<String> systems = new HashSet<String>();
         em.getTransaction().begin();
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
@@ -722,6 +727,23 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 	
 	private StorageService getStorageService() {
+		//checks for connection to the internet through dummy request (http://stackoverflow.com/q/1139547)
+        try {
+            URL url = new URL("http://www.google.com"); // TODO storageService.getServiceUrlString()
+            //open a connection to that source
+            HttpURLConnection urlConnect = (HttpURLConnection)url.openConnection();
+            urlConnect.setConnectTimeout(1000);
+            //trying to retrieve data from the source. If there
+            //is no connection, this line will fail
+            urlConnect.getContent();
+        } catch (UnknownHostException e) {
+        	MessageBox.setError("Storage service", e.getMessage());
+            return null;
+        }
+        catch (IOException e) {
+        	MessageBox.setError("Storage service", e.getMessage());
+            return null;
+        }
 		if (storageService == null) {
 			storageService = new ExtensionManager<StorageService>(StorageService.SERVICE_ID)
 					.getService(Activator.getDefault().getPreferenceStore().getString(StorageService.PROPERTY));

@@ -221,14 +221,15 @@ public class TaskListDialog extends ListDialog {
         originalButton.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
             	original = ((Button) e.getSource()).getSelection();
-                setTasksAndProjects(true);
+                setTasksAndProjects();
             }
         });
 
         if (showComment) {
             (new Label(parent, SWT.NULL)).setText("Comment: ");
             commentText = new Text(parent, SWT.NONE);
-            commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(), new String[] {StringUtils.EMPTY});
+            commentCompleteField = new AutoCompleteField(commentText, new TextContentAdapter(),
+            		storageService.getUsedCommentsForTask(task, taskSelected.getProject().getName(), systemSelected));
             commentText.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
             commentText.setText(comment == null ? "" : comment);
             commentText.addModifyListener(new ModifyListener() {
@@ -269,12 +270,12 @@ public class TaskListDialog extends ListDialog {
         	}
         }
         else systemCombo.select(0);
-        setTasksAndProjects(true);
+        setTasksAndProjects();
         
         systemCombo.setBounds(50, 50, 180, 65);
         systemCombo.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
-                setTasksAndProjects(false);
+                setTasksAndProjects();
             }
         });
         
@@ -288,7 +289,7 @@ public class TaskListDialog extends ListDialog {
         return parent;
     }
 
-	private void setTasksAndProjects(boolean first) {
+	private void setTasksAndProjects() {
 		systemSelected = systemCombo.getText();
 		List<String> projectList;
 		if (original) {
@@ -303,7 +304,7 @@ public class TaskListDialog extends ListDialog {
         projectCombo.setItems(projects);
         if (projects.length == 1) projectCombo.setEnabled(false);
         else projectCombo.setEnabled(true);
-		if (projectSelected == null && taskSelected != null && projectList.contains(taskSelected.getProject().getName()))
+		if (taskSelected != null)
 			projectSelected = taskSelected.getProject().getName();
 		if (projectSelected != null) {
 			for (int i = 0; i < projects.length; i++) {

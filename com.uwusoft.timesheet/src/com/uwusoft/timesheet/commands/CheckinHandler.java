@@ -32,7 +32,7 @@ public class CheckinHandler extends AbstractHandler {
 		try {
 			if (startTime != null) startDate = StorageService.formatter.parse(startTime);
 		} catch (ParseException e) {
-			MessageBox.setError("Check in", e.getMessage());
+			MessageBox.setError(title, e.getMessage());
 		}			
 		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(),
 				TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK), startDate, title);
