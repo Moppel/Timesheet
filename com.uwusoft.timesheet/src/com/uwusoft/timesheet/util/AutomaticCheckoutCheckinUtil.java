@@ -35,13 +35,13 @@ public class AutomaticCheckoutCheckinUtil {
 			shutdownDate = lastDate;
 	
 		int startDay = getDay(startDate);
-		int startWeek = getWeek(startDate);
+		final int startWeek = getWeek(startDate);
 	
 		int shutdownDay = getDay(shutdownDate);
-		int shutdownWeek = getWeek(shutdownDate);
+		final int shutdownWeek = getWeek(shutdownDate);
 	
-		IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
-		ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
+		final IHandlerService handlerService = (IHandlerService) PlatformUI.getWorkbench().getService(IHandlerService.class);
+		final ICommandService commandService = (ICommandService) PlatformUI.getWorkbench().getService(ICommandService.class);
 		ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
 		SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
 
@@ -70,28 +70,36 @@ public class AutomaticCheckoutCheckinUtil {
 				}
 			}
 	
-			Map<String, String> parameters = new HashMap<String, String>();
+			final Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.startTime", StorageService.formatter.format(startDate));
-			try {
-				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
-				for (int week = shutdownWeek; week < startWeek; week++) {
-					parameters.clear();
-					parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
-					handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
-				}
-			} catch (Exception ex) {
-				MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
-			}
+			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					try {
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.checkin"), parameters), null);
+						for (int week = shutdownWeek; week < startWeek; week++) {
+							parameters.clear();
+							parameters.put("Timesheet.commands.weekNum", Integer.toString(week));
+							handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.submit"), parameters), null);
+						}
+					} catch (Exception ex) {
+						MessageBox.setError("Automatic check in", ex.getMessage() + "\n(" + parameters + ")");
+					}
+				}					
+			});
 		}
 		else {
 			commandStateService.setEnabled(true);
-			Map<String, String> parameters = new HashMap<String, String>();
+			final Map<String, String> parameters = new HashMap<String, String>();
 			parameters.put("Timesheet.commands.changeTime", StorageService.formatter.format(startDate));
-			try {
-				handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.changeTask"), parameters), null);
-			} catch (Exception e) {
-				MessageBox.setError("Automatic change task", e.getMessage() + "\n(" + parameters + ")");
-			}
+			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				public void run() {
+					try {
+						handlerService.executeCommand(ParameterizedCommand.generateCommand(commandService.getCommand("Timesheet.changeTask"), parameters), null);
+					} catch (Exception e) {
+						MessageBox.setError("Automatic change task", e.getMessage() + "\n(" + parameters + ")");
+					}
+				}					
+			});
 		}
 		commandStateService.setBreak(false);			
 	}
