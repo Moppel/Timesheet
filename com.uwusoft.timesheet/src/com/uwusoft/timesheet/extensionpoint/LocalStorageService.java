@@ -145,24 +145,23 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					return Status.CANCEL_STATUS;
 				boolean active = false;
 				try {
-					if (em.getTransaction().isActive())	active = true;
-					else em.getTransaction().begin();
-					CriteriaBuilder criteria = em.getCriteriaBuilder();
-					CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
-					Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
-					query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
-					query.orderBy(criteria.asc(taskEntry.get(TaskEntry_.dateTime)));
-					List<TaskEntry> entries = em.createQuery(query).getResultList();
+					synchronized (em) {
+						em.getTransaction().begin();
+						CriteriaBuilder criteria = em.getCriteriaBuilder();
+						CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+						Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
+						query.where(criteria.notEqual(taskEntry.get(TaskEntry_.syncStatus), true));
+						query.orderBy(criteria.asc(taskEntry.get(TaskEntry_.dateTime)));
+						List<TaskEntry> entries = em.createQuery(query).getResultList();
 
-					monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
-					Calendar cal = new GregorianCalendar();
-					cal.setFirstDayOfWeek(Calendar.MONDAY);
-					TaskEntry lastEntry = getLastTaskEntry();
-					int startDay = 0;
-					int startWeek = 0;
-					int endDay = 0;
-					int endWeek = 0;
-					synchronized (entries) {
+						monitor.beginTask("Synchronize " + entries.size() + " entries", entries.size());
+						Calendar cal = new GregorianCalendar();
+						cal.setFirstDayOfWeek(Calendar.MONDAY);
+						TaskEntry lastEntry = getLastTaskEntry();
+						int startDay = 0;
+						int startWeek = 0;
+						int endDay = 0;
+						int endWeek = 0;
 						for (TaskEntry entry : entries) {
 							if (lastEntry.getDateTime() != null) {
 								cal.setTime(lastEntry.getDateTime());
@@ -211,30 +210,32 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;
 				
-				em.getTransaction().begin();
-				CriteriaBuilder criteria = em.getCriteriaBuilder();
-				CriteriaQuery<Task> query = criteria.createQuery(Task.class);
-				Root<Task> rootTask = query.from(Task.class);
-				query.where(criteria.notEqual(rootTask.get(Task_.syncStatus), true));
-				List<Task> tasks = em.createQuery(query).getResultList();
+				synchronized (em) {
+					em.getTransaction().begin();
+					CriteriaBuilder criteria = em.getCriteriaBuilder();
+					CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+					Root<Task> rootTask = query.from(Task.class);
+					query.where(criteria.notEqual(rootTask.get(Task_.syncStatus), true));
+					List<Task> tasks = em.createQuery(query).getResultList();
 				
-				Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
-				for (Task task : tasks) {
-					SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
-					if (submissionProject == null)
-						submissionProject = new SubmissionProject(task.getProject().getExternalId(), task.getProject().getName());
-					submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
-					submissionProjects.put(submissionProject.getName(), submissionProject);					
+					Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
+					for (Task task : tasks) {
+						SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
+						if (submissionProject == null)
+							submissionProject = new SubmissionProject(task.getProject().getExternalId(), task.getProject().getName());
+						submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
+						submissionProjects.put(submissionProject.getName(), submissionProject);					
+					}
+					if (!submissionProjects.isEmpty()) {
+						if (storageService.importTasks(submissionSystem, submissionProjects.values()))
+							for (Task task : tasks) {
+								task.setSyncStatus(true);
+								task.getProject().setSyncStatus(true);
+								em.persist(task);
+							}
+					}
+					em.getTransaction().commit();
 				}
-				if (!submissionProjects.isEmpty()) {
-					if (storageService.importTasks(submissionSystem, submissionProjects.values()))
-						for (Task task : tasks) {
-							task.setSyncStatus(true);
-							task.getProject().setSyncStatus(true);
-							em.persist(task);
-						}
-				}
-				em.getTransaction().commit();
 		        return Status.OK_STATUS;
 			}			
 		};
@@ -254,33 +255,35 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 
 	private Date importLastEntryDate(final Date lastTaskEntryDate) {
 		if (lastTaskEntryDate == null) {
-			em.getTransaction().begin();
-			CriteriaBuilder criteria = em.getCriteriaBuilder();
-			CriteriaQuery<Task> taskQuery = criteria.createQuery(Task.class);
-			Root<Task> taskRoot = taskQuery.from(Task.class);
+			synchronized (em) {
+				em.getTransaction().begin();
+				CriteriaBuilder criteria = em.getCriteriaBuilder();
+				CriteriaQuery<Task> taskQuery = criteria.createQuery(Task.class);
+				Root<Task> taskRoot = taskQuery.from(Task.class);
 			
-			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), CHECK_IN));
-			List<Task> tasks = em.createQuery(taskQuery).getResultList(); 
-			if (tasks.isEmpty()) {
-				Task task = new Task(CHECK_IN);
-				task.setSyncStatus(true);
-				em.persist(task);
+				taskQuery.where(criteria.equal(taskRoot.get(Task_.name), CHECK_IN));
+				List<Task> tasks = em.createQuery(taskQuery).getResultList(); 
+				if (tasks.isEmpty()) {
+					Task task = new Task(CHECK_IN);
+					task.setSyncStatus(true);
+					em.persist(task);
+				}
+				taskQuery.where(criteria.equal(taskRoot.get(Task_.name), BREAK));
+				tasks = em.createQuery(taskQuery).getResultList();
+				if (tasks.isEmpty()) {
+					Task task = new Task(BREAK);
+					task.setSyncStatus(true);
+					em.persist(task);
+				}
+				taskQuery.where(criteria.equal(taskRoot.get(Task_.name), AllDayTasks.BEGIN_ADT));
+				tasks = em.createQuery(taskQuery).getResultList();
+				if (tasks.isEmpty()) {
+					Task task = new Task(AllDayTasks.BEGIN_ADT);
+					task.setSyncStatus(true);
+					em.persist(task);
+				}
+				em.getTransaction().commit();
 			}
-			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), BREAK));
-			tasks = em.createQuery(taskQuery).getResultList();
-			if (tasks.isEmpty()) {
-				Task task = new Task(BREAK);
-				task.setSyncStatus(true);
-				em.persist(task);
-			}
-			taskQuery.where(criteria.equal(taskRoot.get(Task_.name), AllDayTasks.BEGIN_ADT));
-			tasks = em.createQuery(taskQuery).getResultList();
-			if (tasks.isEmpty()) {
-				Task task = new Task(AllDayTasks.BEGIN_ADT);
-				task.setSyncStatus(true);
-				em.persist(task);
-			}
-			em.getTransaction().commit();
 			for (String system : submissionSystems.keySet()) {
 				if (!StringUtils.isEmpty(system) && getProjects(system).isEmpty()) {
 					if (getStorageService() != null)
@@ -316,10 +319,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					Date date = storageService.getLastTaskEntryDate();
 					if (date != null && date.after(lastTaskEntryDate)) {
 						List<TaskEntry> entries = storageService.getTaskEntries(date, date);
-						for (TaskEntry entry : entries) {
-							entry.setRowNum(entry.getId());
-							entry.setSyncStatus(true);
-							createOrUpdate(entry);
+						synchronized (entries) {
+							for (TaskEntry entry : entries) {
+								entry.setRowNum(entry.getId());
+								entry.setSyncStatus(true);
+								createOrUpdate(entry);
+							}
 						}
 					}
 					return DateUtils.truncate(date, Calendar.DATE);
@@ -485,22 +490,26 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		List<TaskEntry> availableEntries = em.createQuery(query).getResultList();
 		if (availableEntries.size() == 1) {
 			TaskEntry availableEntry = availableEntries.iterator().next();
-			em.getTransaction().begin();
-			availableEntry.setDateTime(entry.getDateTime());
-			availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
-					entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
-							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+			synchronized (availableEntry) {
+				em.getTransaction().begin();
+				availableEntry.setDateTime(entry.getDateTime());
+				availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
 				calculateTotal(availableEntry);
-			availableEntry.setComment(entry.getComment());
-			em.persist(availableEntry);
-			em.getTransaction().commit();
+				availableEntry.setComment(entry.getComment());
+				em.persist(availableEntry);
+				em.getTransaction().commit();
+			}
 		}
 		else {
 			if (availableEntries.size() > 1) {
-				em.getTransaction().begin();
-				for (TaskEntry availableEntry : availableEntries)
-					em.remove(availableEntry);
-				em.getTransaction().commit();
+				synchronized (availableEntries) {
+					em.getTransaction().begin();
+					for (TaskEntry availableEntry : availableEntries)
+						em.remove(availableEntry);
+					em.getTransaction().commit();
+				}
 			}
 			entry.setRowNum(entry.getId());
 			createTaskEntry(entry);
@@ -576,23 +585,25 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			for (SubmissionTask submissionTask : submissionProject.getTasks()) {
 				Task foundTask = findTaskByNameProjectAndSystem(submissionTask.getName(), submissionProject.getName(), submissionSystem);
 				if (foundTask == null) {
-					em.getTransaction().begin();
-					Project foundProject = findProjectByNameAndSystem(submissionProject.getName(), submissionSystem);
-					if (foundProject == null) {
-						foundProject = new Project(submissionProject.getName(), submissionSystem);
-						foundProject.setExternalId(submissionProject.getId());
-						em.persist(foundProject);
-						if (isSynchronized) foundProject.setSyncStatus(true);
+					synchronized (em) {
+						em.getTransaction().begin();
+						Project foundProject = findProjectByNameAndSystem(submissionProject.getName(), submissionSystem);
+						if (foundProject == null) {
+							foundProject = new Project(submissionProject.getName(), submissionSystem);
+							foundProject.setExternalId(submissionProject.getId());
+							em.persist(foundProject);
+							if (isSynchronized) foundProject.setSyncStatus(true);
+						}
+						Task task = new Task(submissionTask.getName(), foundProject);
+						task.setExternalId(submissionTask.getId());
+						if (isSynchronized) task.setSyncStatus(true);
+					
+						logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Import task: " + submissionTask.getName() + " id=" + submissionTask.getId()
+								+ " (" + submissionProject.getName() + " id=" + submissionProject.getId() + ") "));
+					
+						em.persist(task);
+						em.getTransaction().commit();
 					}
-					Task task = new Task(submissionTask.getName(), foundProject);
-					task.setExternalId(submissionTask.getId());
-					if (isSynchronized) task.setSyncStatus(true);
-					
-					logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "Import task: " + submissionTask.getName() + " id=" + submissionTask.getId()
-		            		+ " (" + submissionProject.getName() + " id=" + submissionProject.getId() + ") "));
-					
-					em.persist(task);
-					em.getTransaction().commit();
 				}
 			}
 		}
@@ -605,46 +616,48 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	public Set<String> submitEntries(Date startDate, Date endDate) {
 		waitUntilJobsFinished();
         Set<String> systems = new HashSet<String>();
-        em.getTransaction().begin();
-		CriteriaBuilder criteria = em.getCriteriaBuilder();
-		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
-		Root<TaskEntry> entry = query.from(TaskEntry.class);
-		Path<Task> task = entry.get(TaskEntry_.task);
-		query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
-				criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				//criteria.notEqual(task.get(Task_.name), CHECK_IN),
-				//criteria.notEqual(task.get(Task_.name), BREAK),
-				entry.get(TaskEntry_.dateTime).isNotNull(),
-				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
-				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
-		query.orderBy(criteria.asc(entry.get(TaskEntry_.dateTime)));
+		synchronized (em) {
+			em.getTransaction().begin();
+			CriteriaBuilder criteria = em.getCriteriaBuilder();
+			CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
+			Root<TaskEntry> entry = query.from(TaskEntry.class);
+			Path<Task> task = entry.get(TaskEntry_.task);
+			query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
+					criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
+					//criteria.notEqual(task.get(Task_.name), CHECK_IN),
+					//criteria.notEqual(task.get(Task_.name), BREAK),
+					entry.get(TaskEntry_.dateTime).isNotNull(),
+					criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
+					criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
+			query.orderBy(criteria.asc(entry.get(TaskEntry_.dateTime)));
 		
-		List<TaskEntry> entries = em.createQuery(query).getResultList();
-        if (entries.isEmpty()) return systems;
+			List<TaskEntry> entries = em.createQuery(query).getResultList();
+			if (entries.isEmpty()) return systems;
         
-		Date lastDate = DateUtils.truncate(entries.iterator().next().getDateTime(), Calendar.DATE);
-        DailySubmissionEntry submissionEntry = new DailySubmissionEntry(lastDate);
+			Date lastDate = DateUtils.truncate(entries.iterator().next().getDateTime(), Calendar.DATE);
+			DailySubmissionEntry submissionEntry = new DailySubmissionEntry(lastDate);
         
-        for (TaskEntry taskEntry : entries) {
-        	Date date = DateUtils.truncate(taskEntry.getDateTime(), Calendar.DATE);
-            if (!date.equals(lastDate)) { // another day
-            	submissionEntry.submitEntries();
-            	submissionEntry = new DailySubmissionEntry(date);
-                lastDate = date;
-            }
-			String system = taskEntry.getTask().getProject() == null ? null : taskEntry.getTask().getProject().getSystem();
-            if (submissionSystems.containsKey(system)) {
-				systems.add(system);
-				SubmissionEntry submissionTask = new SubmissionEntry(taskEntry.getTask().getProject().getExternalId(), taskEntry.getTask().getExternalId(),
-						taskEntry.getTask().getName(), taskEntry.getTask().getProject().getName(), system);
-				submissionEntry.addSubmissionEntry(submissionTask, taskEntry.getTotal());
+			for (TaskEntry taskEntry : entries) {
+				Date date = DateUtils.truncate(taskEntry.getDateTime(), Calendar.DATE);
+				if (!date.equals(lastDate)) { // another day
+					submissionEntry.submitEntries();
+					submissionEntry = new DailySubmissionEntry(date);
+					lastDate = date;
+				}
+				String system = taskEntry.getTask().getProject() == null ? null : taskEntry.getTask().getProject().getSystem();
+				if (submissionSystems.containsKey(system)) {
+					systems.add(system);
+					SubmissionEntry submissionTask = new SubmissionEntry(taskEntry.getTask().getProject().getExternalId(), taskEntry.getTask().getExternalId(),
+							taskEntry.getTask().getName(), taskEntry.getTask().getProject().getName(), system);
+					submissionEntry.addSubmissionEntry(submissionTask, taskEntry.getTotal());
+				}
+				taskEntry.setStatus(true);
+				taskEntry.setSyncStatus(false);
+				em.persist(taskEntry);
 			}
-            taskEntry.setStatus(true);
-            taskEntry.setSyncStatus(false);
-            em.persist(taskEntry);
+			submissionEntry.submitEntries();
+			em.getTransaction().commit();
 		}
-    	submissionEntry.submitEntries();
-        em.getTransaction().commit();
 		return systems;
 	}
 
