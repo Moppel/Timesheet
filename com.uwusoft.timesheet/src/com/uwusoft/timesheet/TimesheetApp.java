@@ -32,6 +32,7 @@ import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Task;
+import com.uwusoft.timesheet.util.BusinessDayUtil;
 import com.uwusoft.timesheet.util.MessageBox;
 
 /**
@@ -57,7 +58,7 @@ public class TimesheetApp implements IApplication {
 	public Object start(IApplicationContext context) {
 		RuntimeMXBean mx = ManagementFactory.getRuntimeMXBean();
 		startDate = new Date(mx.getStartTime());
-		shutDownDate = startDate;
+		shutDownDate = BusinessDayUtil.getPreviousBusinessDay(startDate);
 
 		Activator.getDefault().getPreferenceStore();
 		String settingsPath;
