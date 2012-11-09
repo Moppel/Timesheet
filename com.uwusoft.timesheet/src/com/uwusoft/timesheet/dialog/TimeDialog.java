@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.dialog;
 
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -20,6 +21,7 @@ public class TimeDialog extends Dialog {
 
 	private String title, task;
     private int day, month, year, hours, minutes;
+    private Date time;
 	
 	public TimeDialog(Display display, String task, Date time) {
 		this(display, "Time", task, time);
@@ -29,6 +31,7 @@ public class TimeDialog extends Dialog {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
 		this.title = title;
 		this.task = task;
+		this.time = time;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(time);
 		day = calendar.get(Calendar.DAY_OF_MONTH);
@@ -47,6 +50,8 @@ public class TimeDialog extends Dialog {
         label.setText(task);
         label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 
+        (new Label(composite, SWT.NONE)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(time));
+        
         DateTime timeEntry = new DateTime(composite, SWT.TIME | SWT.SHORT);
         timeEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
         timeEntry.setHours(hours);

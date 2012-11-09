@@ -1,7 +1,6 @@
 package com.uwusoft.timesheet.commands;
 
 import java.sql.Timestamp;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -36,8 +35,7 @@ public class CheckoutHandler extends AbstractHandler {
 			}
 		LocalStorageService storageService = LocalStorageService.getInstance();
 		TaskEntry lastTask = storageService.getLastTask();
-		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out at " + DateFormat.getDateInstance(DateFormat.SHORT).format(shutdownDate),
-				lastTask.getTask().display(), shutdownDate);
+		TimeDialog timeDialog = new TimeDialog(Display.getDefault(), "Check out", lastTask.getTask().display(), shutdownDate);
 		if (timeDialog.open() == Dialog.OK) {
 			lastTask.setDateTime(new Timestamp(timeDialog.getTime().getTime()));
 			storageService.updateTaskEntry(lastTask);
