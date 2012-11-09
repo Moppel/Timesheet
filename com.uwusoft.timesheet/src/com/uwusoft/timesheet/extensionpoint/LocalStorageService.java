@@ -184,6 +184,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 								if (startWeek != 0 && startWeek < endWeek)
 									storageService.handleWeekChange();
 								entry.setRowNum(storageService.createTaskEntry(entry));
+								calculateTotal(entry);
 							}
 							else
 								storageService.updateTaskEntry(entry);
