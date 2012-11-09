@@ -99,7 +99,14 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				Calendar cal = GregorianCalendar.getInstance();
 				cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
 				Date startDate = cal.getTime();
-				if (lastTaskEntryDate != null) startDate = lastTaskEntryDate;
+				if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+					cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 2);
+					startDate = cal.getTime();
+				}
+				cal.setFirstDayOfWeek(Calendar.MONDAY);
+				cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+				if (lastTaskEntryDate != null && getTaskEntries(startDate, cal.getTime()).size() > 0) // if already imported
+					startDate = lastTaskEntryDate;
 				if (!DateUtils.truncate(startDate, Calendar.DATE).equals(BusinessDayUtil.getNextBusinessDay(new Date(), false))) {
 					cal.setTime(startDate);
 					int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
@@ -129,7 +136,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						monitor.worked(1);
 					}
 					monitor.done();
-					final int lastWeek = cal.get(Calendar.WEEK_OF_YEAR) - 2;
+					final int lastWeek = cal.get(Calendar.WEEK_OF_YEAR) - 3;
 					firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, lastWeek));
 				}
 		        return Status.OK_STATUS;
