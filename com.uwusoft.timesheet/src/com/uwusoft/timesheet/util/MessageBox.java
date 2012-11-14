@@ -33,24 +33,14 @@ public class MessageBox {
 			});
 			return toolTip;
 		} catch (IllegalStateException e) {
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					shell = new Shell(Display.getDefault(), SWT.NO_TRIM | SWT.ON_TOP);
-				}
-			});
+			shell = new Shell(Display.getDefault(), SWT.NO_TRIM | SWT.ON_TOP);
 			return null;
 		}
 	}
 
 	public static void setMessage(final String title, final String message) {
 		if ((toolTip = getSystemTrayToolTip()) == null) {
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					MessageDialog.openInformation(shell, title, message);
-				}
-			});
+			MessageDialog.openInformation(shell, title, message);
 		}
 		else {
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
@@ -67,12 +57,7 @@ public class MessageBox {
 	
 	public static void setError(final String title, final String message) {
 		if ((toolTip = getSystemTrayToolTip()) == null) {
-			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					MessageDialog.openError(shell, title, message);
-				}
-			});
+			MessageDialog.openError(shell, title, message);
 		}
 		else {
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
