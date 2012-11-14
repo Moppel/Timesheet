@@ -106,8 +106,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				cal.setFirstDayOfWeek(Calendar.MONDAY);
 				cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 				if (lastTaskEntryDate != null && getTaskEntries(startDate, cal.getTime()).size() > 0) // if already imported
-					startDate = lastTaskEntryDate;
-				if (!DateUtils.truncate(startDate, Calendar.DATE).equals(BusinessDayUtil.getNextBusinessDay(new Date(), false))) {
+			        return Status.OK_STATUS;
+				
+				if (!startDate.equals(lastTaskEntryDate)) {
 					cal.setTime(startDate);
 					int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
 					cal.setTime(new Date());
@@ -115,7 +116,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					monitor.beginTask("Import " + (endWeek - startWeek) + " weeks", endWeek - startWeek);
 					for (int i = startWeek; i <= endWeek; i++) {
 						logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entries for week " + i));
-						cal.set(Calendar.WEEK_OF_YEAR, i + 1);
+						cal.set(Calendar.WEEK_OF_YEAR, i);
 						cal.setFirstDayOfWeek(Calendar.MONDAY);
 						cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 						Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
@@ -332,6 +333,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 								entry.setRowNum(entry.getId());
 								entry.setSyncStatus(true);
 								createOrUpdate(entry);
+								logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
 							}
 						}
 					}
@@ -339,7 +341,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				}
 			}
 		}
-		return new Date();
+		return getLastTaskEntryDate();
 	}
     
     public static LocalStorageService getInstance() {
