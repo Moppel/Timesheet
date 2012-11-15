@@ -108,38 +108,35 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				if (lastTaskEntryDate != null && getTaskEntries(startDate, cal.getTime()).size() > 0) // if already imported
 			        return Status.OK_STATUS;
 				
-				if (!startDate.equals(lastTaskEntryDate)) {
-					cal.setTime(startDate);
-					int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
-					cal.setTime(new Date());
-					int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
-					monitor.beginTask("Import " + (endWeek - startWeek) + " weeks", endWeek - startWeek);
-					for (int i = startWeek; i <= endWeek; i++) {
-						logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entries for week " + i));
-						cal.set(Calendar.WEEK_OF_YEAR, i);
-						cal.setFirstDayOfWeek(Calendar.MONDAY);
-						cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-						Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
-						if (endDate != null && !endDate.before(importedEndDate))
-							endDate = BusinessDayUtil.getPreviousBusinessDay(importedEndDate);
-						if (startDate != null && startDate.after(endDate))
-							startDate = endDate;
-						List<TaskEntry> entries = storageService.getTaskEntries(startDate, endDate);
-						for (TaskEntry entry : entries) {
-							entry.setRowNum(entry.getId());
-							entry.setSyncStatus(true);
-							logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
-							createOrUpdate(entry);
-						}
-						cal.set(Calendar.WEEK_OF_YEAR, i + 2);
-						cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-						startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
-						monitor.worked(1);
+				cal.setTime(startDate);
+				int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+				cal.setTime(new Date());
+				int endWeek = cal.get(Calendar.WEEK_OF_YEAR);
+				monitor.beginTask("Import " + (endWeek - startWeek) + " weeks", endWeek - startWeek);
+				for (int i = startWeek; i <= endWeek; i++) {
+					logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entries for week " + i));
+					cal.set(Calendar.WEEK_OF_YEAR, i);
+					cal.setFirstDayOfWeek(Calendar.MONDAY);
+					cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+					Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+					if (endDate != null && !endDate.before(importedEndDate))
+						endDate = BusinessDayUtil.getPreviousBusinessDay(importedEndDate);
+					if (startDate != null && startDate.after(endDate))
+						startDate = endDate;
+					List<TaskEntry> entries = storageService.getTaskEntries(startDate, endDate);
+					for (TaskEntry entry : entries) {
+						entry.setRowNum(entry.getId());
+						entry.setSyncStatus(true);
+						logger.log(new Status(IStatus.INFO, Activator.PLUGIN_ID, "import task entry: " + entry));
+						createTaskEntry(entry, false);
 					}
-					monitor.done();
-					final int lastWeek = cal.get(Calendar.WEEK_OF_YEAR) - 3;
-					firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, lastWeek));
+					cal.set(Calendar.WEEK_OF_YEAR, i + 1);
+					cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+					startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
+					monitor.worked(1);
 				}
+				monitor.done();
+				firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR) - 2));
 		        return Status.OK_STATUS;
 			}
 		};
@@ -327,7 +324,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					createTaskEntry(lastTask);
 					Date date = storageService.getLastTaskEntryDate();
 					if (date != null && date.after(lastTaskEntryDate)) {
-						List<TaskEntry> entries = storageService.getTaskEntries(date, date);
+						List<TaskEntry> entries = storageService.getTaskEntries(lastTaskEntryDate, date);
 						synchronized (entries) {
 							for (TaskEntry entry : entries) {
 								entry.setRowNum(entry.getId());
