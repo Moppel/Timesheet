@@ -89,7 +89,7 @@ public class WeekComposite {
 
 	private void calculateStartEndDate(boolean firePropertyChange) {
 		Calendar cal = new GregorianCalendar();
-    	cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
+		cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum); // TODO if local=EN cal.set(Calendar.WEEK_OF_YEAR, currentWeekNum + 1);
     	cal.setFirstDayOfWeek(Calendar.MONDAY);
     	cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
     	startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
