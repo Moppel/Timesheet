@@ -3,8 +3,6 @@ package com.uwusoft.timesheet;
 import java.io.File;
 import java.io.IOException;
 
-import javax.swing.JFileChooser;
-
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -24,10 +22,9 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
-	public static final String USE_GOOGLE_DRIVE = "storage.googledrive";
+	public static final String GOOGLE_DRIVE = "storage.googledrive";
 	
-	public static File googleDrive
-		= new File(new JFileChooser().getFileSystemView().getDefaultDirectory().getAbsolutePath() + File.separator + "Google Drive"); // TODO make path configurable  
+	public static File googleDrive;
 	public static String timesheetPath, settingsPath;	
     private IPreferenceStore preferenceStore;
     
@@ -68,17 +65,18 @@ public class Activator extends AbstractUIPlugin {
 	public IPreferenceStore getPreferenceStore() {
         if (preferenceStore == null) {
         	preferenceStore = super.getPreferenceStore();
-        	if (!googleDrive.exists())
-        		googleDrive = new File(System.getProperty("user.home") + File.separator + "Google Drive");
-        	if (googleDrive.exists() && preferenceStore.getBoolean(USE_GOOGLE_DRIVE)) { // TODO first setup of Use Google Drive
-        		timesheetPath = googleDrive.getAbsolutePath() + File.separator + "Timesheet";
-        		settingsPath = timesheetPath + File.separator + "Settings";
-    			preferenceStore = new PreferenceStore(settingsPath + File.separator + PLUGIN_ID + ".prefs");
-        		try {
-               		if (new File(settingsPath).exists())
-               			((PreferenceStore) preferenceStore).load();
-        		} catch (IOException e) {
-        			MessageBox.setError("Preferences", e.getMessage());
+        	if (preferenceStore.getString(GOOGLE_DRIVE) != null) {
+        		googleDrive = new File(preferenceStore.getString(GOOGLE_DRIVE));
+        		if (googleDrive.exists()) {
+        			timesheetPath = googleDrive.getAbsolutePath() + File.separator + "Timesheet";
+        			settingsPath = timesheetPath + File.separator + "Settings";
+        			preferenceStore = new PreferenceStore(settingsPath + File.separator + PLUGIN_ID + ".prefs");
+        			try {
+        				if (new File(settingsPath).exists())
+        					((PreferenceStore) preferenceStore).load();
+        			} catch (IOException e) {
+        				MessageBox.setError("Preferences", e.getMessage());
+        			}
         		}
         	}
         }
