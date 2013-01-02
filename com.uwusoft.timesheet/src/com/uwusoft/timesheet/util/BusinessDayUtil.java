@@ -107,13 +107,13 @@ public class BusinessDayUtil {
 		Date nextDay = DateUtils.truncate(addDays(startDate, 1), Calendar.DATE);
 		// If tomorrow is a valid business day, return it
 		if (isBusinessDay(nextDay)) {
-			if (createHoliday) handleYearChange(startDate, nextDay);
+			//if (createHoliday) handleYearChange(startDate, nextDay);
 			return nextDay;
 		}
 		// Else we recursively call our function until we find one.
 		else {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
-				handleYearChange(startDate, nextDay);
+				//handleYearChange(startDate, nextDay);
 				//if (holidayService.isValid(nextDay)) { // store holiday entry
 					LocalStorageService storageService = LocalStorageService.getInstance();
 					TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
