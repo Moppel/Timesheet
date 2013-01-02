@@ -154,6 +154,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					synchronized (em) {
 						if (em.getTransaction().isActive())	active = true;
 						else em.getTransaction().begin();
+						em.getTransaction().begin();
 						CriteriaBuilder criteria = em.getCriteriaBuilder();
 						CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 						Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
