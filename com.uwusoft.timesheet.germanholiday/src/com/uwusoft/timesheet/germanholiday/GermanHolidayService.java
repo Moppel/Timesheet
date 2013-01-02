@@ -37,7 +37,7 @@ public class GermanHolidayService implements HolidayService {
 	@Override
 	public List<Date> getOfflimitDates(int year) {
 		holidays.clear();
-		regionValidHolidays.clear();
+		regionValidHolidays = new ArrayList<String>();
 		String regionValids = Activator.getDefault().getPreferenceStore().getString(PROPERTY);
 		if (regionValids != null)
         	regionValidHolidays = Arrays.asList(regionValids.split(SubmissionService.separator));
@@ -91,6 +91,7 @@ public class GermanHolidayService implements HolidayService {
 	
 	@Override
 	public String getName(Date date) {
+		if (holidays.get(date) == null) return "";
 		return Messages.getString(holidays.get(date));
 	}
 }

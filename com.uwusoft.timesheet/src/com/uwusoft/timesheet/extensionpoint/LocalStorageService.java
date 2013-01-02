@@ -69,7 +69,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private Job firstImportJob, syncEntriesJob, syncTasksJob;
     private static LocalStorageService instance;
     private static StorageService storageService;
-    private String submissionSystem;
     private ILog logger;
     private static ISchedulingRule mutex = new Mutex();
 
@@ -140,8 +139,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		        return Status.OK_STATUS;
 			}
 		};
-		firstImportJob.setRule(mutex);
-		firstImportJob.schedule();
+		if (importedEndDate != null) {
+			firstImportJob.setRule(mutex);
+			firstImportJob.schedule();
+		}
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
 			@Override
@@ -151,7 +152,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				boolean active = false;
 				try {
 					synchronized (em) {
-						em.getTransaction().begin();
+						if (em.getTransaction().isActive())	active = true;
+						else em.getTransaction().begin();
 						CriteriaBuilder criteria = em.getCriteriaBuilder();
 						CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 						Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
@@ -168,7 +170,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						int endDay = 0;
 						int endWeek = 0;
 						for (TaskEntry entry : entries) {
-							if (lastEntry.getDateTime() != null) {
+							if (lastEntry != null && lastEntry.getDateTime() != null) {
 								cal.setTime(lastEntry.getDateTime());
 								startDay = cal.get(Calendar.DAY_OF_YEAR);
 								startWeek = cal.get(Calendar.WEEK_OF_YEAR);
@@ -184,7 +186,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 							}
 							
 							if (entry.getRowNum() == null) { 
-								if (!lastEntry.isAllDay() && startDay != 0 && startDay < endDay)
+								if (lastEntry != null && !lastEntry.isAllDay() && startDay != 0 && startDay < endDay)
 									storageService.handleDayChange();
 								if (startWeek != 0 && startWeek < endWeek)
 									storageService.handleWeekChange();
@@ -205,6 +207,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					return Status.CANCEL_STATUS;
 				}
 				if (!active) em.getTransaction().commit();
+				//firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, endWeek);
 		        return Status.OK_STATUS;
 			}			
 		};
@@ -215,35 +218,42 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			protected IStatus run(IProgressMonitor monitor) {
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;
-				
+
 				synchronized (em) {
-					em.getTransaction().begin();
-					CriteriaBuilder criteria = em.getCriteriaBuilder();
-					CriteriaQuery<Task> query = criteria.createQuery(Task.class);
-					Root<Task> rootTask = query.from(Task.class);
-					query.where(criteria.notEqual(rootTask.get(Task_.syncStatus), true));
-					List<Task> tasks = em.createQuery(query).getResultList();
-				
-					Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
-					for (Task task : tasks) {
-						SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
-						if (submissionProject == null)
-							submissionProject = new SubmissionProject(task.getProject().getExternalId(), task.getProject().getName());
-						submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
-						submissionProjects.put(submissionProject.getName(), submissionProject);					
-					}
-					if (!submissionProjects.isEmpty()) {
-						if (storageService.importTasks(submissionSystem, submissionProjects.values()))
+					for (String system : submissionSystems.keySet()) {
+						if (!StringUtils.isEmpty(system)) {
+							em.getTransaction().begin();
+							CriteriaBuilder criteria = em.getCriteriaBuilder();
+							CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+							Root<Task> rootTask = query.from(Task.class);
+							Path<Project> rootProject = rootTask.get(Task_.project);
+							query.where(criteria.and(criteria.notEqual(rootTask.get(Task_.syncStatus), true),
+									criteria.equal(rootProject.get(Project_.system), system)));
+							List<Task> tasks = em.createQuery(query).getResultList();
+
+							Map<String, SubmissionProject> submissionProjects = new HashMap<String, SubmissionProject>();
 							for (Task task : tasks) {
-								task.setSyncStatus(true);
-								task.getProject().setSyncStatus(true);
-								em.persist(task);
+								if (task.getExternalId() == null) continue;
+								SubmissionProject submissionProject = submissionProjects.get(task.getProject().getName());
+								if (submissionProject == null)
+									submissionProject = new SubmissionProject(task.getProject().getExternalId(), task.getProject().getName());
+								submissionProject.addTask(new SubmissionTask(task.getExternalId(), task.getName()));
+								submissionProjects.put(submissionProject.getName(),	submissionProject);
 							}
+							if (!submissionProjects.isEmpty()) {
+								if (storageService.importTasks(system, submissionProjects.values()))
+									for (Task task : tasks) {
+										task.setSyncStatus(true);
+										task.getProject().setSyncStatus(true);
+										em.persist(task);
+									}
+							}
+							em.getTransaction().commit();
+						}
 					}
-					em.getTransaction().commit();
 				}
-		        return Status.OK_STATUS;
-			}			
+				return Status.OK_STATUS;
+			}
 		};
 		syncTasksJob.setRule(mutex);
 	}
@@ -563,21 +573,56 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		storageService.handleYearChange(lastWeek);
 		if (lastWeek != 0) {
 			CriteriaBuilder criteria = em.getCriteriaBuilder();
-			CriteriaQuery<Project> query = criteria.createQuery(Project.class);
-			List<Project> projects = em.createQuery(query).getResultList();
+			CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+			List<Task> tasks = em.createQuery(query).getResultList();
 			Calendar cal = new GregorianCalendar();
 			cal.setTime(new Date());
+			String year = "" + cal.get(Calendar.YEAR); 
 			cal.add(Calendar.YEAR, 1);
 			factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, getConfigOverrides(StorageService.TIMESHEET_PREFIX + cal.get(Calendar.YEAR)));
 			em = factory.createEntityManager();
-			em.getTransaction().begin();
-			// TODO maybe roll over tasks and projects to new year
-			for (Project project : projects) {
-				em.persist(project);
-				for (Task task : project.getTasks())
+			for (Task task : tasks) {
+				Project project = task.getProject();
+				em.getTransaction().begin();
+				if (project == null) {
 					em.persist(task);
+					em.getTransaction().commit();
+					continue;
+				}
+				if (project.getName().contains(year)) {
+					// roll over tasks and projects to new year
+					SubmissionService submissionService = new ExtensionManager<SubmissionService>(SubmissionService.SERVICE_ID).getService(
+							TimesheetApp.getSubmissionSystems().get(project.getSystem()));
+					Map<String, SubmissionProject> assignedProjects = submissionService.getAssignedProjects();
+					SubmissionProject submissionProject = assignedProjects.get(project.getName().replaceFirst("(.*)" + year + "(.*)", "$1" + cal.get(Calendar.YEAR) + "$2"));
+					if (submissionProject != null) {
+						List<SubmissionTask> tasksToRemove = new ArrayList<SubmissionTask>();
+						for (SubmissionTask submissionTask : submissionProject.getTasks()) {							
+							if (!task.getName().equals(submissionTask.getName()))
+								tasksToRemove.add(submissionTask);
+						}
+						for (SubmissionTask taskToRemove : tasksToRemove) submissionProject.removeTask(taskToRemove);
+						Project foundProject = findProjectByNameAndSystem(submissionProject.getName(), project.getSystem());
+						if (foundProject == null) {
+							foundProject = new Project(submissionProject.getName(), project.getSystem());
+							foundProject.setExternalId(submissionProject.getId());
+							em.persist(foundProject);
+						}
+						for (SubmissionTask submissionTask : submissionProject.getTasks()) {
+							Task newTask = new Task(submissionTask.getName(), foundProject);
+							newTask.setExternalId(submissionTask.getId());
+							em.persist(newTask);
+						}
+						em.getTransaction().commit();
+						continue;
+					}
+				}
+				if (findProjectByNameAndSystem(project.getName(), project.getSystem()) == null)
+					em.persist(project);
+				task.setSyncStatus(false);
+				em.persist(task);
+				em.getTransaction().commit();
 			}
-			em.getTransaction().commit();
 			syncTasksJob.schedule();
 		}
 	}
@@ -614,10 +659,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				}
 			}
 		}
-		if (!isSynchronized) {
-			this.submissionSystem = submissionSystem;
+		if (!isSynchronized)
 			syncTasksJob.schedule();
-		}
 	}
 
 	public Set<String> submitEntries(Date startDate, Date endDate) {
