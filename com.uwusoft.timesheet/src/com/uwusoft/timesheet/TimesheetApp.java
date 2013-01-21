@@ -74,7 +74,9 @@ public class TimesheetApp implements IApplication {
 				BufferedReader time = new BufferedReader(new InputStreamReader(new FileInputStream(tmp)));
 				String line = time.readLine();
 				time.close();
-				if (line != null)
+				if (line == null)
+					shutDownDate = new Date(tmp.lastModified());
+				else
 					shutDownDate = SystemShutdownTimeCaptureService.formatter.parse(line);
 			} else
 				tmp.createNewFile();
