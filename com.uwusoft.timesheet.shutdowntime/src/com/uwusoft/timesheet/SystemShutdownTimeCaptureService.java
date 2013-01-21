@@ -75,9 +75,9 @@ public class SystemShutdownTimeCaptureService implements ActionListener {
     }
 
     public static void main(String[] args) throws IOException, URISyntaxException, InterruptedException {        
-        RandomAccessFile lockFile = new RandomAccessFile(new File(lckDir + "shutdownTime.lck"), "rw");
         String tmpDir = lckDir;
         if (args.length > 0) tmpDir = args[0];
+        RandomAccessFile lockFile = new RandomAccessFile(new File(tmpDir + File.separator + "shutdownTime.lck"), "rw");
 		
         FileChannel channel = lockFile.getChannel();
         FileLock lock = channel.tryLock();
