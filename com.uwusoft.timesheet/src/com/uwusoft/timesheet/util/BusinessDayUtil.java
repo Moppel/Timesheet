@@ -3,7 +3,6 @@ package com.uwusoft.timesheet.util;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,10 @@ import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 
+/**
+ * {@link http://stackoverflow.com/a/1047411}
+ * @author wunut
+ */
 public class BusinessDayUtil {
 
 	private static transient Map<Integer, List<Date>> computedDates = new HashMap<Integer, List<Date>>();
@@ -102,24 +105,19 @@ public class BusinessDayUtil {
 	 * 
 	 */
 	public static Date getNextBusinessDay(Date startDate, boolean createHoliday) {
-		// Increment the Date object by a Day and clear out hour/min/sec
-		// information
+		// Increment the Date object by a Day and clear out hour/min/sec information
 		Date nextDay = DateUtils.truncate(addDays(startDate, 1), Calendar.DATE);
 		// If tomorrow is a valid business day, return it
 		if (isBusinessDay(nextDay)) {
-			//if (createHoliday) handleYearChange(startDate, nextDay);
 			return nextDay;
 		}
 		// Else we recursively call our function until we find one.
 		else {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
-				//handleYearChange(startDate, nextDay);
-				//if (holidayService.isValid(nextDay)) { // store holiday entry
-					LocalStorageService storageService = LocalStorageService.getInstance();
-					TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
-					taskEntry.setComment(holidayService.getName(nextDay));
-					storageService.createTaskEntry(taskEntry);
-				//}
+				LocalStorageService storageService = LocalStorageService.getInstance();
+				TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
+				taskEntry.setComment(holidayService.getName(nextDay));
+				storageService.createTaskEntry(taskEntry);
 			}
 			return getNextBusinessDay(nextDay, createHoliday);
 		}
@@ -131,18 +129,6 @@ public class BusinessDayUtil {
 			return lastDay;
 		else
 			return getPreviousBusinessDay(lastDay);
-	}
-
-	private static void handleYearChange(Date startDate, Date endDate) {
-		Calendar cal = new GregorianCalendar();
-		cal.setFirstDayOfWeek(Calendar.MONDAY);
-		cal.setTime(startDate);
-		int startWeek = cal.get(Calendar.WEEK_OF_YEAR);
-		int startYear = cal.get(Calendar.YEAR);
-		cal.setTime(endDate);
-		int endYear = cal.get(Calendar.YEAR);
-		if (startYear != endYear)
-			LocalStorageService.getInstance().handleYearChange(startWeek);
 	}
 
 	/**

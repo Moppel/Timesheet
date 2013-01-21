@@ -118,7 +118,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					cal.setFirstDayOfWeek(Calendar.MONDAY);
 					cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 					Date endDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
-					if (endDate != null && !endDate.before(importedEndDate))
+					if (endDate != null && importedEndDate != null && !endDate.before(importedEndDate))
 						endDate = BusinessDayUtil.getPreviousBusinessDay(importedEndDate);
 					if (startDate != null && startDate.after(endDate))
 						startDate = endDate;
@@ -154,7 +154,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					synchronized (em) {
 						if (em.getTransaction().isActive())	active = true;
 						else em.getTransaction().begin();
-						em.getTransaction().begin();
 						CriteriaBuilder criteria = em.getCriteriaBuilder();
 						CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 						Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
@@ -170,20 +169,25 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 						int startWeek = 0;
 						int endDay = 0;
 						int endWeek = 0;
+						int startYear = 0;
+						int endYear = 0;
 						for (TaskEntry entry : entries) {
 							if (lastEntry != null && lastEntry.getDateTime() != null) {
 								cal.setTime(lastEntry.getDateTime());
 								startDay = cal.get(Calendar.DAY_OF_YEAR);
 								startWeek = cal.get(Calendar.WEEK_OF_YEAR);
+								startYear = cal.get(Calendar.YEAR);
 							}
 							if (entry.getDateTime() != null) {
 								cal.setTime(entry.getDateTime());
 								endDay = cal.get(Calendar.DAY_OF_YEAR);
 								endWeek = cal.get(Calendar.WEEK_OF_YEAR);								
+								endYear = cal.get(Calendar.YEAR);
 							}
 							else {
 								endDay = startDay;
 								endWeek = startWeek;
+								endYear = startYear;
 							}
 							
 							if (entry.getRowNum() == null) { 
@@ -191,6 +195,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 									storageService.handleDayChange();
 								if (startWeek != 0 && startWeek < endWeek)
 									storageService.handleWeekChange();
+								if (startYear != 0 && startYear != endYear) {
+									if (!active) em.getTransaction().commit();
+									handleYearChange(startWeek); // TODO
+									if (em.getTransaction().isActive())	active = true;
+									else em.getTransaction().begin();
+								}
 								entry.setRowNum(storageService.createTaskEntry(entry));
 								calculateTotal(entry);
 							}
