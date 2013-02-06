@@ -69,6 +69,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private Job firstImportJob, syncEntriesJob, syncTasksJob;
     private static LocalStorageService instance;
     private static StorageService storageService;
+    private static IssueService jiraService;
     private ILog logger;
     private static ISchedulingRule mutex = new Mutex();
 
@@ -135,15 +136,16 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 					monitor.worked(1);
 				}
+				getJiraService();
 				monitor.done();
 				firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR) - 2));
 		        return Status.OK_STATUS;
 			}
 		};
-		if (importedEndDate != null) {
+		//if (importedEndDate != null) {
 			firstImportJob.setRule(mutex);
 			firstImportJob.schedule();
-		}
+		//}
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
 			@Override
@@ -825,6 +827,15 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			if (storageService == null) MessageBox.setError("Storage service", "Can't reach remote storage service");
 		}
 		return storageService;
+	}
+	
+	private IssueService getJiraService() {
+		if (jiraService == null) {
+			jiraService = new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
+					.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
+			if (jiraService == null) MessageBox.setError("Jira service", "Can't reach remote Jira service");
+		}
+		return jiraService;
 	}
 	
 	public void waitUntilJobsFinished() {

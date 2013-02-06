@@ -4,7 +4,7 @@
    <extension-point id="com.uwusoft.timesheet.storageservice" name="StorageService" schema="schema/com.uwusoft.timesheet.storageservice.exsd"/>
    <extension-point id="com.uwusoft.timesheet.submissionservice" name="SubmissionService" schema="schema/com.uwusoft.timesheet.submissionservice.exsd"/>
    <extension-point id="com.uwusoft.timesheet.holidayservice" name="HolidayService" schema="schema/com.uwusoft.timesheet.holidayservice.exsd"/>
-   <extension-point id="com.uwusoft.timesheet.jiraservice" name="JiraService" schema="schema/com.uwusoft.timesheet.jiraservice.exsd"/>
+   <extension-point id="com.uwusoft.timesheet.issueservice" name="IssueService" schema="schema/com.uwusoft.timesheet.issueservice.exsd"/>
 
    <extension
          id="application"

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Jira
-Bundle-SymbolicName: com.uwusoft.timesheet.jira3;singleton:=true
+Bundle-SymbolicName: com.uwusoft.timesheet.jira3issue;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: UWUSOFT
 Require-Bundle: org.eclipse.ui,

@@ -24,9 +24,9 @@ public class Jira3PreferencePage extends FieldEditorPreferencePage implements IW
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new StringFieldEditor(Jira3Service.PREFIX + SubmissionService.URL, "Server Url:",
+		addField(new StringFieldEditor(Jira3IssueService.PREFIX + SubmissionService.URL, "Server Url:",
 				getFieldEditorParent()));
-		addField(new StringFieldEditor(Jira3Service.PREFIX + StorageService.USERNAME, "User name:",
+		addField(new StringFieldEditor(Jira3IssueService.PREFIX + StorageService.USERNAME, "User name:",
 				getFieldEditorParent()));
 	}
 }

@@ -20,6 +20,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.Messages;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.HolidayService;
+import com.uwusoft.timesheet.extensionpoint.IssueService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.AllDayTasks;
@@ -46,6 +47,8 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 				StorageService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new ComboFieldEditor(HolidayService.PROPERTY, "Holiday System:", getSystemArray(HolidayService.SERVICE_ID,
 				HolidayService.SERVICE_NAME), getFieldEditorParent()));
+		addField(new ComboFieldEditor(IssueService.PROPERTY, "Task and Issue System:", getSystemArray(IssueService.SERVICE_ID,
+				IssueService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID,
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));

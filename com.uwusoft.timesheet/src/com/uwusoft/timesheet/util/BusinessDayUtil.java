@@ -43,8 +43,15 @@ public class BusinessDayUtil {
 			while (systemDialog.open() != Dialog.OK);
 			preferenceStore.setValue(HolidayService.PROPERTY, systemDialog.getSelectedSystem());			
 		}
-		holidayService = new ExtensionManager<HolidayService>(
-				HolidayService.SERVICE_ID).getService(preferenceStore.getString(HolidayService.PROPERTY));
+	}
+	
+	private static HolidayService getHolidayService() {
+		if (holidayService == null) {
+			holidayService = new ExtensionManager<HolidayService>(
+					HolidayService.SERVICE_ID).getService(Activator.getDefault().getPreferenceStore().getString(HolidayService.PROPERTY));
+			if (holidayService == null) MessageBox.setError("Holiday service", "Can't reach Holiday service");
+		}
+		return holidayService;		
 	}
 
 	/*
@@ -58,11 +65,12 @@ public class BusinessDayUtil {
 		// Setup the calendar to have the start date truncated
 		Calendar baseCal = Calendar.getInstance();
 		baseCal.setTime(DateUtils.truncate(dateToCheck, Calendar.DATE));
-
+		if (isNonBusinessDay(dateToCheck)) return false;
 		List<Date> offlimitDates;
 
 		// Grab the list of dates for the year. These SHOULD NOT be modified.
 		synchronized (computedDates) {
+			if (getHolidayService() == null) return true;			
 			int year = baseCal.get(Calendar.YEAR);
 
 			// If the map doesn't already have the dates computed, create them.
@@ -73,7 +81,7 @@ public class BusinessDayUtil {
 
 		// If it's on a holiday, increment and test again
 		// If it's on a weekend, increment necessary amount and test again
-		if (offlimitDates.contains(baseCal.getTime()) || isNonBusinessDay(dateToCheck))
+		if (offlimitDates.contains(baseCal.getTime()))
 			return false;
 		else
 			return true;
@@ -116,7 +124,8 @@ public class BusinessDayUtil {
 			if (createHoliday && !isNonBusinessDay(nextDay)) {
 				LocalStorageService storageService = LocalStorageService.getInstance();
 				TaskEntry taskEntry = new TaskEntry(nextDay, task, AllDayTasks.getInstance().getTotal(), true);
-				taskEntry.setComment(holidayService.getName(nextDay));
+				if (getHolidayService() != null)			
+					taskEntry.setComment(holidayService.getName(nextDay));
 				storageService.createTaskEntry(taskEntry);
 			}
 			return getNextBusinessDay(nextDay, createHoliday);

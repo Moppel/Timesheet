@@ -12,29 +12,34 @@ import org.eclipse.swt.widgets.Display;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
-import com.uwusoft.timesheet.extensionpoint.JiraService;
+import com.uwusoft.timesheet.extensionpoint.IssueService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.SecurePreferencesManager;
 
-public class Jira3Service implements JiraService {
-	public static final String PREFIX = "jira3.";
+public class Jira3IssueService implements IssueService {
+	public static final String PREFIX = "jira3.issue.";
 	
     private String message;
     
-	public Jira3Service() throws CoreException {
+	public Jira3IssueService() throws CoreException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         if (StringUtils.isEmpty(preferenceStore.getString(PREFIX + SubmissionService.URL))
         		|| StringUtils.isEmpty(preferenceStore.getString(PREFIX + StorageService.USERNAME))) {
-        	PreferencesDialog preferencesDialog;
-        	do
-        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.jira3.Jira3PreferencePage");
-        	while (preferencesDialog.open() != Dialog.OK);
+        		Display.getDefault().syncExec(new Runnable() {
+            		@Override
+            		public void run() {
+            			PreferencesDialog preferencesDialog;
+                    	do
+                    		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.jira3.Jira3PreferencePage");
+                        while (preferencesDialog.open() != Dialog.OK);
+            		}
+            	});
+        	}
             boolean lastSuccess = true;
             do lastSuccess = authenticate(lastSuccess);
            	while (!lastSuccess);
         }
-	}
 
     private boolean authenticate(boolean lastSuccess) throws CoreException {
 		final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
