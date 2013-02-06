@@ -70,10 +70,16 @@ public class Activator extends AbstractUIPlugin {
         		if (googleDrive.exists()) {
         			timesheetPath = googleDrive.getAbsolutePath() + File.separator + "Timesheet";
         			settingsPath = timesheetPath + File.separator + "Settings";
-        			preferenceStore = new PreferenceStore(settingsPath + File.separator + PLUGIN_ID + ".prefs");
+        			String prefsPath = settingsPath + File.separator + PLUGIN_ID + ".prefs";
+        			preferenceStore = new PreferenceStore(prefsPath);
         			try {
-        				if (new File(settingsPath).exists())
-        					((PreferenceStore) preferenceStore).load();
+        				File settingsDir = new File(settingsPath);
+        				if (!settingsDir.exists())
+        					settingsDir.mkdirs();
+        				File prefsFile = new File(prefsPath);
+        				if (!prefsFile.exists())
+        					prefsFile.createNewFile();
+       					((PreferenceStore) preferenceStore).load();
         			} catch (IOException e) {
         				MessageBox.setError("Preferences", e.getMessage());
         			}
