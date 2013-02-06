@@ -33,7 +33,8 @@ Export-Package: com.uwusoft.timesheet;
  com.uwusoft.timesheet.preferences,
  com.uwusoft.timesheet.submission.model,
  com.uwusoft.timesheet.util,
- com.uwusoft.timesheet.wizard
+ com.uwusoft.timesheet.wizard,
+ org.apache.commons.lang3
 Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  lib/persistence/javax.persistence_2.0.4.v201112161009.jar,
  lib/persistence/derby.jar,
