@@ -364,7 +364,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
-		importTasks(getAllDayTaskService().getSystem(), getAllDayTaskService().getAssignedProjects(), true); // TODO import All Day Tasks
+		//importTasks(getAllDayTaskService().getSystem(), getAllDayTaskService().getAssignedProjects(), true); // TODO import All Day Tasks
 		return getLastTaskEntryDate();
 	}
     
