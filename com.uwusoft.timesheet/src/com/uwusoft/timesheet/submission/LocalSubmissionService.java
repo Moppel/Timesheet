@@ -64,8 +64,13 @@ public class LocalSubmissionService implements SubmissionService {
 	public Map<String, SubmissionProject> getAssignedProjects() {
 		Map<String, SubmissionProject> assignedProjects = new HashMap<String, SubmissionProject>();
 		Query q = em.createQuery("select p from SubmissionProject p");
-		for (SubmissionProject project : (List<SubmissionProject>)q.getResultList())
+		for (SubmissionProject project : (List<SubmissionProject>)q.getResultList()) {
+			q = em.createQuery("select t from SubmissionTask t where t.project.id = :projectId")
+					.setParameter("projectId", project.getId());
+			// why doesn't eager fetch work?
+			project.setTasks(q.getResultList());
 			assignedProjects.put(project.getName(), project);
+		}
 		return assignedProjects;
 	}
 

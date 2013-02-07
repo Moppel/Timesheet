@@ -53,6 +53,7 @@ import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.model.TaskEntry_;
 import com.uwusoft.timesheet.model.Task_;
+import com.uwusoft.timesheet.submission.LocalSubmissionService;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
@@ -136,16 +137,15 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 					monitor.worked(1);
 				}
-				getJiraService();
 				monitor.done();
 				firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR) - 2));
 		        return Status.OK_STATUS;
 			}
 		};
-		//if (importedEndDate != null) {
+		if (importedEndDate != null) {
 			firstImportJob.setRule(mutex);
 			firstImportJob.schedule();
-		//}
+		}
 		
 		syncEntriesJob = new Job("Synchronizing entries") {
 			@Override
@@ -362,6 +362,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				}
 			}
 		}
+		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
+			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
+		getJiraService(); // TODO import All Day Tasks
 		return getLastTaskEntryDate();
 	}
     
