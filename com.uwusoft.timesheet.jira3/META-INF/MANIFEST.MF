@@ -11,3 +11,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  .
+Export-Package: com.uwusoft.timesheet.jira3

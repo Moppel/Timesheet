@@ -5,6 +5,7 @@
    <extension-point id="com.uwusoft.timesheet.submissionservice" name="SubmissionService" schema="schema/com.uwusoft.timesheet.submissionservice.exsd"/>
    <extension-point id="com.uwusoft.timesheet.holidayservice" name="HolidayService" schema="schema/com.uwusoft.timesheet.holidayservice.exsd"/>
    <extension-point id="com.uwusoft.timesheet.issueservice" name="IssueService" schema="schema/com.uwusoft.timesheet.issueservice.exsd"/>
+   <extension-point id="com.uwusoft.timesheet.alldaytaskservice" name="AllDayTaskService" schema="schema/com.uwusoft.timesheet.alldaytaskservice.exsd"/>
 
    <extension
          id="application"
