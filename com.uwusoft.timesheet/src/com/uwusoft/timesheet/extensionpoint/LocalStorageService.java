@@ -70,7 +70,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     private Job firstImportJob, syncEntriesJob, syncTasksJob;
     private static LocalStorageService instance;
     private static StorageService storageService;
-    private static IssueService jiraService;
+    private static AllDayTaskService allDayTaskService;
     private ILog logger;
     private static ISchedulingRule mutex = new Mutex();
 
@@ -364,7 +364,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
-		getJiraService(); // TODO import All Day Tasks
+		getAllDayTaskService(); // TODO import All Day Tasks
 		return getLastTaskEntryDate();
 	}
     
@@ -832,13 +832,13 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return storageService;
 	}
 	
-	private IssueService getJiraService() {
-		if (jiraService == null) {
-			jiraService = new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
-					.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
-			if (jiraService == null) MessageBox.setError("Jira service", "Can't reach remote Jira service");
+	private AllDayTaskService getAllDayTaskService() {
+		if (allDayTaskService == null) {
+			allDayTaskService = new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
+					.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY));
+			if (allDayTaskService == null) MessageBox.setError("Jira service", "Can't reach remote Jira service");
 		}
-		return jiraService;
+		return allDayTaskService;
 	}
 	
 	public void waitUntilJobsFinished() {
