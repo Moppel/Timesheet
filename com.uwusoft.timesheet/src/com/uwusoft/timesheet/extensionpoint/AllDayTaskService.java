@@ -10,4 +10,6 @@ public interface AllDayTaskService {
 	public static final String PROPERTY = "alldaytask.system";
 
 	Collection<SubmissionProject> getAssignedProjects();
+	
+	String getSystem();
 }
