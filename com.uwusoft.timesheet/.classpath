@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="src/com.uwusoft.timesheet.submission.model/" kind="src" path="src"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons/commons-lang3-3.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/persistence/javax.persistence_2.0.4.v201112161009.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/persistence/derby.jar"/>

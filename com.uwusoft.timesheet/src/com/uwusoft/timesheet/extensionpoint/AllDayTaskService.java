@@ -2,6 +2,7 @@ package com.uwusoft.timesheet.extensionpoint;
 
 import java.util.Collection;
 
+import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 
 public interface AllDayTaskService {
@@ -10,6 +11,8 @@ public interface AllDayTaskService {
 	public static final String PROPERTY = "alldaytask.system";
 
 	Collection<SubmissionProject> getAssignedProjects();
+	
+	Collection<AllDayTaskEntry> getAllDayTaskEntries();
 	
 	String getSystem();
 }

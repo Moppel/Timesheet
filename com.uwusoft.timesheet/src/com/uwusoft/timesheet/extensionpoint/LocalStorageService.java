@@ -46,6 +46,7 @@ import com.uwusoft.timesheet.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
+import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Project_;
@@ -137,6 +138,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 					monitor.worked(1);
 				}
+				/*for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries()) {
+					createAllDayTaskEntry(entry, false);
+				} TODO */
 				monitor.done();
 				firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR) - 2));
 		        return Status.OK_STATUS;
@@ -364,7 +368,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
-		//importTasks(getAllDayTaskService().getSystem(), getAllDayTaskService().getAssignedProjects(), true); // TODO import All Day Tasks
+		if (getProjects(getAllDayTaskService().getSystem()).isEmpty())
+			importTasks(getAllDayTaskService().getSystem(), getAllDayTaskService().getAssignedProjects(), true);
 		return getLastTaskEntryDate();
 	}
     
@@ -482,6 +487,24 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 	}
 
+	private void createAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
+		boolean active = false;
+		synchronized (entry) {
+			if (em.getTransaction().isActive())	active = true;
+			else em.getTransaction().begin();
+			entry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+					entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+							entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+			em.persist(entry);
+			if (!active) em.getTransaction().commit();
+		}
+		/*if (firePropertyChangeEvent) {
+	        Calendar cal = new GregorianCalendar();
+	        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
+			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
+		}*/
+	}
+	
 	public void updateTaskEntry(TaskEntry entry) {
 		boolean active = false;
         Calendar cal = new GregorianCalendar();

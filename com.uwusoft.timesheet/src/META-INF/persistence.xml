@@ -3,6 +3,7 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
 	version="2.0" xmlns="http://java.sun.com/xml/ns/persistence">
 	<persistence-unit name="timesheet" transaction-type="RESOURCE_LOCAL">
+		<class>com.uwusoft.timesheet.model.AllDayTaskEntry</class>
 		<class>com.uwusoft.timesheet.model.TaskEntry</class>
 		<class>com.uwusoft.timesheet.model.Task</class>
 		<class>com.uwusoft.timesheet.model.Project</class>
