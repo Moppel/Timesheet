@@ -5,6 +5,7 @@ import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 
 import com.uwusoft.timesheet.view.AllDayTasksView;
+import com.uwusoft.timesheet.view.TasksView;
 
 public class Perspective implements IPerspectiveFactory {
 

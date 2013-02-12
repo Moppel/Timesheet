@@ -27,7 +27,7 @@
    <extension
          point="org.eclipse.ui.views">
       <view
-            class="com.uwusoft.timesheet.TasksView"
+            class="com.uwusoft.timesheet.view.TasksView"
             id="com.uwusoft.timesheet.tasksview"
             name="Weekly Tasks">
       </view>
