@@ -31,8 +31,13 @@
             id="com.uwusoft.timesheet.tasksview"
             name="Weekly Tasks">
       </view>
+      <view
+            class="com.uwusoft.timesheet.view.AllDayTasksView"
+            id="com.uwusoft.timesheet.view.alldaytasksview"
+            name="All Day Tasks">
+      </view>
    </extension>
-   <extension
+   <!--<extension
          point="org.eclipse.ui.perspectiveExtensions">
       <perspectiveExtension
             targetID="*">
@@ -40,11 +45,19 @@
                standalone="true"
                minimized="true"
                relative="org.eclipse.ui.editorss"
-               relationship="left"
+               relationship="top"
                id="com.uwusoft.timesheet.tasksview">
          </view>
+         <view
+               id="com.uwusoft.timesheet.view.alldaytasksview"
+               minimized="false"
+               ratio="0.95"
+               relationship="top"
+               relative="org.eclipse.ui.editorss"
+               standalone="true">
+         </view>
       </perspectiveExtension>
-   </extension>
+   </extension>-->
    <extension
          point="org.eclipse.ui.menus">
       <menuContribution
