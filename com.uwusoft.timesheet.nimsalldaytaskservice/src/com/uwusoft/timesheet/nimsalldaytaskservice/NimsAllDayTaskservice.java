@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.CoreException;
 
@@ -24,9 +25,15 @@ public class NimsAllDayTaskservice extends Jira3IssueService implements
 
 	@Override
 	public Collection<SubmissionProject> getAssignedProjects() {
+		Long projectId = 10230L; // TODO configure project
 		List<SubmissionProject> assignedProjects = new ArrayList<SubmissionProject>();
-		SubmissionProject project = new SubmissionProject("INT");
-		project.addTask(new SubmissionTask("Vacation", project));
+		SubmissionProject project = new SubmissionProject(projectId, "Internal");
+		for (Object subTaskMap : getSubTaskIssueTypesForProject("" + projectId)) {
+			@SuppressWarnings("unchecked")
+			Map<String, String> subTask = (Map<String, String>) subTaskMap;
+			System.out.println(subTask.get("name") + " with id " + subTask.get("id"));
+			project.addTask(new SubmissionTask(new Long(subTask.get("id")), subTask.get("name"), project));
+		}
 		assignedProjects.add(project);
 		return assignedProjects;
 	}

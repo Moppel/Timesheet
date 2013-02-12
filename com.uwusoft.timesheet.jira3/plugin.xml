@@ -4,7 +4,8 @@
    <extension
          point="com.uwusoft.timesheet.issueservice">
       <client
-            class="com.uwusoft.timesheet.jira3.Jira3IssueService"></client>
+            class="com.uwusoft.timesheet.jira3.Jira3IssueService">
+      </client>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

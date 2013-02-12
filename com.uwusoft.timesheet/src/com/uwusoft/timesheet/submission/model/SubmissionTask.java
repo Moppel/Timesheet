@@ -43,6 +43,12 @@ public class SubmissionTask {
 		this.project = project;
 	}
 		
+	public SubmissionTask(Long id, String name, SubmissionProject project) {
+		this.id = id;
+		this.name = name;
+		this.project = project;
+	}
+	
 	/**
 	 * @return the id
 	 */
