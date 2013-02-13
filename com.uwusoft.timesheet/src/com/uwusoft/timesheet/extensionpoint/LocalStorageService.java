@@ -47,6 +47,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
+import com.uwusoft.timesheet.model.AllDayTaskEntry_;
 import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Project_;
@@ -98,6 +99,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;				
 				
+				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
+					createOrUpdateAllDayTaskEntry(entry, false);
+				
 				Calendar cal = GregorianCalendar.getInstance();
 				cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
 				Date startDate = cal.getTime();
@@ -138,9 +142,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					startDate = DateUtils.truncate(cal.getTime(), Calendar.DATE);
 					monitor.worked(1);
 				}
-				/*for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries()) {
-					createAllDayTaskEntry(entry, false);
-				} TODO */
 				monitor.done();
 				firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR) - 2));
 		        return Status.OK_STATUS;
@@ -487,7 +488,39 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 	}
 
-	private void createAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
+	private void createOrUpdateAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+		Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
+		query.where(criteria.equal(taskEntry.get(AllDayTaskEntry_.externalId), entry.getExternalId()));
+		List<AllDayTaskEntry> availableEntries = em.createQuery(query).getResultList();
+		if (availableEntries.size() == 1) {
+			AllDayTaskEntry availableEntry = availableEntries.iterator().next();
+			synchronized (availableEntry) {
+				em.getTransaction().begin();
+				availableEntry.setFrom(entry.getFrom());
+				availableEntry.setTo(entry.getTo());
+				availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+				em.persist(availableEntry);
+				em.getTransaction().commit();
+			}
+		}
+		else {
+			if (availableEntries.size() > 1) {
+				synchronized (availableEntries) {
+					em.getTransaction().begin();
+					for (AllDayTaskEntry availableEntry : availableEntries)
+						em.remove(availableEntry);
+					em.getTransaction().commit();
+				}
+			}
+			createAllDayTaskEntry(entry);
+		}
+	}
+	
+	private void createAllDayTaskEntry(AllDayTaskEntry entry) {
 		boolean active = false;
 		synchronized (entry) {
 			if (em.getTransaction().isActive())	active = true;

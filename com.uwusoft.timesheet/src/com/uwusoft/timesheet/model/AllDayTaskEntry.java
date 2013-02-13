@@ -51,8 +51,16 @@ public class AllDayTaskEntry {
 		return fromDate;
 	}
 
+	public void setFrom(Timestamp fromDate) {
+		this.fromDate = fromDate;
+	}
+
 	public Timestamp getTo() {
 		return toDate;
+	}
+
+	public void setTo(Timestamp toDate) {
+		this.toDate = toDate;
 	}
 
 	public Task getTask() {

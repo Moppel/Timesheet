@@ -29,7 +29,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	
 	private Map<String, String> subTasks;
 	private Long projectId, filterId;
-	private String projectName = "Internal"; // TODO
+	private String projectName;
 
 	public NimsAllDayTaskService() throws CoreException {
 		super();
@@ -61,7 +61,6 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		for (Object subTaskMap : getSubTaskIssueTypesForProject("" + projectId)) {
 			@SuppressWarnings("unchecked")
 			Map<String, String> subTask = (Map<String, String>) subTaskMap;
-			System.out.println(subTask.get("name") + " with id " + subTask.get("id"));
 			project.addTask(new SubmissionTask(new Long(subTask.get("id")), subTask.get("name"), project));
 		}
 		assignedProjects.add(project);
@@ -72,7 +71,6 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	public Collection<AllDayTaskEntry> getAllDayTaskEntries() {
 		List<AllDayTaskEntry> allDayTaskEntries = new ArrayList<AllDayTaskEntry>();
 		Project project = new Project(projectName, getSystem());
-		project.setExternalId(projectId);
 		for (Object issueMap : getIssuesFromFilter("" + filterId)) {
 			@SuppressWarnings("rawtypes")
 			Map issue = (Map) issueMap;
