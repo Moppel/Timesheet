@@ -93,7 +93,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 					e.printStackTrace();
 				}
 			}
-			allDayTaskEntries.add(new AllDayTaskEntry(from, to, (String) issue.get("key"), task));
+			allDayTaskEntries.add(new AllDayTaskEntry(from, to, (String) issue.get("key"), task, true));
 		}
 		return allDayTaskEntries;
 	}

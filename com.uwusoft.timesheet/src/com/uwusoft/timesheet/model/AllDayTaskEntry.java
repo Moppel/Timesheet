@@ -31,6 +31,7 @@ public class AllDayTaskEntry {
 	/**
 	 * @param from
 	 * @param to
+	 * @param externalId
 	 * @param task
 	 */
 	public AllDayTaskEntry(Date from, Date to, String externalId, Task task) {
@@ -38,6 +39,11 @@ public class AllDayTaskEntry {
 		if (to != null) this.toDate = new Timestamp(to.getTime());
 		this.externalId = externalId;
 		this.task = task;
+	}
+	
+	public AllDayTaskEntry(Date from, Date to, String externalId, Task task, boolean syncStatus) {
+		this(from, to, externalId, task);
+		this.syncStatus = syncStatus;
 	}
 	
 	/**
