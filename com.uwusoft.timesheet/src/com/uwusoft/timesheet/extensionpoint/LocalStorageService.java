@@ -48,7 +48,6 @@ import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.AllDayTaskEntry_;
-import com.uwusoft.timesheet.model.AllDayTasks;
 import com.uwusoft.timesheet.model.Project;
 import com.uwusoft.timesheet.model.Project_;
 import com.uwusoft.timesheet.model.Task;
@@ -310,13 +309,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					task.setSyncStatus(true);
 					em.persist(task);
 				}
-				taskQuery.where(criteria.equal(taskRoot.get(Task_.name), AllDayTasks.BEGIN_ADT));
-				tasks = em.createQuery(taskQuery).getResultList();
-				if (tasks.isEmpty()) {
-					Task task = new Task(AllDayTasks.BEGIN_ADT);
-					task.setSyncStatus(true);
-					em.persist(task);
-				}
 				em.getTransaction().commit();
 			}
 			for (String system : submissionSystems.keySet()) {
@@ -449,9 +441,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> entry = query.from(TaskEntry.class);
-		Path<Task> task = entry.get(TaskEntry_.task);
-		query.where(criteria.and(criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
-				criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
+		query.where(criteria.and(criteria.greaterThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(startDate.getTime())),
 				criteria.lessThanOrEqualTo(entry.get(TaskEntry_.dateTime), new Timestamp(endDate.getTime()))));
 		query.orderBy(criteria.asc(entry.get(TaskEntry_.dateTime)));
 		return em.createQuery(query).getResultList();
@@ -752,9 +742,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			CriteriaBuilder criteria = em.getCriteriaBuilder();
 			CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 			Root<TaskEntry> entry = query.from(TaskEntry.class);
-			Path<Task> task = entry.get(TaskEntry_.task);
+			//Path<Task> task = entry.get(TaskEntry_.task);
 			query.where(criteria.and(criteria.notEqual(entry.get(TaskEntry_.status), true),
-					criteria.notEqual(task.get(Task_.name), AllDayTasks.BEGIN_ADT),
 					//criteria.notEqual(task.get(Task_.name), CHECK_IN),
 					//criteria.notEqual(task.get(Task_.name), BREAK),
 					entry.get(TaskEntry_.dateTime).isNotNull(),

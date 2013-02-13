@@ -22,14 +22,14 @@ public class AllDayTaskHandler extends AbstractHandler {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		
 		AllDayTasks wholeDayTasks = AllDayTasks.getInstance();
-		Date startDate = wholeDayTasks.getNextBegin();
+		Date startDate = wholeDayTasks.getNextBegin(new Date());
 		String task = event.getParameter("Timesheet.commands.task");
 		DateDialog dateDialog;
 		try {
 			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),
 					preferenceStore.getString(task), startDate);
 			if (dateDialog.open() == Dialog.OK) {
-				wholeDayTasks.addNextTask(dateDialog.getTime(), dateDialog.getTask());
+				//TODO wholeDayTasks.addNextTask(dateDialog.getTime(), dateDialog.getTask());
 			}
 		} catch (NotDefinedException e) {
 			MessageBox.setError("All day task", e.getLocalizedMessage());
