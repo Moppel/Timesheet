@@ -18,7 +18,7 @@ public class Jira3PreferencePage extends FieldEditorPreferencePage implements IW
 	@Override
 	public void init(IWorkbench workbench) {
 		setPreferenceStore(Activator.getDefault().getPreferenceStore());
-		setDescription("Google preferences");
+		setDescription("Jira preferences");
 		getPreferenceStore().addPropertyChangeListener(this);
 	}
 

@@ -150,12 +150,25 @@ public class Jira3IssueService implements IssueService {
     	if (message == null) return true;
         throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
     }    
-    
-    protected Object[] getProjects() {
+
+	@Override
+	public Object[] getProjects() {
 		Vector<String> searchVector = new Vector<String>(1);
 		searchVector.add(loginToken);
 		try {
 			return (Object[]) rpcClient.execute("jira1.getProjectsNoSchemes", searchVector);
+		} catch (XmlRpcException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+    
+	@Override
+    public Object[] getSavedFilters() {
+		Vector<String> searchVector = new Vector<String>(1);
+		searchVector.add(loginToken);
+		try {
+			return (Object[]) rpcClient.execute("jira1.getSavedFilters", searchVector);
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
 			return null;
@@ -168,6 +181,18 @@ public class Jira3IssueService implements IssueService {
  		searchVector.add(projectId);
  		try {
  			return (Object[]) rpcClient.execute("jira1.getSubTaskIssueTypesForProject", searchVector);
+ 		} catch (XmlRpcException e) {
+ 			e.printStackTrace();
+ 			return null;
+ 		}
+    }
+    
+    protected Object[] getIssuesFromFilter(String filterId) {
+    	Vector<String> searchVector = new Vector<String>(2);
+		searchVector.add(loginToken);
+		searchVector.add(filterId);
+ 		try {
+ 			return (Object[]) rpcClient.execute("jira1.getIssuesFromFilter", searchVector);
  		} catch (XmlRpcException e) {
  			e.printStackTrace();
  			return null;

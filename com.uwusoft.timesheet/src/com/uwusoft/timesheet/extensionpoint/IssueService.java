@@ -5,4 +5,6 @@ public interface IssueService {
 	public static final String SERVICE_NAME = "issue";
 	public static final String PROPERTY = "issue.system";
 
+	Object[] getProjects();
+	Object[] getSavedFilters();
 }

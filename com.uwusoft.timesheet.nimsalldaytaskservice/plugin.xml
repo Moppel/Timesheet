@@ -4,8 +4,17 @@
    <extension
          point="com.uwusoft.timesheet.alldaytaskservice">
       <client
-            class="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskservice">
+            class="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskService">
       </client>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
+            class="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage"
+            id="com.uwusoft.timesheet.nimsalldaytask.preferences"
+            name="All Day Task Preferences">
+      </page>
    </extension>
 
 </plugin>
