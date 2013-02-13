@@ -380,6 +380,14 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
     	return instance;
     }
 	
+    public List<AllDayTaskEntry> getAllDayTaskEntries() {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+		Root<AllDayTaskEntry> entry = query.from(AllDayTaskEntry.class);
+		query.orderBy(criteria.asc(entry.get(AllDayTaskEntry_.fromDate)));
+		return em.createQuery(query).getResultList();
+    }
+    
 	public List<String> getProjects(String system) {
 		List<String> projects = new ArrayList<String>();
 		for (Project project : getProjectList(system)) projects.add(project.getName());
