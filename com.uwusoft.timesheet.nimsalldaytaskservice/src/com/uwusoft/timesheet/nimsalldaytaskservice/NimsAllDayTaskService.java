@@ -12,8 +12,11 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.jira3.Jira3IssueService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
@@ -34,6 +37,12 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	public NimsAllDayTaskService() throws CoreException {
 		super();
 		String s = Activator.getDefault().getPreferenceStore().getString(PREFIX + PROJECT);
+		if (StringUtils.isEmpty(s)) { 
+        	PreferencesDialog preferencesDialog;
+        	do
+        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
+        	while (preferencesDialog.open() != Dialog.OK);
+		}
 		if (!StringUtils.isEmpty(s)) projectId = new Long(s);
 		s = Activator.getDefault().getPreferenceStore().getString(PREFIX + FILTER);
 		if (!StringUtils.isEmpty(s)) filterId = new Long(s);

@@ -12,7 +12,7 @@
       <page
             category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
             class="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage"
-            id="com.uwusoft.timesheet.nimsalldaytask.preferences"
+            id="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage"
             name="All Day Task Preferences">
       </page>
    </extension>
