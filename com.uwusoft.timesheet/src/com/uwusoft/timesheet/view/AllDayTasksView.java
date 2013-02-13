@@ -60,8 +60,8 @@ public class AllDayTasksView extends ViewPart {
 	}
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
-		String[] titles = { "From", "To", "Requested", "Task" };
-		int[] bounds = { 80, 80, 80, 300 };
+		String[] titles = { "From", "To", "Requested", "Task", "Issue Key" };
+		int[] bounds = { 80, 80, 70, 150, 70 };
         
 		//final OptimizedIndexSearcher searcher = new OptimizedIndexSearcher();
 
@@ -189,7 +189,7 @@ public class AllDayTasksView extends ViewPart {
 		    }
 
 		    protected Object getValue(Object element) {
-		        return DateFormat.getDateInstance(DateFormat.SHORT).format(((AllDayTaskEntry) element).getTask().getName());
+		        return ((AllDayTaskEntry) element).getTask().getName();
 		    }
 
 		    protected void setValue(Object element, Object value) {
@@ -203,6 +203,42 @@ public class AllDayTasksView extends ViewPart {
 			}
 			public Image getImage(Object obj) {
 	    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
+			}
+            /*@Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				return getColor(viewer, element, even);
+			}*/
+		});
+		// Fifth column is for the issue key
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return false;
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return null;
+		    }
+
+		    protected Object getValue(Object element) {
+		        return ((AllDayTaskEntry) element).getExternalId();
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		    }
+		});
+		col.setLabelProvider(new ColumnLabelProvider() {
+            //boolean even = true;
+			
+			public String getText(Object element) {
+				return ((AllDayTaskEntry) element).getExternalId();
+			}
+			public Image getImage(Object obj) {
+	    		return null;
 			}
             /*@Override public void update(ViewerCell cell) {
                 even = searcher.isEven((TableItem)cell.getItem());
