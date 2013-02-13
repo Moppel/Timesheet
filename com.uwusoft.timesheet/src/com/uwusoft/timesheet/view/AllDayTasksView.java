@@ -21,6 +21,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
+import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class AllDayTasksView extends ViewPart {
 	public static final String ID = "com.uwusoft.timesheet.view.alldaytasksview";
@@ -59,8 +60,8 @@ public class AllDayTasksView extends ViewPart {
 	}
 
 	private void createColumns(final Composite parent, final TableViewer viewer) {
-		String[] titles = { "From", "To", "Task" };
-		int[] bounds = { 80, 80, 300 };
+		String[] titles = { "From", "To", "Requested", "Task" };
+		int[] bounds = { 80, 80, 80, 300 };
         
 		//final OptimizedIndexSearcher searcher = new OptimizedIndexSearcher();
 
@@ -139,7 +140,43 @@ public class AllDayTasksView extends ViewPart {
 				return getColor(viewer, element, even);
 			}*/
 		});
-		// Third column is for the task
+		// Third column is for the requested
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return false;
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return null;
+		    }
+
+		    protected Object getValue(Object element) {
+		        return BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo());
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		    }
+		});
+		col.setLabelProvider(new ColumnLabelProvider() {
+            //boolean even = true;
+			
+			public String getText(Object element) {
+		        return new Integer(BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo())).toString();
+			}
+			public Image getImage(Object obj) {
+	    		return null;
+			}
+            /*@Override public void update(ViewerCell cell) {
+                even = searcher.isEven((TableItem)cell.getItem());
+                super.update(cell);
+			}
+			@Override public Color getBackground(Object element) {
+				return getColor(viewer, element, even);
+			}*/
+		});
+		// Fourth column is for the task
 		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 

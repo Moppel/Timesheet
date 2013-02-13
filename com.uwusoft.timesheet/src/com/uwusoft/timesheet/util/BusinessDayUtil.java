@@ -53,6 +53,13 @@ public class BusinessDayUtil {
 		}
 		return holidayService;		
 	}
+	
+	public static int getRequestedDays(Date from, Date to) {
+		int requestedDays = 1;
+		while(!(from = getNextBusinessDay(from, false)).after(to))
+			requestedDays++;
+		return requestedDays;
+	}
 
 	/*
 	 * This method will calculate the next business day after the one input.
