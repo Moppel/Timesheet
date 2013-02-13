@@ -84,20 +84,18 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 				@SuppressWarnings("rawtypes")
 				Map customField = (Map) customFieldMap;
 				SimpleDateFormat formatter = new SimpleDateFormat("dd/MMM/yy", Locale.US);
-				System.out.println(formatter.format(new Date()));
 				try {
 					if ("customfield_10230".equals(customField.get("customfieldId")))
 						from = formatter.parse((String) customField.get("values"));
 					if ("customfield_10231".equals(customField.get("customfieldId")))
 						to = formatter.parse((String) customField.get("values"));
-					if ("customfield_10234".equals(customField.get("customfieldId")))
-						System.out.println("requested days: " + customField.get("values"));
+					/*if ("customfield_10234".equals(customField.get("customfieldId")))
+						System.out.println("requested days: " + customField.get("values"));*/
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
 			}
-			issue.get("key"); // TODO String externalId
-			allDayTaskEntries.add(new AllDayTaskEntry(from, to, task));
+			allDayTaskEntries.add(new AllDayTaskEntry(from, to, (String) issue.get("key"), task));
 		}
 		return allDayTaskEntries;
 	}

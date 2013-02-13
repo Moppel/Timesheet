@@ -18,6 +18,9 @@ public class AllDayTaskEntry {
 	private Timestamp toDate;
     @ManyToOne
 	private Task task;
+	@SuppressWarnings("unused")
+	private boolean syncStatus = false;
+    private String externalId;
 	
     /**
 	 * JPA requires a no-arg constructor
@@ -30,9 +33,10 @@ public class AllDayTaskEntry {
 	 * @param to
 	 * @param task
 	 */
-	public AllDayTaskEntry(Date from, Date to, Task task) {
+	public AllDayTaskEntry(Date from, Date to, String externalId, Task task) {
 		if (from != null) this.fromDate = new Timestamp(from.getTime());
 		if (to != null) this.toDate = new Timestamp(to.getTime());
+		this.externalId = externalId;
 		this.task = task;
 	}
 	
@@ -59,6 +63,18 @@ public class AllDayTaskEntry {
         //Task oldTask = this.task;
 		this.task = task;
         //firePropertyChange(PROPERTY_TASK, oldTask, task);
+	}
+
+	public void setSyncStatus(boolean syncStatus) {
+		this.syncStatus = syncStatus;
+	}
+
+	public String getExternalId() {
+		return externalId;
+	}
+
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
 	}
 
 	@Override
