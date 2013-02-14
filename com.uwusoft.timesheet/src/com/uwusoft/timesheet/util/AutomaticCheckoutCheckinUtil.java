@@ -66,7 +66,7 @@ public class AutomaticCheckoutCheckinUtil {
 					do {
 						storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
 								AllDayTasks.getInstance().getTotal(), true));
-					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTime()));
+					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTo()));
 				}
 			}
 	

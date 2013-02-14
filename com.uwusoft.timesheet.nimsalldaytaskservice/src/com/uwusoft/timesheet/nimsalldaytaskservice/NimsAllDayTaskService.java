@@ -26,7 +26,6 @@ import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 
 public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTaskService {	
-	public static final String PREFIX = "alldaytask.";
 	public static final String PROJECT = "project";
 	public static final String FILTER = "filter";
 	
@@ -36,7 +35,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 
 	public NimsAllDayTaskService() throws CoreException {
 		super();
-		String s = Activator.getDefault().getPreferenceStore().getString(PREFIX + PROJECT);
+		String s = Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PREFIX + PROJECT);
 		if (StringUtils.isEmpty(s)) { 
         	PreferencesDialog preferencesDialog;
         	do
@@ -44,7 +43,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         	while (preferencesDialog.open() != Dialog.OK);
 		}
 		if (!StringUtils.isEmpty(s)) projectId = new Long(s);
-		s = Activator.getDefault().getPreferenceStore().getString(PREFIX + FILTER);
+		s = Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PREFIX + FILTER);
 		if (!StringUtils.isEmpty(s)) filterId = new Long(s);
 		
 		subTasks = new HashMap<String, String>();

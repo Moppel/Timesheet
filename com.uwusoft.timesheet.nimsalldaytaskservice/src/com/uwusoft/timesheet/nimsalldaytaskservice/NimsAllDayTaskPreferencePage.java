@@ -9,7 +9,10 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.IssueService;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
+import com.uwusoft.timesheet.preferences.TaskFieldEditor;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -27,10 +30,12 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 
 	@Override
 	protected void createFieldEditors() {
-		addField(new ComboFieldEditor(NimsAllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT, "Project:", getProjectArray(),
+		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT, "Project:", getProjectArray(),
 				getFieldEditorParent()));
-		addField(new ComboFieldEditor(NimsAllDayTaskService.PREFIX + NimsAllDayTaskService.FILTER, "Filter:", getFilterArray(),
+		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.FILTER, "Filter:", getFilterArray(),
 				getFieldEditorParent()));
+        for (String task : LocalStorageService.getInstance().getAllDayTasks())
+    		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.replaceAll("\\s", "_").toLowerCase(), task + ":", getFieldEditorParent()));
 	}
 
 	private String[][] getProjectArray() {

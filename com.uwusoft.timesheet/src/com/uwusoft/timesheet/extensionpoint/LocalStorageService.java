@@ -380,6 +380,18 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return em.createQuery(query).getResultList();
     }
     
+    public Collection<String> getAllDayTasks() {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
+		Root<Task> root = query.from(Task.class);
+		Path<Project> project = root.get(Task_.project);
+		query.where(criteria.equal(project.get(Project_.system), getAllDayTaskService().getSystem()));
+		List<String> tasks = new ArrayList<String>();
+		for (Task task : em.createQuery(query).getResultList())
+			tasks.add(task.getName());
+		return tasks;
+    }
+    
 	public List<String> getProjects(String system) {
 		List<String> projects = new ArrayList<String>();
 		for (Project project : getProjectList(system)) projects.add(project.getName());
@@ -518,7 +530,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 	}
 	
-	private void createAllDayTaskEntry(AllDayTaskEntry entry) {
+	public void createAllDayTaskEntry(AllDayTaskEntry entry) {
 		boolean active = false;
 		synchronized (entry) {
 			if (em.getTransaction().isActive())	active = true;

@@ -1,13 +1,13 @@
 package com.uwusoft.timesheet.dialog;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -21,14 +21,15 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
-import com.uwusoft.timesheet.Activator;
-import com.uwusoft.timesheet.model.AllDayTasks;
+import com.uwusoft.timesheet.Messages;
+import com.uwusoft.timesheet.commands.AllDayTaskFactory;
 
 public class DateDialog extends Dialog {
 
-	private String title, task, date;
-    private int day, month, year;
+	private String title, task;
+    private int fromDay, fromMonth, fromYear, toDay, toMonth, toYear;
     private Combo taskCombo;
+    private Map<String, String> allDayTaskTranslations;
 
 	public DateDialog(Display display, String task, Date date) {
 		this(display, "Date", task, date);
@@ -36,30 +37,34 @@ public class DateDialog extends Dialog {
     
 	public DateDialog(Display display, String title, String task, Date date) {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
-		this.date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(date);
 		this.title = title;
 		this.task = task;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
-		day = calendar.get(Calendar.DAY_OF_MONTH);
-		month = calendar.get(Calendar.MONTH);
-		year = calendar.get(Calendar.YEAR);
+		fromDay = calendar.get(Calendar.DAY_OF_MONTH);
+		fromMonth = calendar.get(Calendar.MONTH);
+		fromYear = calendar.get(Calendar.YEAR);
+		toDay = calendar.get(Calendar.DAY_OF_MONTH);
+		toMonth = calendar.get(Calendar.MONTH);
+		toYear = calendar.get(Calendar.YEAR);
+		allDayTaskTranslations = new HashMap<String, String>();
 	}
 
 	@Override
     protected Control createDialogArea(Composite parent) {
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(2, false));
         
         (new Label(composite, SWT.NULL)).setText("Task: ");
         taskCombo = new Combo(composite, SWT.READ_ONLY);
         List<String> allDayTasks = new ArrayList<String>();
-        for (String allDayTask : AllDayTasks.allDayTasks)
-        	allDayTasks.add(preferenceStore.getString(allDayTask));
+        for (String allDayTask : AllDayTaskFactory.getAllDayTasks()) {
+        	allDayTasks.add(Messages.getString(allDayTask));
+        	allDayTaskTranslations.put(Messages.getString(allDayTask), allDayTask);
+        }
         taskCombo.setItems(allDayTasks.toArray(new String[allDayTasks.size()]));
 		for (int i = 0; i < allDayTasks.size(); i++) {
-			if (task.equals(allDayTasks.get(i))) {
+			if (task.equals(allDayTaskTranslations.get(allDayTasks.get(i)))) {
 				taskCombo.select(i);
 				break;
 			}
@@ -71,15 +76,25 @@ public class DateDialog extends Dialog {
         });
 		
 		(new Label(composite, SWT.NULL)).setText("From: ");
-        (new Label(composite, SWT.NULL)).setText("" + date);       
-        (new Label(composite, SWT.NULL)).setText("To: ");
 		DateTime dateEntry = new DateTime(composite, SWT.CALENDAR);
-        dateEntry.setDate(year, month, day);
+        dateEntry.setDate(fromYear, fromMonth, fromDay);
         dateEntry.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
-				day = ((DateTime) e.getSource()).getDay();
-				month = ((DateTime) e.getSource()).getMonth();
-				year = ((DateTime) e.getSource()).getYear();
+				fromDay = ((DateTime) e.getSource()).getDay();
+				fromMonth = ((DateTime) e.getSource()).getMonth();
+				fromYear = ((DateTime) e.getSource()).getYear();
+			}
+			public void widgetDefaultSelected(SelectionEvent e) {
+			}
+		});
+        (new Label(composite, SWT.NULL)).setText("To: ");
+		dateEntry = new DateTime(composite, SWT.CALENDAR);
+        dateEntry.setDate(toYear, toMonth, toDay);
+        dateEntry.addSelectionListener(new SelectionListener() {			
+			public void widgetSelected(SelectionEvent e) {
+				toDay = ((DateTime) e.getSource()).getDay();
+				toMonth = ((DateTime) e.getSource()).getMonth();
+				toYear = ((DateTime) e.getSource()).getYear();
 			}
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
@@ -95,14 +110,22 @@ public class DateDialog extends Dialog {
     }
 
 	public String getTask() {
-		return task;
+		return allDayTaskTranslations.get(task) == null ? task : allDayTaskTranslations.get(task);
 	}
     
-    public Date getTime() {
+    public Date getFrom() {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.DAY_OF_MONTH, day);
-		calendar.set(Calendar.MONTH, month);
-		calendar.set(Calendar.YEAR, year);
+		calendar.set(Calendar.DAY_OF_MONTH, fromDay);
+		calendar.set(Calendar.MONTH, fromMonth);
+		calendar.set(Calendar.YEAR, fromYear);
+		return calendar.getTime();
+    }
+    
+    public Date getTo() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.DAY_OF_MONTH, toDay);
+		calendar.set(Calendar.MONTH, toMonth);
+		calendar.set(Calendar.YEAR, toYear);
 		return calendar.getTime();
     }
 }

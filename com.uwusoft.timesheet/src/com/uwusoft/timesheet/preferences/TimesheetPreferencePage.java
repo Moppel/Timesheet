@@ -50,14 +50,14 @@ public class TimesheetPreferencePage extends FieldEditorPreferencePage
 				HolidayService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new ComboFieldEditor(IssueService.PROPERTY, "Task and Issue System:", getSystemArray(IssueService.SERVICE_ID,
 				IssueService.SERVICE_NAME), getFieldEditorParent()));
-		addField(new ComboFieldEditor(AllDayTaskService.PROPERTY, "NIMS All Day Task System:", getSystemArray(AllDayTaskService.SERVICE_ID,
+		addField(new ComboFieldEditor(AllDayTaskService.PROPERTY, "All Day Task System:", getSystemArray(AllDayTaskService.SERVICE_ID,
 				AllDayTaskService.SERVICE_NAME), getFieldEditorParent()));
 		addField(new PluginListEditor(SubmissionService.PROPERTY, "Submission System:", SubmissionService.SERVICE_ID,
 				SubmissionService.SERVICE_NAME,	getFieldEditorParent()));
 		addField(new IntegerFieldEditor(TimesheetApp.WORKING_HOURS, "Weekly working hours:", getFieldEditorParent()));
 		addField(new WeekdayListEditor(TimesheetApp.NON_WORKING_DAYS, "Non Working Days:",	getFieldEditorParent()));
         for (String task : AllDayTasks.allDayTasks)
-    		addField(new TaskFieldEditor(task, Messages.getString(task) + " task:", getFieldEditorParent()));
+    		addField(new TaskFieldEditor(task, Messages.getString(task) + ":", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DEFAULT_TASK, "Default task:", getFieldEditorParent()));
 		addField(new TaskFieldEditor(TimesheetApp.DAILY_TASK, "Daily task:", getFieldEditorParent()));
 		if (!StringUtils.isEmpty(getPreferenceStore().getString(TimesheetApp.DAILY_TASK)))

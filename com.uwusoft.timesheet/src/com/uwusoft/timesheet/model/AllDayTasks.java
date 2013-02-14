@@ -10,10 +10,12 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
@@ -57,10 +59,14 @@ public class AllDayTasks {
 		
 		BusinessDayUtil.getNextBusinessDay(lastDate, true); // create missing holidays and handle week change
 		Date begin = taskEntryList.iterator().next().getFrom(); 
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		
 		for (AllDayTaskEntry taskEntry : taskEntryList) {
 			do {
-				storageService.createTaskEntry(new TaskEntry(new Timestamp(begin.getTime()), taskEntry.getTask(), getTotal(), true));
+				String taskName = preferenceStore.getString(AllDayTaskService.PREFIX + taskEntry.getTask().getName().replaceAll("\\s", "_").toLowerCase());
+				if (StringUtils.isEmpty(taskName)) continue;
+				Task task = TimesheetApp.createTask(taskName);
+				storageService.createTaskEntry(new TaskEntry(new Timestamp(begin.getTime()), task, getTotal(), true));
 				// MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin, true)).after(taskEntry.getTo()));
 			em.remove(taskEntry);

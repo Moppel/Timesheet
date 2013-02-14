@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.model.Project;
@@ -42,10 +43,10 @@ public class TimesheetApp implements IApplication {
 
 	public static final String WORKING_HOURS = "weekly.workinghours";
 	public static final String NON_WORKING_DAYS = "weekly.nonworkingdays";
-    public static final String HOLIDAY_TASK = "task.holiday";
-    public static final String VACATION_TASK = "task.vacation";
-    public static final String SICK_TASK = "task.sick";
-    public static final String TIL_TASK = "task.til";
+    public static final String HOLIDAY_TASK = AllDayTaskService.PREFIX + "holiday";
+    public static final String VACATION_TASK = AllDayTaskService.PREFIX + "vacation";
+    public static final String SICK_TASK = AllDayTaskService.PREFIX + "sick";
+    public static final String TIL_TASK = AllDayTaskService.PREFIX + "til";
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
