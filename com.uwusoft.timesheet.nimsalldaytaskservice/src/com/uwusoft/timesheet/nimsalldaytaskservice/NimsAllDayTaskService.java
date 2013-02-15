@@ -38,6 +38,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	private Long projectId, filterId, componentId;
 	private String projectName, projectKey, componentName;
 	private SimpleDateFormat customFieldFormatter;
+	private int vacationLeft = 0;
 
 	public NimsAllDayTaskService() throws CoreException {
 		super();
@@ -100,7 +101,23 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		for (Object issueMap : getIssuesFromFilter("" + filterId)) {
 			@SuppressWarnings("rawtypes")
 			Map issue = (Map) issueMap;
-			Task task = new Task(subTasks.get(issue.get("type")), project);
+			String taskName = subTasks.get(issue.get("type"));
+			if (taskName == null) { // Vacation Sheet
+				int remainingLeave = 0;
+				int vacationEntitlement = 0;
+				Object[] customFieldValues = (Object[]) issue.get("customFieldValues");
+				for (Object customFieldMap : customFieldValues) {
+					@SuppressWarnings("rawtypes")
+					Map customField = (Map) customFieldMap;
+					if ("customfield_10232".equals(customField.get("customfieldId")))
+						remainingLeave = new Integer((String) customField.get("values"));
+					if ("customfield_10233".equals(customField.get("customfieldId")))
+						vacationEntitlement = new Integer((String) customField.get("values"));
+				}
+				vacationLeft += remainingLeave + vacationEntitlement;
+				continue;
+			}
+			Task task = new Task(taskName, project);
 
 			Object[] customFieldValues = (Object[]) issue.get("customFieldValues");
 			Date from = null, to = null;
@@ -112,8 +129,8 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 						from = customFieldFormatter.parse((String) customField.get("values"));
 					if ("customfield_10231".equals(customField.get("customfieldId")))
 						to = customFieldFormatter.parse((String) customField.get("values"));
-					/*if ("customfield_10234".equals(customField.get("customfieldId")))
-						System.out.println("requested days: " + customField.get("values"));*/
+					if ("customfield_10234".equals(customField.get("customfieldId")))
+						vacationLeft -= new Integer((String) customField.get("values"));
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
@@ -125,9 +142,10 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	
 	public String createAllDayTaskEntry(String taskProperty, Date from, Date to) {
         Hashtable<String, Serializable> struct = new Hashtable<String, Serializable>();
+        int requestedDays = BusinessDayUtil.getRequestedDays(from, to);
+        vacationLeft -= requestedDays;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmdd");
-        int left=26; // TODO parent issue (vacation sheet)?
-        struct.put("summary", dateFormat.format(from) + "-" + dateFormat.format(to) + "_(" + left + "left)");
+        struct.put("summary", dateFormat.format(from) + "-" + dateFormat.format(to) + "_(" + vacationLeft + "left)");
         struct.put("project", projectKey);
         struct.put("status", "10004");
         struct.put("votes", "0");
@@ -143,7 +161,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         Hashtable<String, Serializable> customField = new Hashtable<String, Serializable>();
         addCustomField(customField, "customfield_10230", customFieldFormatter.format(from));
         addCustomField(customField, "customfield_10231", customFieldFormatter.format(to));
-        addCustomField(customField, "customfield_10234", "" + BusinessDayUtil.getRequestedDays(from, to));
+        addCustomField(customField, "customfield_10234", "" + requestedDays);
         struct.put("customFieldValues", makeVector(customField));
         
         return createIssue(struct);
