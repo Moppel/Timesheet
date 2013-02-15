@@ -6,5 +6,6 @@ public interface IssueService {
 	public static final String PROPERTY = "issue.system";
 
 	Object[] getProjects();
+	Object[] getComponents(String projectKey);
 	Object[] getSavedFilters();
 }

@@ -11,6 +11,8 @@ public interface AllDayTaskService {
 	public static final String PROPERTY = "alldaytask.system";
 	public static final String PREFIX = SERVICE_NAME + ".";
 
+	String getProjectKey();
+	
 	Collection<SubmissionProject> getAssignedProjects();
 	
 	Collection<AllDayTaskEntry> getAllDayTaskEntries();

@@ -1,10 +1,13 @@
 package com.uwusoft.timesheet.jira3;
 
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.net.ssl.HostnameVerifier;
@@ -26,6 +29,7 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
+import com.atlassian.core.util.collection.EasyList;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
@@ -151,6 +155,22 @@ public class Jira3IssueService implements IssueService {
         throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
     }    
 
+	public String createIssue(Hashtable<String, Serializable> struct) {
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+        // Constants for issue creation
+        struct.put("assignee", preferenceStore.getString(PREFIX + StorageService.USERNAME));
+        struct.put("reporter", preferenceStore.getString(PREFIX + StorageService.USERNAME));
+
+		try {
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			Map issueMap = (Map) rpcClient.execute("jira1.createIssue", new Vector(EasyList.build(loginToken, struct)));
+	        return (String) issueMap.get("key");		
+		} catch (XmlRpcException e) {
+			e.printStackTrace();
+		}
+		return "";
+	}
+    
 	@Override
 	public Object[] getProjects() {
 		Vector<String> searchVector = new Vector<String>(1);
@@ -163,6 +183,19 @@ public class Jira3IssueService implements IssueService {
 		}
 	}
     
+	@Override
+    public Object[] getComponents(String projectKey) {
+		Vector<String> searchVector = new Vector<String>(2);
+		searchVector.add(loginToken);
+		searchVector.add(projectKey);
+		try {
+			return (Object[]) rpcClient.execute("jira1.getComponents", searchVector);
+		} catch (XmlRpcException e) {
+			e.printStackTrace();
+			return null;
+		}
+    }
+	
 	@Override
     public Object[] getSavedFilters() {
 		Vector<String> searchVector = new Vector<String>(1);

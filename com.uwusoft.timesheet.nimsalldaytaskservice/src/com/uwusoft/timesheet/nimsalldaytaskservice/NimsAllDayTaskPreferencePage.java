@@ -34,6 +34,8 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 				getFieldEditorParent()));
 		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.FILTER, "Filter:", getFilterArray(),
 				getFieldEditorParent()));
+		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.COMPONENT, "Component:", getComponentArray(),
+				getFieldEditorParent()));
         for (String task : LocalStorageService.getInstance().getAllDayTasks())
     		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.replaceAll("\\s", "_").toLowerCase(), task + ":", getFieldEditorParent()));
 	}
@@ -62,6 +64,19 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		return getArray(filters);
 	}
 
+	private String[][] getComponentArray() {
+		Map<String, String> components = new HashMap<String, String>();
+		IssueService jiraService = new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
+				.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
+		for (Object componentMap : jiraService.getComponents(new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
+				.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY)).getProjectKey())) {
+		    @SuppressWarnings("unchecked")
+			Map<String, String> component =  (Map<String, String>) componentMap;
+		    components.put(component.get("name"), component.get("id"));			
+		}
+		return getArray(components);
+	}
+	
 	private String[][] getArray(Map<String, String> projects) {
 		String[][] systemArray = new String[projects.size()][2];
 
