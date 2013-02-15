@@ -151,7 +151,9 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         struct.put("votes", "0");
         struct.put("priority", "3");
         struct.put("type", subTaskIds.get(taskProperty));
-        struct.put("created", new SimpleDateFormat("yyyy-mm-dd hh:mm:ss.S").format(new Date()));
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss.S");
+        struct.put("created", format.format(new Date()));
+        struct.put("updated", format.format(new Date()));
         Hashtable<String, Object> components = new Hashtable<String, Object>();
         components.put("id", componentId);
         components.put("name", componentName);
@@ -164,7 +166,8 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         addCustomField(customField, "customfield_10234", "" + requestedDays);
         struct.put("customFieldValues", makeVector(customField));
         
-        return createIssue(struct);
+        //return createIssue(struct);
+        return "";
 	}
 	
 	@Override

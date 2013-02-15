@@ -1,6 +1,7 @@
 package com.uwusoft.timesheet.extensionpoint;
 
 import java.util.Collection;
+import java.util.Date;
 
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
@@ -16,6 +17,8 @@ public interface AllDayTaskService {
 	Collection<SubmissionProject> getAssignedProjects();
 	
 	Collection<AllDayTaskEntry> getAllDayTaskEntries();
+	
+	String createAllDayTaskEntry(String taskProperty, Date from, Date to);
 	
 	String getSystem();
 }

@@ -866,6 +866,30 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		syncEntriesJob.schedule();
 	}
 	
+	public void synchronizeAllDayTaskEntries() {
+		if (getAllDayTaskService() == null) return;
+		new Job("Synchronizing all day task entries") {
+
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				boolean active = false;
+				if (em.getTransaction().isActive())	active = true;
+				else em.getTransaction().begin();
+				CriteriaBuilder criteria = em.getCriteriaBuilder();
+				CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+				Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
+				query.where(criteria.notEqual(taskEntry.get(AllDayTaskEntry_.syncStatus), true));
+				query.orderBy(criteria.asc(taskEntry.get(AllDayTaskEntry_.fromDate)));
+				List<AllDayTaskEntry> entries = em.createQuery(query).getResultList();
+				for (AllDayTaskEntry entry : entries) {
+					entry.setExternalId(getAllDayTaskService().createAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())));
+					if (active) em.persist(entry);
+				}
+				return null;
+			}			
+		}.schedule();
+	}
+	
 	public void reload() {
 		if (getStorageService() == null) return;
 		storageService.reload();		
@@ -897,7 +921,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return storageService;
 	}
 	
-	private AllDayTaskService getAllDayTaskService() {
+	public AllDayTaskService getAllDayTaskService() {
 		if (allDayTaskService == null) {
 			allDayTaskService = new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
 					.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY));
