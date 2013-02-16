@@ -63,7 +63,7 @@ public class AllDayTasks {
 		
 		for (AllDayTaskEntry taskEntry : taskEntryList) {
 			do {
-				String taskName = preferenceStore.getString(AllDayTaskService.PREFIX + taskEntry.getTask().getName().replaceAll("\\s", "_").toLowerCase());
+				String taskName = preferenceStore.getString(AllDayTaskService.PREFIX + taskEntry.getTask().getName().replaceAll("\\s", "_"));
 				if (StringUtils.isEmpty(taskName)) continue;
 				Task task = TimesheetApp.createTask(taskName);
 				storageService.createTaskEntry(new TaskEntry(new Timestamp(begin.getTime()), task, getTotal(), true));

@@ -30,7 +30,6 @@ import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTaskService {	
-	public static final String PROJECT = "project";
 	public static final String FILTER = "filter";
 	public static final String COMPONENT = "component";
 	
@@ -61,7 +60,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 			@SuppressWarnings("unchecked")
 			Map<String, String> subTask = (Map<String, String>) subTaskMap;
 			subTasks.put(subTask.get("id"), subTask.get("name"));
-			subTaskIds.put(subTask.get("name").replaceAll("\\s", "_").toLowerCase(), subTask.get("id"));
+			subTaskIds.put(subTask.get("name").replaceAll("\\s", "_"), subTask.get("id"));
 		}
 		for (Object projectMap : getProjects()) {
 		    @SuppressWarnings("rawtypes")
@@ -170,6 +169,11 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         return "";
 	}
 	
+	@Override
+	public String getProjectName() {
+		return projectName;
+	}
+
 	@Override
 	public String getProjectKey() {
 		return projectKey;

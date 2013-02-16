@@ -37,7 +37,7 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.COMPONENT, "Component:", getComponentArray(),
 				getFieldEditorParent()));
         for (String task : LocalStorageService.getInstance().getAllDayTasks())
-    		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.replaceAll("\\s", "_").toLowerCase(), task + ":", getFieldEditorParent()));
+    		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.replaceAll("\\s", "_"), task + ":", getFieldEditorParent()));
 	}
 
 	private String[][] getProjectArray() {

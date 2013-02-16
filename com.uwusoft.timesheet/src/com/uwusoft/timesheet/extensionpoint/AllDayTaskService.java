@@ -11,8 +11,11 @@ public interface AllDayTaskService {
 	public static final String SERVICE_NAME = "alldaytask";
 	public static final String PROPERTY = "alldaytask.system";
 	public static final String PREFIX = SERVICE_NAME + ".";
+	public static final String PROJECT = "project";
 
 	String getProjectKey();
+	
+	String getProjectName();
 	
 	Collection<SubmissionProject> getAssignedProjects();
 	

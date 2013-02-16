@@ -53,7 +53,7 @@ public class AllDayTaskFactory extends ExtensionContributionFactory {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		Set<String> allDayTasks = new HashSet<String>(Arrays.asList(AllDayTasks.allDayTasks));    	
     	for (String task : LocalStorageService.getInstance().getAllDayTasks()) {
-    		String property = AllDayTaskService.PREFIX + task.replaceAll("\\s", "_").toLowerCase();
+    		String property = AllDayTaskService.PREFIX + task.replaceAll("\\s", "_");
     		if (StringUtils.isEmpty(preferenceStore.getString(property))) continue;
     		allDayTasks.add(property);
     	}

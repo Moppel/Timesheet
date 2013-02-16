@@ -43,10 +43,10 @@ public class TimesheetApp implements IApplication {
 
 	public static final String WORKING_HOURS = "weekly.workinghours";
 	public static final String NON_WORKING_DAYS = "weekly.nonworkingdays";
-    public static final String HOLIDAY_TASK = AllDayTaskService.PREFIX + "holiday";
-    public static final String VACATION_TASK = AllDayTaskService.PREFIX + "vacation";
-    public static final String SICK_TASK = AllDayTaskService.PREFIX + "sick";
-    public static final String TIL_TASK = AllDayTaskService.PREFIX + "til";
+    public static final String HOLIDAY_TASK = AllDayTaskService.PREFIX + "Holiday";
+    public static final String VACATION_TASK = AllDayTaskService.PREFIX + "Vacation";
+    public static final String SICK_TASK = AllDayTaskService.PREFIX + "Sick";
+    public static final String TIL_TASK = AllDayTaskService.PREFIX + "Til";
     public static final String DEFAULT_TASK = "task.default";
     public static final String DAILY_TASK = "task.daily";
     public static final String DAILY_TASK_TOTAL = "task.daily.total";
