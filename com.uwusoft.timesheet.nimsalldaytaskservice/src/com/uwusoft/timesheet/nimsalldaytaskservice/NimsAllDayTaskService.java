@@ -150,23 +150,22 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         struct.put("votes", "0");
         struct.put("priority", "3");
         struct.put("type", subTaskIds.get(taskProperty));
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss.S");
-        struct.put("created", format.format(new Date()));
-        struct.put("updated", format.format(new Date()));
+        String created = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(new Date()) +".0";
+        struct.put("created", created);
+        struct.put("updated", created);
         Hashtable<String, Object> components = new Hashtable<String, Object>();
         components.put("id", componentId);
         components.put("name", componentName);
         struct.put("components", makeVector(components));
         struct.put("affectsVersions", makeVector(new Hashtable<String, Object>()));
         struct.put("fixVersions", makeVector(new Hashtable<String, Object>()));
-        Hashtable<String, Serializable> customField = new Hashtable<String, Serializable>();
-        addCustomField(customField, "customfield_10230", customFieldFormatter.format(from));
-        addCustomField(customField, "customfield_10231", customFieldFormatter.format(to));
-        addCustomField(customField, "customfield_10234", "" + requestedDays);
-        struct.put("customFieldValues", makeVector(customField));
+        Vector<Object> vector = new Vector<Object>(3);
+        addCustomField(vector, "customfield_10230", customFieldFormatter.format(from));
+        addCustomField(vector, "customfield_10231", customFieldFormatter.format(to));
+        addCustomField(vector, "customfield_10234", "" + requestedDays);
+        struct.put("customFieldValues", vector);
         
-        //return createIssue(struct);
-        return "";
+        return createIssue(struct);
 	}
 	
 	@Override
@@ -184,10 +183,12 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		return "NIMS";
 	}
     
-	private void addCustomField(Hashtable<String, Serializable> customField, String customFieldId, String value)
+	private void addCustomField(Vector<Object> vector, String customFieldId, String value)
     {
+        Hashtable<String, Serializable> customField = new Hashtable<String, Serializable>();
         customField.put("customfieldId", customFieldId);
-        customField.put("values", makeVector(value));
+        customField.put("values", value);
+        vector.add(customField);
     }
 
     private Vector<Object> makeVector(Object p0)

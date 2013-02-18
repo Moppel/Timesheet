@@ -1,18 +1,17 @@
 package com.uwusoft.timesheet.commands;
 
+import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
-import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.DateDialog;
-import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.AllDayTasks;
@@ -32,7 +31,7 @@ public class AllDayTaskHandler extends AbstractHandler {
 		try {
 			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),	task, startDate);
 			if (dateDialog.open() == Dialog.OK) {
-				AllDayTaskEntry entry = new AllDayTaskEntry(dateDialog.getFrom(), dateDialog.getTo(), "",
+				AllDayTaskEntry entry = new AllDayTaskEntry(DateUtils.truncate(dateDialog.getFrom(), Calendar.DATE), DateUtils.truncate(dateDialog.getTo(), Calendar.DATE),
 						new Task(dateDialog.getTask().substring(dateDialog.getTask().indexOf(".") + 1, dateDialog.getTask().length()).replaceAll("_", " "),
 								new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), LocalStorageService.getInstance().getAllDayTaskService().getSystem())));
 				LocalStorageService.getInstance().createAllDayTaskEntry(entry);

@@ -102,16 +102,30 @@ public class Jira3IssueService implements IssueService {
 	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getMessage(), null));
 		} catch (KeyManagementException e) {
 	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getMessage(), null));
-		}
-		
+		}		
+		login();
+    }
+
+	private void login() throws CoreException {
 		boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
        	while (!lastSuccess);
-    }
+	}
+	
+	private void logout() {
+		Vector<String> loginTokenVector = new Vector<String>(1);
+        loginTokenVector.add(loginToken);
+		try {
+	        Boolean bool = (Boolean) rpcClient.execute("jira1.logout", loginTokenVector);
+	        //System.out.println("Logout successful: " + bool);
+	    } catch (XmlRpcException e) {
+			e.printStackTrace();
+		}
+	}
 
     private boolean authenticate(boolean lastSuccess) throws CoreException {
 		final IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		final SecurePreferencesManager secureProps = new SecurePreferencesManager("Google");
+		final SecurePreferencesManager secureProps = new SecurePreferencesManager("Jira");
 		final Vector<String> loginParams = new Vector<String>(2);
     	final String userName = preferenceStore.getString(PREFIX + StorageService.USERNAME);
     	final String password = secureProps.getProperty(PREFIX + StorageService.PASSWORD);
@@ -156,27 +170,40 @@ public class Jira3IssueService implements IssueService {
     }    
 
 	public String createIssue(Hashtable<String, Serializable> struct) {
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         // Constants for issue creation
         struct.put("assignee", preferenceStore.getString(PREFIX + StorageService.USERNAME));
         struct.put("reporter", preferenceStore.getString(PREFIX + StorageService.USERNAME));
 
-		try {
+		/*try {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			Map issueMap = (Map) rpcClient.execute("jira1.createIssue", new Vector(EasyList.build(loginToken, struct)));
 	        return (String) issueMap.get("key");		
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
-		}
+		}*/
+        logout();
 		return "";
 	}
     
 	@Override
 	public Object[] getProjects() {
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		Vector<String> searchVector = new Vector<String>(1);
 		searchVector.add(loginToken);
 		try {
-			return (Object[]) rpcClient.execute("jira1.getProjectsNoSchemes", searchVector);
+			Object[] retValue = (Object[]) rpcClient.execute("jira1.getProjectsNoSchemes", searchVector);
+			logout();
+			return retValue; 
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
 			return null;
@@ -185,11 +212,18 @@ public class Jira3IssueService implements IssueService {
     
 	@Override
     public Object[] getComponents(String projectKey) {
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		Vector<String> searchVector = new Vector<String>(2);
 		searchVector.add(loginToken);
 		searchVector.add(projectKey);
 		try {
-			return (Object[]) rpcClient.execute("jira1.getComponents", searchVector);
+			Object[] retValue = (Object[]) rpcClient.execute("jira1.getComponents", searchVector);
+			logout();
+			return retValue;
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
 			return null;
@@ -198,10 +232,17 @@ public class Jira3IssueService implements IssueService {
 	
 	@Override
     public Object[] getSavedFilters() {
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 		Vector<String> searchVector = new Vector<String>(1);
 		searchVector.add(loginToken);
 		try {
-			return (Object[]) rpcClient.execute("jira1.getSavedFilters", searchVector);
+			Object[] retValue = (Object[]) rpcClient.execute("jira1.getSavedFilters", searchVector);
+			logout();
+			return retValue;
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
 			return null;
@@ -209,11 +250,18 @@ public class Jira3IssueService implements IssueService {
     }
     
     protected Object[] getSubTaskIssueTypesForProject(String projectId) {    	
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
  		Vector<String> searchVector = new Vector<String>(2);
  		searchVector.add(loginToken);
  		searchVector.add(projectId);
  		try {
- 			return (Object[]) rpcClient.execute("jira1.getSubTaskIssueTypesForProject", searchVector);
+ 			Object[] retValue = (Object[]) rpcClient.execute("jira1.getSubTaskIssueTypesForProject", searchVector);
+ 			logout();
+ 			return retValue;
  		} catch (XmlRpcException e) {
  			e.printStackTrace();
  			return null;
@@ -221,11 +269,18 @@ public class Jira3IssueService implements IssueService {
     }
     
     protected Object[] getIssuesFromFilter(String filterId) {
+		try {
+			login();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
     	Vector<String> searchVector = new Vector<String>(2);
 		searchVector.add(loginToken);
 		searchVector.add(filterId);
  		try {
- 			return (Object[]) rpcClient.execute("jira1.getIssuesFromFilter", searchVector);
+ 			Object[] retValue = (Object[]) rpcClient.execute("jira1.getIssuesFromFilter", searchVector);
+ 			logout();
+ 			return retValue;
  		} catch (XmlRpcException e) {
  			e.printStackTrace();
  			return null;

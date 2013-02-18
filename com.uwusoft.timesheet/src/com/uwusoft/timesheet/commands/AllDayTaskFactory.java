@@ -2,7 +2,7 @@ package com.uwusoft.timesheet.commands;
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,7 +51,7 @@ public class AllDayTaskFactory extends ExtensionContributionFactory {
 
 	public static Set<String> getAllDayTasks() {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		Set<String> allDayTasks = new HashSet<String>(Arrays.asList(AllDayTasks.allDayTasks));    	
+		Set<String> allDayTasks = new LinkedHashSet<String>(Arrays.asList(AllDayTasks.allDayTasks));    	
     	for (String task : LocalStorageService.getInstance().getAllDayTasks()) {
     		String property = AllDayTaskService.PREFIX + task.replaceAll("\\s", "_");
     		if (StringUtils.isEmpty(preferenceStore.getString(property))) continue;
