@@ -10,4 +10,5 @@ Require-Bundle: org.eclipse.ui,
  com.uwusoft.timesheet;bundle-version="1.0.0",
  org.eclipse.core.runtime;bundle-version="3.7.0",
  com.uwusoft.timesheet.jira3issue;bundle-version="1.0.0"
-Bundle-ClassPath: .
+Bundle-ClassPath: lib/hibernate-jpamodelgen-1.2.0.Final.jar,
+ .

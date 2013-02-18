@@ -40,7 +40,9 @@
       <plugin id="com.uwusoft.timesheet"/>
       <plugin id="com.uwusoft.timesheet.germanholiday"/>
       <plugin id="com.uwusoft.timesheet.googlestorage"/>
+      <plugin id="com.uwusoft.timesheet.jira3issue"/>
       <plugin id="com.uwusoft.timesheet.kimaisubmission"/>
+      <plugin id="com.uwusoft.timesheet.nimsalldaytaskservice"/>
       <plugin id="javax.servlet"/>
       <plugin id="javax.transaction" fragment="true"/>
       <plugin id="org.apache.commons.lang"/>
