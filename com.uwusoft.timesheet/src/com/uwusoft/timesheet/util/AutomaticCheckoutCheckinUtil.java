@@ -17,7 +17,7 @@ import org.eclipse.ui.services.ISourceProviderService;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
-import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTasks;
@@ -60,7 +60,7 @@ public class AutomaticCheckoutCheckinUtil {
 			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
 			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
 			while (end.before(start)) { // create missing whole day tasks until last business day
-				DateDialog dateDialog = new DateDialog(Display.getDefault(), "Select missing all day task",
+				AllDayTaskDateDialog dateDialog = new AllDayTaskDateDialog(Display.getDefault(), "Select missing all day task",
 						Activator.getDefault().getPreferenceStore().getString(AllDayTasks.allDayTasks[0]), end);
 				if (dateDialog.open() == Dialog.OK) {
 					do {

@@ -3,15 +3,21 @@ package com.uwusoft.timesheet.view;
 import java.beans.PropertyChangeEvent;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Date;
 
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CellEditor;
+import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
@@ -35,11 +41,22 @@ public class AllDayTasksView extends AbstractTasksView {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return false;
+		        return true;
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
-		        return null;
+		        return new DateDialogCellEditor(viewer.getTable(), (AllDayTaskEntry) element) {
+
+					@Override
+					protected Date getDate(AllDayTaskEntry entry) {
+						return entry.getFrom();
+					}
+
+					@Override
+					protected void setDate(AllDayTaskEntry entry, Timestamp date) {
+						entry.setFrom(date);
+					}		        	
+		        };
 		    }
 
 		    protected Object getValue(Object element) {
@@ -63,11 +80,22 @@ public class AllDayTasksView extends AbstractTasksView {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return false;
+		        return true;
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
-		        return null;
+		        return new DateDialogCellEditor(viewer.getTable(), (AllDayTaskEntry) element) {
+
+					@Override
+					protected Date getDate(AllDayTaskEntry entry) {
+						return entry.getTo();
+					}
+
+					@Override
+					protected void setDate(AllDayTaskEntry entry, Timestamp date) {
+						entry.setTo(date);
+					}		        	
+		        };
 		    }
 
 		    protected Object getValue(Object element) {
@@ -167,6 +195,47 @@ public class AllDayTasksView extends AbstractTasksView {
 	    		return null;
 			}
 		});
+	}
+
+	abstract class DateDialogCellEditor extends DialogCellEditor {
+
+		private AllDayTaskEntry entry;
+		
+		/**
+		 * @param parent
+		 */
+		public DateDialogCellEditor(Composite parent, AllDayTaskEntry entry) {
+			super(parent);
+			this.entry = entry;
+		}
+
+		@Override
+		protected Object openDialogBox(Control cellEditorWindow) {
+			DateDialog dateDialog = new DateDialog(cellEditorWindow.getDisplay(), entry.getExternalId(), getDate(entry));
+			if (dateDialog.open() == Dialog.OK) {
+    			Calendar oldCal = Calendar.getInstance();
+    			oldCal.setTime(getDate(entry));
+    			Calendar newCal = Calendar.getInstance();
+    			newCal.setTime(dateDialog.getDate());
+    			if (oldCal.get(Calendar.HOUR) != newCal.get(Calendar.HOUR)
+    					|| oldCal.get(Calendar.MINUTE) != newCal.get(Calendar.MINUTE)
+    					|| oldCal.get(Calendar.AM_PM) != newCal.get(Calendar.AM_PM)) {
+    				newCal.set(Calendar.YEAR, oldCal.get(Calendar.YEAR));
+    				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
+    				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
+    				setDate(entry, new Timestamp(newCal.getTimeInMillis()));
+    				//storageService.updateTaskEntry(entry); TODO
+    				//storageService.synchronize();
+		    		viewer.refresh(entry);
+    			}
+				return DateFormat.getDateInstance(DateFormat.SHORT).format(dateDialog.getDate());
+			}
+			return null;
+		}
+		
+		protected abstract Date getDate(AllDayTaskEntry entry);
+		
+		protected abstract void setDate(AllDayTaskEntry entry, Timestamp date);
 	}
 
 	@Override

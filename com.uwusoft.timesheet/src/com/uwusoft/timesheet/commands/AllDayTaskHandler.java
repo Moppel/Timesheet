@@ -11,7 +11,7 @@ import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
 
-import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.AllDayTasks;
@@ -27,9 +27,9 @@ public class AllDayTaskHandler extends AbstractHandler {
 		AllDayTasks allDayTasks = AllDayTasks.getInstance();
 		Date startDate = allDayTasks.getNextBegin(new Date());
 		String task = event.getParameter("Timesheet.commands.task");
-		DateDialog dateDialog;
+		AllDayTaskDateDialog dateDialog;
 		try {
-			dateDialog = new DateDialog(Display.getDefault(), event.getCommand().getName(),	task, startDate);
+			dateDialog = new AllDayTaskDateDialog(Display.getDefault(), event.getCommand().getName(),	task, startDate);
 			if (dateDialog.open() == Dialog.OK) {
 				AllDayTaskEntry entry = new AllDayTaskEntry(DateUtils.truncate(dateDialog.getFrom(), Calendar.DATE), DateUtils.truncate(dateDialog.getTo(), Calendar.DATE),
 						new Task(dateDialog.getTask().substring(dateDialog.getTask().indexOf(".") + 1, dateDialog.getTask().length()).replaceAll("_", " "),
