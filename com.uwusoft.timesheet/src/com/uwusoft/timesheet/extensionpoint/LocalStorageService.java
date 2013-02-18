@@ -499,35 +499,8 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	private void createOrUpdateAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
-		CriteriaBuilder criteria = em.getCriteriaBuilder();
-		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
-		Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
-		query.where(criteria.equal(taskEntry.get(AllDayTaskEntry_.externalId), entry.getExternalId()));
-		List<AllDayTaskEntry> availableEntries = em.createQuery(query).getResultList();
-		if (availableEntries.size() == 1) {
-			AllDayTaskEntry availableEntry = availableEntries.iterator().next();
-			synchronized (availableEntry) {
-				em.getTransaction().begin();
-				availableEntry.setFrom(entry.getFrom());
-				availableEntry.setTo(entry.getTo());
-				availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
-						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
-								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
-				em.persist(availableEntry);
-				em.getTransaction().commit();
-			}
-		}
-		else {
-			if (availableEntries.size() > 1) {
-				synchronized (availableEntries) {
-					em.getTransaction().begin();
-					for (AllDayTaskEntry availableEntry : availableEntries)
-						em.remove(availableEntry);
-					em.getTransaction().commit();
-				}
-			}
+		if (updateAllDayTaskEntry(entry).size() != 1)
 			createAllDayTaskEntry(entry);
-		}
 	}
 	
 	public void createAllDayTaskEntry(AllDayTaskEntry entry) {
@@ -546,6 +519,37 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
 			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
 		}*/
+	}
+	
+	public Collection<AllDayTaskEntry> updateAllDayTaskEntry(AllDayTaskEntry entry) {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+		Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
+		query.where(criteria.equal(taskEntry.get(AllDayTaskEntry_.externalId), entry.getExternalId()));
+		List<AllDayTaskEntry> availableEntries = em.createQuery(query).getResultList();
+		if (availableEntries.size() == 1) {
+			AllDayTaskEntry availableEntry = availableEntries.iterator().next();
+			synchronized (availableEntry) {
+				em.getTransaction().begin();
+				availableEntry.setFrom(entry.getFrom());
+				availableEntry.setTo(entry.getTo());
+				availableEntry.setTask(findTaskByNameProjectAndSystem(entry.getTask().getName(),
+						entry.getTask().getProject() == null ? null : entry.getTask().getProject().getName(),
+								entry.getTask().getProject() == null ? null : entry.getTask().getProject().getSystem()));
+				em.persist(availableEntry);
+				em.getTransaction().commit();
+			}
+		}
+		else
+			if (availableEntries.size() > 1) {
+				synchronized (availableEntries) {
+					em.getTransaction().begin();
+					for (AllDayTaskEntry availableEntry : availableEntries)
+						em.remove(availableEntry);
+					em.getTransaction().commit();
+				}
+			}
+		return availableEntries;
 	}
 	
 	public void updateTaskEntry(TaskEntry entry) {
@@ -882,7 +886,11 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				query.orderBy(criteria.asc(taskEntry.get(AllDayTaskEntry_.fromDate)));
 				List<AllDayTaskEntry> entries = em.createQuery(query).getResultList();
 				for (AllDayTaskEntry entry : entries) {
-					entry.setExternalId(getAllDayTaskService().createAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())));
+					if (entry.getExternalId() == null)
+						entry.setExternalId(getAllDayTaskService().createAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())));
+					else
+						if (getAllDayTaskService().updateAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())))
+							entry.setSyncStatus(true);
 					if (active) em.persist(entry);
 				}
 				return null;

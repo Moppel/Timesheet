@@ -167,6 +167,24 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         
         return createIssue(struct);
 	}
+
+	@Override
+	public boolean updateAllDayTaskEntry(String taskProperty, Date from, Date to) {
+        Hashtable<String, Serializable> struct = new Hashtable<String, Serializable>();
+        int requestedDays = BusinessDayUtil.getRequestedDays(from, to);
+        vacationLeft -= requestedDays;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmdd");
+        struct.put("summary", dateFormat.format(from) + "-" + dateFormat.format(to) + "_(" + vacationLeft + "left)");
+        struct.put("type", subTaskIds.get(taskProperty));
+        struct.put("updated", new SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(new Date()) +".0");
+        Vector<Object> vector = new Vector<Object>(3);
+        addCustomField(vector, "customfield_10230", customFieldFormatter.format(from));
+        addCustomField(vector, "customfield_10231", customFieldFormatter.format(to));
+        addCustomField(vector, "customfield_10234", "" + requestedDays);
+        struct.put("customFieldValues", vector);
+		
+        return true;
+	}
 	
 	@Override
 	public String getProjectName() {

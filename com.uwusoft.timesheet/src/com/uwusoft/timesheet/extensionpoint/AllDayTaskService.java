@@ -23,5 +23,7 @@ public interface AllDayTaskService {
 	
 	String createAllDayTaskEntry(String taskProperty, Date from, Date to);
 	
+	boolean updateAllDayTaskEntry(String taskProperty, Date from, Date to);
+	
 	String getSystem();
 }

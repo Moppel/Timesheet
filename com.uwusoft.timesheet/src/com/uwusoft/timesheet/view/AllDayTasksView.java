@@ -217,15 +217,13 @@ public class AllDayTasksView extends AbstractTasksView {
     			oldCal.setTime(getDate(entry));
     			Calendar newCal = Calendar.getInstance();
     			newCal.setTime(dateDialog.getDate());
-    			if (oldCal.get(Calendar.HOUR) != newCal.get(Calendar.HOUR)
-    					|| oldCal.get(Calendar.MINUTE) != newCal.get(Calendar.MINUTE)
-    					|| oldCal.get(Calendar.AM_PM) != newCal.get(Calendar.AM_PM)) {
-    				newCal.set(Calendar.YEAR, oldCal.get(Calendar.YEAR));
-    				newCal.set(Calendar.MONTH, oldCal.get(Calendar.MONTH));
-    				newCal.set(Calendar.DAY_OF_MONTH, oldCal.get(Calendar.DAY_OF_MONTH));
+    			if (oldCal.get(Calendar.YEAR) != newCal.get(Calendar.YEAR)
+    					|| oldCal.get(Calendar.MONTH) != newCal.get(Calendar.MONTH)
+    					|| oldCal.get(Calendar.DAY_OF_MONTH) != newCal.get(Calendar.DAY_OF_MONTH)) {
     				setDate(entry, new Timestamp(newCal.getTimeInMillis()));
-    				//storageService.updateTaskEntry(entry); TODO
-    				//storageService.synchronize();
+    				entry.setSyncStatus(false);
+    				storageService.updateAllDayTaskEntry(entry);
+    				storageService.synchronizeAllDayTaskEntries();
 		    		viewer.refresh(entry);
     			}
 				return DateFormat.getDateInstance(DateFormat.SHORT).format(dateDialog.getDate());
