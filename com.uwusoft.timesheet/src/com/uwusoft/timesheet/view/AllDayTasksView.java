@@ -220,7 +220,7 @@ public class AllDayTasksView extends AbstractTasksView {
     				entry.setSyncStatus(false);
     				storageService.updateAllDayTaskEntry(entry);
     				storageService.synchronizeAllDayTaskEntries();
-		    		viewer.refresh(entry);
+    				if (entry.isSyncStatus()) viewer.refresh(entry);
     			}
 				return DateFormat.getDateInstance(DateFormat.SHORT).format(dateDialog.getDate());
 			}

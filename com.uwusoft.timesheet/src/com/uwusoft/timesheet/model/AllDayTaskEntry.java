@@ -18,7 +18,6 @@ public class AllDayTaskEntry {
 	private Timestamp toDate;
     @ManyToOne
 	private Task task;
-	@SuppressWarnings("unused")
 	private boolean syncStatus = false;
     private String externalId;
 	
@@ -88,6 +87,10 @@ public class AllDayTaskEntry {
 
 	public void setExternalId(String externalId) {
 		this.externalId = externalId;
+	}
+
+	public boolean isSyncStatus() {
+		return syncStatus;
 	}
 
 	@Override
