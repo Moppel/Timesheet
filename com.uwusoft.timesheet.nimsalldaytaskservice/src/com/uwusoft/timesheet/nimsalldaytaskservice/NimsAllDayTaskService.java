@@ -21,6 +21,7 @@ import org.eclipse.swt.widgets.Display;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
+import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.jira3.Jira3IssueService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.Project;
@@ -36,7 +37,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	private Map<String, String> subTasks, subTaskIds;
 	private Long projectId, filterId, componentId;
 	private String projectName, projectKey, componentName;
-	private SimpleDateFormat customFieldFormatter;
+	private SimpleDateFormat customFieldFormatter, summaryFormatter, updatedFormatter;
 	private int vacationLeft = 0;
 
 	public NimsAllDayTaskService() throws CoreException {
@@ -78,6 +79,8 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		    	componentName = (String) component.get("name");
 		}
 		customFieldFormatter = new SimpleDateFormat("dd/MMM/yy", Locale.US);
+		summaryFormatter = new SimpleDateFormat("yyyyMMdd", Locale.US);
+		updatedFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
 	}
 
 	@Override
@@ -143,14 +146,13 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         Hashtable<String, Serializable> struct = new Hashtable<String, Serializable>();
         int requestedDays = BusinessDayUtil.getRequestedDays(from, to);
         vacationLeft -= requestedDays;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmdd");
-        struct.put("summary", dateFormat.format(from) + "-" + dateFormat.format(to) + "_(" + vacationLeft + "left)");
+        struct.put("summary", getSummary(from, to, requestedDays, vacationLeft));
         struct.put("project", projectKey);
         struct.put("status", "10004");
         struct.put("votes", "0");
         struct.put("priority", "3");
         struct.put("type", subTaskIds.get(taskProperty));
-        String created = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(new Date()) +".0";
+        String created = updatedFormatter.format(new Date()) +".0";
         struct.put("created", created);
         struct.put("updated", created);
         Hashtable<String, Object> components = new Hashtable<String, Object>();
@@ -169,21 +171,50 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	}
 
 	@Override
-	public boolean updateAllDayTaskEntry(String taskProperty, Date from, Date to) {
+	public boolean updateAllDayTaskEntry(String key, String taskProperty, Date from, Date to) {
         Hashtable<String, Serializable> struct = new Hashtable<String, Serializable>();
         int requestedDays = BusinessDayUtil.getRequestedDays(from, to);
-        vacationLeft -= requestedDays;
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyymmdd");
-        struct.put("summary", dateFormat.format(from) + "-" + dateFormat.format(to) + "_(" + vacationLeft + "left)");
+        int requested = requestedDays;
+		@SuppressWarnings("rawtypes")
+		Map issue = getIssue(key);
+		String summary = (String) issue.get("summary");
+		int vacationLeft = Integer.parseInt(summary.substring(summary.indexOf("(") + 1, summary.indexOf("left)"))); 
+		Object[] customFieldValues = (Object[]) issue.get("customFieldValues");
+		for (Object customFieldMap : customFieldValues) {
+			@SuppressWarnings("rawtypes")
+			Map customField = (Map) customFieldMap;
+			if ("customfield_10234".equals(customField.get("customfieldId")))
+				requested = new Integer((String) customField.get("values"));
+		}
+		int requestedDiff = requestedDays - requested;
+        vacationLeft -= requestedDiff;
+        struct.put("summary", getSummary(from, to, requestedDays, vacationLeft));
         struct.put("type", subTaskIds.get(taskProperty));
-        struct.put("updated", new SimpleDateFormat("yyyy-mm-dd hh:mm:ss").format(new Date()) +".0");
+        struct.put("updated", updatedFormatter.format(new Date()) +".0");
         Vector<Object> vector = new Vector<Object>(3);
         addCustomField(vector, "customfield_10230", customFieldFormatter.format(from));
         addCustomField(vector, "customfield_10231", customFieldFormatter.format(to));
         addCustomField(vector, "customfield_10234", "" + requestedDays);
         struct.put("customFieldValues", vector);
 		
-        return true;
+        boolean retValue = updateIssue(key, struct);
+        if (/*retValue && */requestedDiff != 0)
+        	for (String nextKey : LocalStorageService.getInstance().getFollowingVacationEntryKeys(to)) {
+        		@SuppressWarnings("rawtypes")
+        		Map nextIssue = getIssue(nextKey);
+        		String nextSummary = (String) nextIssue.get("summary");
+        		int nextVacationLeft = Integer.parseInt(nextSummary.substring(nextSummary.indexOf("(") + 1, nextSummary.indexOf("left)")));
+        		nextVacationLeft -= requestedDiff;
+                Hashtable<String, Serializable> nextStruct = new Hashtable<String, Serializable>();
+                nextStruct.put("summary", nextSummary.replaceFirst("\\d*.left", nextVacationLeft + "left"));
+        		if (!updateIssue(nextKey, nextStruct)) return false;
+        	}
+        return retValue;
+	}
+
+	private String getSummary(Date from, Date to, int requestedDays, int vacationLeft) {
+		return summaryFormatter.format(from) + "-" + summaryFormatter.format(to) + "_" + requestedDays + (requestedDays > 1 ? "days" : "day")
+        		+ "_(" + vacationLeft + "left)";
 	}
 	
 	@Override

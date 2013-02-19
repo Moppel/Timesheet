@@ -6,6 +6,7 @@ import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.DialogCellEditor;
@@ -213,14 +214,9 @@ public class AllDayTasksView extends AbstractTasksView {
 		protected Object openDialogBox(Control cellEditorWindow) {
 			DateDialog dateDialog = new DateDialog(cellEditorWindow.getDisplay(), entry.getExternalId(), getDate(entry));
 			if (dateDialog.open() == Dialog.OK) {
-    			Calendar oldCal = Calendar.getInstance();
-    			oldCal.setTime(getDate(entry));
-    			Calendar newCal = Calendar.getInstance();
-    			newCal.setTime(dateDialog.getDate());
-    			if (oldCal.get(Calendar.YEAR) != newCal.get(Calendar.YEAR)
-    					|| oldCal.get(Calendar.MONTH) != newCal.get(Calendar.MONTH)
-    					|| oldCal.get(Calendar.DAY_OF_MONTH) != newCal.get(Calendar.DAY_OF_MONTH)) {
-    				setDate(entry, new Timestamp(newCal.getTimeInMillis()));
+    			Date date = DateUtils.truncate(dateDialog.getDate(), Calendar.DATE);
+    			if (getDate(entry).after(date) || getDate(entry).before(date)) {
+    				setDate(entry, new Timestamp(date.getTime()));
     				entry.setSyncStatus(false);
     				storageService.updateAllDayTaskEntry(entry);
     				storageService.synchronizeAllDayTaskEntries();

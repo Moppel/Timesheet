@@ -552,6 +552,19 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return availableEntries;
 	}
 	
+	public Collection<String> getFollowingVacationEntryKeys(Date to) {
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+		Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
+		Path<Task> task = taskEntry.get(AllDayTaskEntry_.task);
+		query.where(criteria.and(criteria.greaterThan(taskEntry.get(AllDayTaskEntry_.fromDate), new Timestamp(to.getTime())),
+				criteria.like(task.get(Task_.name), "Vacation%"))); // TODO how to get vacation related tasks
+		List<String> keys = new ArrayList<String>();
+		for (AllDayTaskEntry entry : em.createQuery(query).getResultList())
+			keys.add(entry.getExternalId());
+		return keys;
+	}
+	
 	public void updateTaskEntry(TaskEntry entry) {
 		boolean active = false;
         Calendar cal = new GregorianCalendar();
@@ -889,11 +902,11 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 					if (entry.getExternalId() == null)
 						entry.setExternalId(getAllDayTaskService().createAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())));
 					else
-						if (getAllDayTaskService().updateAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())))
+						if (getAllDayTaskService().updateAllDayTaskEntry(entry.getExternalId(), entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())))
 							entry.setSyncStatus(true);
 					if (active) em.persist(entry);
 				}
-				return null;
+				return Status.OK_STATUS;
 			}			
 		}.schedule();
 	}

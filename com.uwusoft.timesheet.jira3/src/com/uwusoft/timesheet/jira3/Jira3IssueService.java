@@ -103,13 +103,21 @@ public class Jira3IssueService implements IssueService {
 		} catch (KeyManagementException e) {
 	        throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, e.getMessage(), null));
 		}		
-		login();
+		doLogin();
     }
 
-	private void login() throws CoreException {
+	private void doLogin() throws CoreException {
 		boolean lastSuccess = true;
         do lastSuccess = authenticate(lastSuccess);
        	while (!lastSuccess);
+	}
+	
+	private void login() {
+		try {
+			doLogin();
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void logout() {
@@ -169,12 +177,24 @@ public class Jira3IssueService implements IssueService {
         throw new CoreException(new Status(IStatus.ERROR, Platform.PI_RUNTIME, IStatus.ERROR, message, null));
     }    
 
-	public String createIssue(Hashtable<String, Serializable> struct) {
+	@SuppressWarnings("rawtypes")
+	public Map getIssue(String key) {
+		login();
+		Vector<String> searchVector = new Vector<String>(2);
+		searchVector.add(loginToken);
+		searchVector.add(key);		
 		try {
-			login();
-		} catch (CoreException e) {
+			Map retValue = (Map) rpcClient.execute("jira1.getIssue", searchVector);
+			logout();
+			return retValue;
+		} catch (XmlRpcException e) {
 			e.printStackTrace();
+			return null;
 		}
+	}
+    
+    public String createIssue(Hashtable<String, Serializable> struct) {
+		login();
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
         // Constants for issue creation
         struct.put("assignee", preferenceStore.getString(PREFIX + StorageService.USERNAME));
@@ -183,6 +203,7 @@ public class Jira3IssueService implements IssueService {
 		/*try {
 			@SuppressWarnings({ "rawtypes", "unchecked" })
 			Map issueMap = (Map) rpcClient.execute("jira1.createIssue", new Vector(EasyList.build(loginToken, struct)));
+			logout();
 	        return (String) issueMap.get("key");		
 		} catch (XmlRpcException e) {
 			e.printStackTrace();
@@ -190,14 +211,24 @@ public class Jira3IssueService implements IssueService {
         logout();
 		return "";
 	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean updateIssue(String key, Hashtable<String, Serializable> struct) {
+		login();
+		/*try {
+			rpcClient.execute("jira1.updateIssue", new Vector(EasyList.build(loginToken, key, struct)));
+			logout();
+        	return true;		
+		} catch (XmlRpcException e) {
+			e.printStackTrace();
+		}*/
+		logout();
+		return false;
+	}
     
 	@Override
 	public Object[] getProjects() {
-		try {
-			login();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		login();
 		Vector<String> searchVector = new Vector<String>(1);
 		searchVector.add(loginToken);
 		try {
@@ -212,11 +243,7 @@ public class Jira3IssueService implements IssueService {
     
 	@Override
     public Object[] getComponents(String projectKey) {
-		try {
-			login();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		login();
 		Vector<String> searchVector = new Vector<String>(2);
 		searchVector.add(loginToken);
 		searchVector.add(projectKey);
@@ -232,11 +259,7 @@ public class Jira3IssueService implements IssueService {
 	
 	@Override
     public Object[] getSavedFilters() {
-		try {
-			login();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		login();
 		Vector<String> searchVector = new Vector<String>(1);
 		searchVector.add(loginToken);
 		try {
@@ -250,11 +273,7 @@ public class Jira3IssueService implements IssueService {
     }
     
     protected Object[] getSubTaskIssueTypesForProject(String projectId) {    	
-		try {
-			login();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		login();
  		Vector<String> searchVector = new Vector<String>(2);
  		searchVector.add(loginToken);
  		searchVector.add(projectId);
@@ -269,11 +288,7 @@ public class Jira3IssueService implements IssueService {
     }
     
     protected Object[] getIssuesFromFilter(String filterId) {
-		try {
-			login();
-		} catch (CoreException e) {
-			e.printStackTrace();
-		}
+		login();
     	Vector<String> searchVector = new Vector<String>(2);
 		searchVector.add(loginToken);
 		searchVector.add(filterId);
