@@ -11,6 +11,7 @@ import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
 
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
@@ -29,11 +30,18 @@ public class AllDayTaskHandler extends AbstractHandler {
 		String task = event.getParameter("Timesheet.commands.task");
 		AllDayTaskDateDialog dateDialog;
 		try {
-			dateDialog = new AllDayTaskDateDialog(Display.getDefault(), event.getCommand().getName(),	task, startDate);
+			dateDialog = new AllDayTaskDateDialog(Display.getDefault(), event.getCommand().getName(), task, startDate);
 			if (dateDialog.open() == Dialog.OK) {
-				AllDayTaskEntry entry = new AllDayTaskEntry(DateUtils.truncate(dateDialog.getFrom(), Calendar.DATE), DateUtils.truncate(dateDialog.getTo(), Calendar.DATE),
-						new Task(dateDialog.getTask().substring(dateDialog.getTask().indexOf(".") + 1, dateDialog.getTask().length()).replaceAll("_", " "),
-								new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), LocalStorageService.getInstance().getAllDayTaskService().getSystem())));
+				Date from = DateUtils.truncate(dateDialog.getFrom(), Calendar.DATE);
+				Date to = DateUtils.truncate(dateDialog.getTo(), Calendar.DATE);
+				String newTask = dateDialog.getTask().substring(dateDialog.getTask().indexOf(".") + 1, dateDialog.getTask().length()).replaceAll("_", " ");
+				AllDayTaskEntry entry;
+				if (LocalStorageService.getInstance().getAllDayTaskService().taskAvailable(newTask))
+					entry = new AllDayTaskEntry(from, to, new Task(newTask, new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), LocalStorageService.getInstance().getAllDayTaskService().getSystem())));
+				else {
+					entry = new AllDayTaskEntry(from, to, TimesheetApp.createTask(dateDialog.getTask()));
+					entry.setSyncStatus(true);
+				}
 				LocalStorageService.getInstance().createAllDayTaskEntry(entry);
 				LocalStorageService.getInstance().synchronizeAllDayTaskEntries();
 			}

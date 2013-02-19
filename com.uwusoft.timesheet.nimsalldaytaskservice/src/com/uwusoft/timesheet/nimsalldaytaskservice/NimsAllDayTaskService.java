@@ -170,6 +170,10 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         return createIssue(struct);
 	}
 
+	public boolean taskAvailable(String taskProperty) {
+		return subTaskIds.get(taskProperty) != null;
+	}
+
 	@Override
 	public boolean updateAllDayTaskEntry(String key, String taskProperty, Date from, Date to) {
         Hashtable<String, Serializable> struct = new Hashtable<String, Serializable>();

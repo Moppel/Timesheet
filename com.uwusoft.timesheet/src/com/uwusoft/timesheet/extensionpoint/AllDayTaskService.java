@@ -21,6 +21,8 @@ public interface AllDayTaskService {
 	
 	Collection<AllDayTaskEntry> getAllDayTaskEntries();
 	
+	boolean taskAvailable(String taskProperty);
+	
 	String createAllDayTaskEntry(String taskProperty, Date from, Date to);
 	
 	boolean updateAllDayTaskEntry(String key, String taskProperty, Date from, Date to);

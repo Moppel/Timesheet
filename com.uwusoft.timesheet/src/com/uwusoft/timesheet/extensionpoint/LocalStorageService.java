@@ -886,7 +886,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	public void synchronizeAllDayTaskEntries() {
 		if (getAllDayTaskService() == null) return;
 		new Job("Synchronizing all day task entries") {
-
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				boolean active = false;
@@ -899,13 +898,16 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				query.orderBy(criteria.asc(taskEntry.get(AllDayTaskEntry_.fromDate)));
 				List<AllDayTaskEntry> entries = em.createQuery(query).getResultList();
 				for (AllDayTaskEntry entry : entries) {
+					if (getAllDayTaskService().taskAvailable(entry.getTask().getName())) continue;
 					if (entry.getExternalId() == null)
 						entry.setExternalId(getAllDayTaskService().createAllDayTaskEntry(entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())));
 					else
-						if (getAllDayTaskService().updateAllDayTaskEntry(entry.getExternalId(), entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime())))
+						if (getAllDayTaskService().updateAllDayTaskEntry(entry.getExternalId(), entry.getTask().getName(), new Date(entry.getFrom().getTime()), new Date(entry.getTo().getTime()))) {
 							entry.setSyncStatus(true);
-					if (active) em.persist(entry);
+							if (active) em.persist(entry);
+						}
 				}
+				if (!active) em.getTransaction().commit();
 				return Status.OK_STATUS;
 			}			
 		}.schedule();
