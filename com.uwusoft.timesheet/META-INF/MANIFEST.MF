@@ -43,6 +43,10 @@ Bundle-ClassPath: lib/commons/commons-lang3-3.0.1.jar,
  .
 Import-Package: com.uwusoft.timesheet,
  org.apache.commons.lang.time;version="2.4.0",
+ org.eclipse.core.databinding,
+ org.eclipse.core.databinding.beans,
+ org.eclipse.core.databinding.conversion,
  org.eclipse.core.databinding.observable,
  org.eclipse.core.databinding.observable.value,
- org.eclipse.core.databinding.validation
+ org.eclipse.core.databinding.validation,
+ org.eclipse.jface.databinding.swt

@@ -7,11 +7,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.core.databinding.DataBindingContext;
+import org.eclipse.core.databinding.UpdateValueStrategy;
+import org.eclipse.core.databinding.beans.BeansObservables;
+import org.eclipse.core.databinding.conversion.Converter;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.databinding.swt.SWTObservables;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -20,15 +31,23 @@ import org.eclipse.swt.widgets.DateTime;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Text;
 
 import com.uwusoft.timesheet.Messages;
 import com.uwusoft.timesheet.commands.AllDayTaskFactory;
+import com.uwusoft.timesheet.validation.DateTimeObservableValue;
+import com.uwusoft.timesheet.validation.Period;
+import com.uwusoft.timesheet.validation.PeriodValidator;
 
 public class AllDayTaskDateDialog extends Dialog {
 
 	private String title, task;
     private int fromDay, fromMonth, fromYear, toDay, toMonth, toYear;
     private Combo taskCombo;
+	private DateTime dateTimeStart;
+	private DateTime dateTimeEnd;
+	private Text status;
+	private final Period period;
     private Map<String, String> allDayTaskTranslations;
 
 	public AllDayTaskDateDialog(Display display, String task, Date date) {
@@ -47,6 +66,7 @@ public class AllDayTaskDateDialog extends Dialog {
 		toDay = calendar.get(Calendar.DAY_OF_MONTH);
 		toMonth = calendar.get(Calendar.MONTH);
 		toYear = calendar.get(Calendar.YEAR);
+		this.period = new Period(new Date(), new Date());
 		allDayTaskTranslations = new HashMap<String, String>();
 	}
 
@@ -76,9 +96,9 @@ public class AllDayTaskDateDialog extends Dialog {
         });
 		
 		(new Label(composite, SWT.NULL)).setText("From: ");
-		DateTime dateEntry = new DateTime(composite, SWT.CALENDAR);
-        dateEntry.setDate(fromYear, fromMonth, fromDay);
-        dateEntry.addSelectionListener(new SelectionListener() {			
+		dateTimeStart = new DateTime(composite, SWT.CALENDAR);
+		dateTimeStart.setDate(fromYear, fromMonth, fromDay);
+		dateTimeStart.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				fromDay = ((DateTime) e.getSource()).getDay();
 				fromMonth = ((DateTime) e.getSource()).getMonth();
@@ -88,9 +108,9 @@ public class AllDayTaskDateDialog extends Dialog {
 			}
 		});
         (new Label(composite, SWT.NULL)).setText("To: ");
-		dateEntry = new DateTime(composite, SWT.CALENDAR);
-        dateEntry.setDate(toYear, toMonth, toDay);
-        dateEntry.addSelectionListener(new SelectionListener() {			
+        dateTimeEnd = new DateTime(composite, SWT.CALENDAR);
+        dateTimeEnd.setDate(toYear, toMonth, toDay);
+        dateTimeEnd.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
 				toDay = ((DateTime) e.getSource()).getDay();
 				toMonth = ((DateTime) e.getSource()).getMonth();
@@ -99,14 +119,66 @@ public class AllDayTaskDateDialog extends Dialog {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-        dateEntry.setFocus();
+        dateTimeEnd.setFocus();
+		status = new Text(composite, SWT.NONE);
+		status.setEnabled(false);
+		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 0));
+		status.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (getButton(IDialogConstants.OK_ID) != null)
+					getButton(IDialogConstants.OK_ID).setEnabled(Status.OK_STATUS.getMessage().equals(status.getText()));
+			}
+		}); 
+		createDatabinding();
         return composite;
 	}
 
-    @Override
+	private void createDatabinding() { // see http://eclipsesource.com/blogs/2009/02/27/databinding-crossvalidation-with-a-multivalidator/
+		DateTimeObservableValue startObservable = new DateTimeObservableValue(this.dateTimeStart);
+		DateTimeObservableValue endObservable = new DateTimeObservableValue(this.dateTimeEnd);
+
+		DataBindingContext context = new DataBindingContext();
+
+		// bind start and end
+		UpdateValueStrategy modelToTarget = new UpdateValueStrategy(
+				UpdateValueStrategy.POLICY_UPDATE);
+		UpdateValueStrategy targetToModel = new UpdateValueStrategy(
+				UpdateValueStrategy.POLICY_UPDATE);
+
+		context.bindValue(startObservable, BeansObservables.observeValue(this.period,
+				Period.PROP_START), targetToModel, modelToTarget);
+
+		context.bindValue(endObservable, BeansObservables
+				.observeValue(this.period, Period.PROP_END), targetToModel, modelToTarget);
+
+		// bind status
+		PeriodValidator periodValidator = new PeriodValidator(startObservable, endObservable);
+
+		modelToTarget = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
+		modelToTarget.setConverter(new Converter(IStatus.class, String.class) {
+
+			@Override
+			public Object convert(final Object arg) {
+				if (arg instanceof IStatus) {
+					IStatus status = (IStatus) arg;
+					return status.getMessage();
+				}
+				return null;
+			}
+
+		});
+		targetToModel = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
+
+		context.bindValue(SWTObservables.observeText(status), periodValidator
+				.getValidationStatus(), targetToModel, modelToTarget);
+	}
+    
+	@Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
         newShell.setText(title);
+        newShell.setSize(260, 425);
     }
 
 	public String getTask() {
