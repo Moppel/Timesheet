@@ -143,7 +143,7 @@ public class AllDayTasksView extends AbstractTasksView {
 		    }
 
 		    protected Object getValue(Object element) {
-		        return BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo());
+		        return BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo()); // TODO only count vacation related
 		    }
 
 		    protected void setValue(Object element, Object value) {
@@ -151,7 +151,7 @@ public class AllDayTasksView extends AbstractTasksView {
 		});
 		col.setLabelProvider(new AlternatingColumnProvider() {
 			public String getText(Object element) {
-		        return new Integer(BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo())).toString();
+		        return new Integer(BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo())).toString(); // TODO only count vacation related
 			}
 			public Image getImage(Object obj) {
 	    		return null;
