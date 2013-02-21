@@ -10,7 +10,7 @@
    <extension
          point="org.eclipse.ui.preferencePages">
       <page
-            category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
+            category="com.uwusoft.timesheet.jira3.Jira3PreferencePage"
             class="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage"
             id="com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage"
             name="All Day Task Preferences">

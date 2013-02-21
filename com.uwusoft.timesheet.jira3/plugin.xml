@@ -13,7 +13,7 @@
             category="com.uwusoft.timesheet.preferences.TimesheetPreferencePage"
             class="com.uwusoft.timesheet.jira3.Jira3PreferencePage"
             id="com.uwusoft.timesheet.jira3.Jira3PreferencePage"
-            name="Jira 3 Preferences">
+            name="Task and Issue (Jira 3) Preferences">
       </page>
    </extension>
 
