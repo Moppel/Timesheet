@@ -9,6 +9,7 @@ public class ExternalAllDayTaskListDialog extends TaskListDialog {
 
 	public ExternalAllDayTaskListDialog(Shell shell, Task taskSelected) {
 		super(shell, taskSelected, false);
+		setTitle("External All Day Tasks");
 	}
 
 	@Override

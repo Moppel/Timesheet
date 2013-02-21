@@ -79,7 +79,7 @@ public class TaskListDialog extends ListDialog {
     private Combo systemCombo, projectCombo;
     private Text commentText;
     private AutoCompleteField commentCompleteField;
-    private String projectSelected, systemSelected, task, comment, changeTitle, selectedTask;
+    protected String projectSelected, systemSelected, task, comment, changeTitle, selectedTask;
 	private Date changeDate, rememberedTime;
     private int day, month, year, hours, minutes;
     private boolean original;
@@ -301,9 +301,8 @@ public class TaskListDialog extends ListDialog {
 					TimesheetApp.getSubmissionSystems().get(systemSelected));
 			projectList = new ArrayList<String>(submissionService.getAssignedProjects().keySet());
 		}
-		else {
-			projectList = storageService.getProjects(systemSelected);
-		}
+		else
+			projectList = getInternalProjects();
 		String[] projects = projectList.toArray(new String[projectList.size()]);
         projectCombo.setItems(projects);
         if (projects.length == 1) projectCombo.setEnabled(false);
@@ -320,6 +319,10 @@ public class TaskListDialog extends ListDialog {
 		}
         else projectCombo.select(0);
 		setTasks();
+	}
+
+	protected List<String> getInternalProjects() {
+		return storageService.getProjects(systemSelected);
 	}
 
 	private void setTasks() {
@@ -341,23 +344,23 @@ public class TaskListDialog extends ListDialog {
 			getTableViewer().setInput(tasksMap.keySet());
 		}
 		else {
-			setInternalTasks();
-		}
-	}
-
-	protected void setInternalTasks() {
-		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-		getTableViewer().setInput(tasks);
-		if (taskSelected != null && taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
-			for (int i = 0; i < tasks.size(); i++) {
-				if (tasks.get(i).equals(this.taskSelected.getName())) {
-					ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
-					getTableViewer().setSelection(selection);
-			        getTableViewer().getTable().setFocus();
-			        break;
+			List<String> tasks = getInternalTasks();
+			getTableViewer().setInput(tasks);
+			if (taskSelected != null && taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
+				for (int i = 0; i < tasks.size(); i++) {
+					if (tasks.get(i).equals(this.taskSelected.getName())) {
+						ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
+						getTableViewer().setSelection(selection);
+				        getTableViewer().getTable().setFocus();
+				        break;
+					}
 				}
 			}
 		}
+	}
+
+	protected List<String> getInternalTasks() {
+		return new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
 	}
 	
 	@Override

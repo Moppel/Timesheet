@@ -26,6 +26,8 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.dialog.InternalAllDayTaskListDialog;
+import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
@@ -272,7 +274,11 @@ public class AllDayTasksView extends AbstractTasksView {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			ExternalAllDayTaskListDialog listDialog = new ExternalAllDayTaskListDialog(cellEditorWindow.getShell(),	entry.getTask());
+			TaskListDialog listDialog;
+			if (storageService.getAllDayTaskService().getSystem().equals(entry.getTask().getProject().getSystem()))
+				listDialog = new ExternalAllDayTaskListDialog(cellEditorWindow.getShell(), entry.getTask());
+			else
+				listDialog = new InternalAllDayTaskListDialog(cellEditorWindow.getShell(), entry.getTask());
 			if (listDialog.open() == Dialog.OK) {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
