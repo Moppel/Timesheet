@@ -57,7 +57,7 @@ public class BusinessDayUtil {
 	public static int getRequestedDays(Date from, Date to) {
 		int requestedDays = 1;
 		if (!isBusinessDay(from)) requestedDays = 0;
-		else while(!(from = getNextBusinessDay(from, false)).after(to))
+		while(!(from = getNextBusinessDay(from, false)).after(to))
 			requestedDays++;
 		return requestedDays;
 	}
