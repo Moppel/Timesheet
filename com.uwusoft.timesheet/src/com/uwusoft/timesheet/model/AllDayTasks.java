@@ -1,5 +1,6 @@
 package com.uwusoft.timesheet.model;
 
+import java.beans.PropertyChangeEvent;
 import java.sql.Timestamp;
 import java.text.DateFormatSymbols;
 import java.util.Date;
@@ -17,6 +18,7 @@ import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
+import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
@@ -64,12 +66,16 @@ public class AllDayTasks {
 		for (AllDayTaskEntry taskEntry : taskEntryList) {
 			do {
 				String taskName = preferenceStore.getString(AllDayTaskService.PREFIX + taskEntry.getTask().getName().replaceAll("\\s", "_"));
-				if (StringUtils.isEmpty(taskName)) continue;
-				Task task = TimesheetApp.createTask(taskName);
+				Task task;
+				if (StringUtils.isEmpty(taskName))
+					task = taskEntry.getTask();
+				else
+					task = TimesheetApp.createTask(taskName);
 				storageService.createTaskEntry(new TaskEntry(new Timestamp(begin.getTime()), task, getTotal(), true));
 				// MessageBox.setMessage("Set whole day task", begin + "\n" + taskEntry); // TODO create confirm dialog
 			} while (!(begin = BusinessDayUtil.getNextBusinessDay(begin, true)).after(taskEntry.getTo()));
 			em.remove(taskEntry);
+			storageService.firePropertyChangeEvent(new PropertyChangeEvent(this, StorageService.PROPERTY_ALLDAYTASK, null, taskEntry));
 		}
 		em.getTransaction().commit();
 		storageService.synchronize();

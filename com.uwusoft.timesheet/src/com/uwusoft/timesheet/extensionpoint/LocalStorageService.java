@@ -433,7 +433,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		removeListenerObject(listener);
 	}
 
-    protected void firePropertyChangeEvent(final PropertyChangeEvent event) {
+    public void firePropertyChangeEvent(final PropertyChangeEvent event) {
 		if (event == null) {
 			throw new NullPointerException();
 		}
