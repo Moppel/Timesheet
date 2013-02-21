@@ -24,11 +24,12 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.InternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
+import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
@@ -248,7 +249,10 @@ public class AllDayTasksView extends AbstractTasksView {
 	}
 
 	@Override
-	public void propertyChange(PropertyChangeEvent arg0) {
+	public void propertyChange(PropertyChangeEvent evt) {
+		if (StorageService.PROPERTY_ALLDAYTASK.equals(evt.getPropertyName()) && evt.getNewValue() != null) {
+			if (addTaskEntries()) viewer.refresh();
+		}
 	}
 
 	@Override

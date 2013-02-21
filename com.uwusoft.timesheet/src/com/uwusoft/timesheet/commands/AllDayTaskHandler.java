@@ -42,7 +42,7 @@ public class AllDayTaskHandler extends AbstractHandler {
 					entry = new AllDayTaskEntry(from, to, TimesheetApp.createTask(dateDialog.getTask()));
 					entry.setSyncStatus(true);
 				}
-				LocalStorageService.getInstance().createAllDayTaskEntry(entry);
+				LocalStorageService.getInstance().createAllDayTaskEntry(entry, true);
 				LocalStorageService.getInstance().synchronizeAllDayTaskEntries();
 			}
 		} catch (NotDefinedException e) {

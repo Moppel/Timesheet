@@ -11,6 +11,7 @@ public interface ImportTaskService {
     public static final String BREAK = "Break";
 	
 	public static final String PROPERTY_WEEK = "week";
+    public static final String PROPERTY_ALLDAYTASK = "allDayTask";	
 
     /**
      * @return a list of tasks assigned to name of special time management system

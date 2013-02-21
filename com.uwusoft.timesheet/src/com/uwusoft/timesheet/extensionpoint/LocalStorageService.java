@@ -502,10 +502,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 
 	private void createOrUpdateAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
 		if (updateAllDayTaskEntry(entry).size() != 1)
-			createAllDayTaskEntry(entry);
+			createAllDayTaskEntry(entry, false);
 	}
 	
-	public void createAllDayTaskEntry(AllDayTaskEntry entry) {
+	public void createAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
 		boolean active = false;
 		synchronized (entry) {
 			if (em.getTransaction().isActive())	active = true;
@@ -516,11 +516,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			em.persist(entry);
 			if (!active) em.getTransaction().commit();
 		}
-		/*if (firePropertyChangeEvent) {
-	        Calendar cal = new GregorianCalendar();
-	        cal.setTime(entry.getDateTime() == null ? new Date() : entry.getDateTime());
-			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_WEEK, null, cal.get(Calendar.WEEK_OF_YEAR)));
-		}*/
+		if (firePropertyChangeEvent) {
+			firePropertyChangeEvent(new PropertyChangeEvent(this, PROPERTY_ALLDAYTASK, null, entry));
+		}
 	}
 	
 	public Collection<AllDayTaskEntry> updateAllDayTaskEntry(AllDayTaskEntry entry) {

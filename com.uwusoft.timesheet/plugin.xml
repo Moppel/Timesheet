@@ -34,7 +34,7 @@
       <view
             class="com.uwusoft.timesheet.view.AllDayTasksView"
             id="com.uwusoft.timesheet.view.alldaytasksview"
-            name="All Day Tasks">
+            name="Planned All Day Tasks">
       </view>
    </extension>
    <!--<extension
