@@ -73,7 +73,7 @@ public class TaskListDialog extends ListDialog {
     private SubmissionService submissionService;
     private Task taskSelected;
     private boolean showComment;
-	private String[] systems;
+	protected String[] systems;
 	private Map<String, SubmissionProject> assignedProjects;
 	private Map<String, SubmissionTask> tasksMap;
     private Combo systemCombo, projectCombo;
@@ -103,12 +103,7 @@ public class TaskListDialog extends ListDialog {
     public TaskListDialog(Shell shell, Task taskSelected, boolean showComment) {
         super(shell);
 		storageService = LocalStorageService.getInstance();
-		Set<String> systemsList = TimesheetApp.getSubmissionSystems().keySet();
-		if (systemsList.isEmpty()) {
-			systemsList = new HashSet<String>();
-			systemsList.add("Local");
-		}
-        systems = systemsList.toArray(new String[systemsList.size()]);
+		setSystems();
         this.taskSelected = taskSelected;
         task = taskSelected == null ? null : taskSelected.getName();
         this.showComment = showComment;
@@ -118,6 +113,15 @@ public class TaskListDialog extends ListDialog {
 		setMessage("Select task");
 		setWidthInChars(70);
     }
+
+	protected void setSystems() {
+		Set<String> systemsList = TimesheetApp.getSubmissionSystems().keySet();
+		if (systemsList.isEmpty()) {
+			systemsList = new HashSet<String>();
+			systemsList.add("Local");
+		}
+        systems = systemsList.toArray(new String[systemsList.size()]);
+	}
     
     public TaskListDialog(Shell shell, Task taskSelected, String comment) {
     	this(shell, taskSelected, true);
@@ -337,16 +341,20 @@ public class TaskListDialog extends ListDialog {
 			getTableViewer().setInput(tasksMap.keySet());
 		}
 		else {
-			List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
-	        getTableViewer().setInput(tasks);
-			if (taskSelected != null && taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
-				for (int i = 0; i < tasks.size(); i++) {
-					if (tasks.get(i).equals(this.taskSelected.getName())) {
-						ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
-						getTableViewer().setSelection(selection);
-				        getTableViewer().getTable().setFocus();
-				        break;
-					}
+			setInternalTasks();
+		}
+	}
+
+	protected void setInternalTasks() {
+		List<String> tasks = new ArrayList<String>(storageService.findTasksBySystemAndProject(systemSelected, projectSelected));
+		getTableViewer().setInput(tasks);
+		if (taskSelected != null && taskSelected.getProject().getName() != null && taskSelected.getProject().getName().equals(projectSelected) && taskSelected.getProject().getSystem().equals(systemSelected)) {
+			for (int i = 0; i < tasks.size(); i++) {
+				if (tasks.get(i).equals(this.taskSelected.getName())) {
+					ISelection selection = new StructuredSelection(getTableViewer().getTable().getItem(i).getData());
+					getTableViewer().setSelection(selection);
+			        getTableViewer().getTable().setFocus();
+			        break;
 				}
 			}
 		}

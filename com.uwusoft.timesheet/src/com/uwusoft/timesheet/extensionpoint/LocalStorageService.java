@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -460,7 +461,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public String[] getUsedCommentsForTask(String task, String project,	String system) {
-		Set<String> comments = new HashSet<String>();
+		Set<String> comments = new LinkedHashSet<String>();
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<TaskEntry> query = criteria.createQuery(TaskEntry.class);
 		Root<TaskEntry> taskEntry = query.from(TaskEntry.class);
@@ -469,6 +470,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		query.where(criteria.and(criteria.equal(rootTask.get(Task_.name), task),
 				criteria.equal(rootProject.get(Project_.name), project),
 				criteria.equal(rootProject.get(Project_.system), system)));
+		query.orderBy(criteria.desc(taskEntry.get(TaskEntry_.comment)));
 		List<TaskEntry> results = em.createQuery(query).getResultList();
 		for (TaskEntry entry : results)
 			if (entry.getComment() != null)
