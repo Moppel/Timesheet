@@ -40,8 +40,6 @@ public class ChangeTaskHandler extends AbstractHandler {
 				MessageBox.setError("Change task", e.getMessage());
 			}
 		boolean okPressed = changeTask(changeDate);
-		if (okPressed && listDialog.getRememberedTime() != null)
-			changeTask(listDialog.getRememberedTime());
 		if (okPressed) {
 			storageService.openUrl(StorageService.OPEN_BROWSER_CHANGE_TASK);
 			storageService.synchronize();

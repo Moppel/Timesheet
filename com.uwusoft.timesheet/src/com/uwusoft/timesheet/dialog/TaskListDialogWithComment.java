@@ -42,12 +42,6 @@ public class TaskListDialogWithComment extends TaskListDialog {
 				comment = commentText.getText();
 			}        	
 		});
-		/*setProposals = new Job("Search available comments") {
-			protected IStatus run(IProgressMonitor monitor) {
-				commentCompleteField.setProposals(storageService.getUsedCommentsForTask(task, projectSelected, systemSelected));
-		        return Status.OK_STATUS;
-			}
-		};*/
 		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {

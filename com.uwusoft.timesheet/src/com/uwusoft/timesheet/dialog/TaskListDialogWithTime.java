@@ -1,7 +1,6 @@
 package com.uwusoft.timesheet.dialog;
 
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -28,7 +27,7 @@ import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Task;
 
 public class TaskListDialogWithTime extends TaskListDialogWithComment {
-	private Date changeDate, rememberedTime;
+	private Date changeDate;
     private int day, month, year, hours, minutes;
     private String changeTitle;
 
@@ -50,39 +49,13 @@ public class TaskListDialogWithTime extends TaskListDialogWithComment {
         if (changeDate != null) {
     		final Composite timePanel = new Composite(parent, SWT.NONE);
     		timePanel.moveAbove(getContents());
-    		timePanel.setLayout(new GridLayout(3, false));
-    		timePanel.setLayoutData(new GridData(GridData.FILL_BOTH));
+    		timePanel.setLayout(new GridLayout(4, false));
+    		timePanel.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));
     		(new Label(timePanel, SWT.NULL)).setText(changeTitle + " at : ");
     		(new Label(timePanel, SWT.NULL)).setText(DateFormat.getDateInstance(DateFormat.SHORT).format(changeDate));
-    		final Button rememberButton = new Button(timePanel, SWT.PUSH);
-    		rememberButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/signs_16.png").createImage());
-    		final String text = "Remember time";
-    		rememberButton.setText(text);
-    		rememberButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-    		rememberButton.setVisible(false);
-    		rememberButton.addSelectionListener(new SelectionAdapter() {
-    		    public void widgetSelected(SelectionEvent e) {
-    		    	if (rememberButton.getText().equals(text)) {
-    		    		rememberedTime = new Date();
-    		    		rememberButton.setText(new SimpleDateFormat("HH:mm").format(rememberedTime));
-    		    	}
-    		    	else {
-    		    		rememberedTime = null;
-    		    		rememberButton.setText(text);
-    		    	}
-    		    }
-    		});
-    		rememberButton.getDisplay().timerExec(5 * 60 * 1000, new Runnable() { // enable after five minutes
-    			public void run() {
-    				if (!rememberButton.isDisposed()) {
-    					rememberButton.setVisible(true);
-    					timePanel.pack();
-    				}
-    			}            	
-    		});
-    		(new Label(timePanel, SWT.NULL)).setText("");
+    		
     		DateTime timeEntry = new DateTime(timePanel, SWT.TIME | SWT.SHORT);
-    		timeEntry.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
+    		timeEntry.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, false, false));
     		timeEntry.setHours(hours);
     		timeEntry.setMinutes(minutes);
     		timeEntry.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
@@ -97,12 +70,12 @@ public class TaskListDialogWithTime extends TaskListDialogWithComment {
     		timeEntry.setFocus();
     		Button breakButton = new Button(timePanel, SWT.PUSH);
     		breakButton.setImage(AbstractUIPlugin.imageDescriptorFromPlugin(Activator.PLUGIN_ID, "/icons/pause_16.png").createImage());
+    		breakButton.setLayoutData(new GridData(SWT.END, SWT.CENTER, true, false));
     		breakButton.setText("Set Break");
     		ISourceProviderService sourceProviderService = (ISourceProviderService) PlatformUI.getWorkbench().getService(ISourceProviderService.class);
     		SessionSourceProvider commandStateService = (SessionSourceProvider) sourceProviderService.getSourceProvider(SessionSourceProvider.SESSION_STATE);
     		breakButton.setVisible(!CheckinHandler.title.equals(changeTitle)
     				&& commandStateService.getCurrentState().get(SessionSourceProvider.BREAK_STATE) == SessionSourceProvider.DISABLED);
-    		breakButton.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
     		breakButton.addSelectionListener(new SelectionAdapter() {
     		    public void widgetSelected(SelectionEvent e) {
     		    	selectedTask = StorageService.BREAK;
@@ -123,8 +96,4 @@ public class TaskListDialogWithTime extends TaskListDialogWithComment {
 		calendar.set(Calendar.MINUTE, minutes);
 		return calendar.getTime();
     }
-
-	public Date getRememberedTime() {
-		return rememberedTime;
-	}
 }

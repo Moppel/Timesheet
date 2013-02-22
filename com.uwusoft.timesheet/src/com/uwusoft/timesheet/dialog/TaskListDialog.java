@@ -56,7 +56,6 @@ public class TaskListDialog extends ListDialog {
     private Combo systemCombo, projectCombo;
     protected String projectSelected, systemSelected, task, selectedTask;
     private boolean original;
-    //private Job setProposals;
 	private StatusLineManager statusLineManager = new StatusLineManager();
 
 	class TaskLabelProvider extends LabelProvider implements ITableLabelProvider {
@@ -238,7 +237,6 @@ public class TaskListDialog extends ListDialog {
 	@Override
 	protected void okPressed() {
 		super.okPressed();
-		//if (setProposals != null) setProposals.cancel();
 	    if (selectedTask == null) {
 	    	selectedTask = Arrays.toString(getResult());
 	    	selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
@@ -252,12 +250,6 @@ public class TaskListDialog extends ListDialog {
 			storageService.importTasks(systemSelected, projects);
 		}
 	}
-
-	/*@Override
-	protected void cancelPressed() {
-		super.cancelPressed();
-		if (setProposals != null) setProposals.cancel();
-	}*/
 
     public String getTask() {
 		return selectedTask;
