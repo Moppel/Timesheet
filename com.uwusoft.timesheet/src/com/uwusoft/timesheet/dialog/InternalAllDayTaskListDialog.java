@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 import com.uwusoft.timesheet.TimesheetApp;
@@ -19,7 +20,7 @@ public class InternalAllDayTaskListDialog extends TaskListDialog {
 	private Map<String, Set<String>> systems;
 	
 	public InternalAllDayTaskListDialog(Shell shell, Task taskSelected) {
-		super(shell, taskSelected, false);
+		super(shell, taskSelected);
 		projects = new HashMap<String, Set<String>>();
 		systems = new HashMap<String, Set<String>>();
 		for (String property : AllDayTaskFactory.getAllDayTasks()) {
@@ -44,5 +45,9 @@ public class InternalAllDayTaskListDialog extends TaskListDialog {
 	@Override
 	protected List<String> getInternalTasks() {
 		return new ArrayList<String>(projects.get(projectSelected));
+	}
+
+	@Override
+	protected void setOriginalButton(Composite parent) {
 	}
 }

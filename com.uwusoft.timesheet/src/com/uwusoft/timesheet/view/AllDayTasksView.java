@@ -49,8 +49,8 @@ public class AllDayTasksView extends AbstractTasksView {
 		for(String allDayTask : allDayTasks)
     		allDayTaskIndex.put(allDayTask, i++);
 
-		String[] titles = { "From", "To", "Requested", "Task", "Issue Key" };
-		int[] bounds = { 80, 80, 70, 150, 70 };
+		String[] titles = { "From", "To", "Requested", "Task", "Project", "Issue Key" };
+		int[] bounds = { 80, 80, 70, 150, 150, 70 };
         
 		int colNum = 0;
 		// First column is for the from date
@@ -185,7 +185,34 @@ public class AllDayTasksView extends AbstractTasksView {
 	    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
 			}
 		});
-		// Fifth column is for the issue key
+		// Fifth column is for the project
+		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
+		col.setEditingSupport(new EditingSupport(viewer) {
+
+		    protected boolean canEdit(Object element) {
+		        return false;
+		    }
+
+		    protected CellEditor getCellEditor(Object element) {
+		        return null;
+		    }
+
+		    protected Object getValue(Object element) {
+		        return ((AllDayTaskEntry) element).getTask().getProject().getName();
+		    }
+
+		    protected void setValue(Object element, Object value) {
+		    }
+		});
+		col.setLabelProvider(new AlternatingColumnProvider() {
+			public String getText(Object element) {
+				return ((AllDayTaskEntry) element).getTask().getProject().getName();
+			}
+			public Image getImage(Object obj) {
+	    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
+			}
+		});
+		// Sixth column is for the issue key
 		col = createTableViewerColumn(titles[colNum], bounds[colNum], colNum++);
 		col.setEditingSupport(new EditingSupport(viewer) {
 

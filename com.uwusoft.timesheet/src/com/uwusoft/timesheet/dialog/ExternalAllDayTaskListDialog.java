@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 import com.uwusoft.timesheet.Activator;
@@ -17,7 +18,7 @@ import com.uwusoft.timesheet.model.Task;
 public class ExternalAllDayTaskListDialog extends TaskListDialog {
 
 	public ExternalAllDayTaskListDialog(Shell shell, Task taskSelected) {
-		super(shell, taskSelected, false);
+		super(shell, taskSelected);
 		setTitle("External All Day Tasks");
 	}
 
@@ -36,5 +37,14 @@ public class ExternalAllDayTaskListDialog extends TaskListDialog {
     		allDayTasks.add(property.substring(property.indexOf(".") + 1));
     	}
     	return new ArrayList<String>(allDayTasks);
+	}
+
+	@Override
+	protected void setOriginalButton(Composite parent) {
+	}
+
+	@Override
+	protected String getSystemText() {
+		return "Issue";
 	}
 }

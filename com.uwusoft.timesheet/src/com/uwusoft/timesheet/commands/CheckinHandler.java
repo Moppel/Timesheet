@@ -13,7 +13,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.TimesheetApp;
-import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.dialog.TaskListDialogWithTime;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Project;
@@ -34,7 +34,7 @@ public class CheckinHandler extends AbstractHandler {
 		} catch (ParseException e) {
 			MessageBox.setError(title, e.getMessage());
 		}			
-		TaskListDialog listDialog = new TaskListDialog(Display.getDefault(),
+		TaskListDialogWithTime listDialog = new TaskListDialogWithTime(Display.getDefault(),
 				TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK), startDate, title);
 		if (listDialog.open() == Dialog.OK) {
 			storageService.createTaskEntry(new TaskEntry(listDialog.getTime(), new Task(StorageService.CHECK_IN)));

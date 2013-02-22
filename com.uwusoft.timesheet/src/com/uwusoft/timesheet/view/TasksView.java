@@ -26,7 +26,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.dialog.TaskListDialogWithComment;
 import com.uwusoft.timesheet.dialog.TimeDialog;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.TaskEntry;
@@ -291,7 +291,7 @@ public class TasksView extends AbstractTasksView {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			TaskListDialog listDialog = new TaskListDialog(cellEditorWindow.getShell(),	entry.getTask(), entry.getComment());
+			TaskListDialogWithComment listDialog = new TaskListDialogWithComment(cellEditorWindow.getShell(), entry.getTask(), entry.getComment());
 			if (listDialog.open() == Dialog.OK) {
 			    String selectedTask = Arrays.toString(listDialog.getResult());
 			    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));

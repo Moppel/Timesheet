@@ -18,7 +18,7 @@ import org.eclipse.ui.services.ISourceProviderService;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
-import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.dialog.TaskListDialogWithTime;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.Task;
@@ -26,7 +26,7 @@ import com.uwusoft.timesheet.model.TaskEntry;
 import com.uwusoft.timesheet.util.MessageBox;
 
 public class ChangeTaskHandler extends AbstractHandler {
-	private TaskListDialog listDialog;
+	private TaskListDialogWithTime listDialog;
 	private LocalStorageService storageService = LocalStorageService.getInstance();
 
 	@Override
@@ -60,7 +60,7 @@ public class ChangeTaskHandler extends AbstractHandler {
 		}
 		else
 			lastTask = lastTaskEntry == null ? TimesheetApp.createTask(TimesheetApp.DEFAULT_TASK) : lastTaskEntry.getTask();
-		listDialog = new TaskListDialog(Display.getDefault(), lastTask, changeDate, "Change task");
+		listDialog = new TaskListDialogWithTime(Display.getDefault(), lastTask, changeDate, "Change task");
 		listDialog.setMessage("Select next task");
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = listDialog.getTask();
