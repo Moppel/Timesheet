@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.6"?><target name="eclipse4_rcp" sequenceNumber="1">
+<locations>
+<location includeAllPlatforms="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="org.eclipse.rcp.sdk.id" version="4.2.1.M20120914-1800"/>
+<unit id="org.eclipse.equinox.sdk.feature.group" version="3.8.0.v20120522-1841-7M7fA78g5_y-g-jtHxcd5k8q8lFR"/>
+<repository location="http://download.eclipse.org/releases/juno/"/>
+</location>
+</locations>
+</target>
