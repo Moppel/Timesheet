@@ -677,7 +677,7 @@ public class GoogleStorageService extends EventManager implements StorageService
 					List<SubmissionTask> tasks = new ArrayList<SubmissionTask>(project.getTasks());
 						
 					for (ListEntry entry : listEntries) // collect available tasks
-						for (SubmissionTask task : tasks)
+						for (SubmissionTask task : project.getTasks())
 							if (task.getName().equals(entry.getCustomElements().getValue(TASK)))
 								tasks.remove(task);							
 					project.setTasks(tasks);
