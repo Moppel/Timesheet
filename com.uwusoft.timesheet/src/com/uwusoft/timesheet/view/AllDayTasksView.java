@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.DialogCellEditor;
@@ -24,9 +24,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import com.uwusoft.timesheet.dialog.DateDialog;
+import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
+import com.uwusoft.timesheet.dialog.EndAllDayTaskDateDialog;
 import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.InternalAllDayTaskListDialog;
+import com.uwusoft.timesheet.dialog.StartAllDayTaskDateDialog;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
@@ -65,6 +67,11 @@ public class AllDayTasksView extends AbstractTasksView {
 		        return new DateDialogCellEditor(viewer.getTable(), (AllDayTaskEntry) element) {
 
 					@Override
+					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
+						return new StartAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set start date of " + entry.getExternalId(), entry.getTask().getName(), getDate(entry));
+					}		        	
+
+					@Override
 					protected Date getDate(AllDayTaskEntry entry) {
 						return entry.getFrom();
 					}
@@ -72,7 +79,7 @@ public class AllDayTasksView extends AbstractTasksView {
 					@Override
 					protected void setDate(AllDayTaskEntry entry, Timestamp date) {
 						entry.setFrom(date);
-					}		        	
+					}
 		        };
 		    }
 
@@ -102,6 +109,11 @@ public class AllDayTasksView extends AbstractTasksView {
 
 		    protected CellEditor getCellEditor(Object element) {
 		        return new DateDialogCellEditor(viewer.getTable(), (AllDayTaskEntry) element) {
+
+					@Override
+					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
+						return new EndAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set end date of " + entry.getExternalId(), entry.getTask().getName(), getDate(entry));
+					}		        	
 
 					@Override
 					protected Date getDate(AllDayTaskEntry entry) {
@@ -255,7 +267,7 @@ public class AllDayTasksView extends AbstractTasksView {
 
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
-			DateDialog dateDialog = new DateDialog(cellEditorWindow.getDisplay(), entry.getExternalId(), getDate(entry));
+			AllDayTaskDateDialog dateDialog = getDateDialog(cellEditorWindow, entry);
 			if (dateDialog.open() == Dialog.OK) {
     			Date date = DateUtils.truncate(dateDialog.getDate(), Calendar.DATE);
     			if (getDate(entry).after(date) || getDate(entry).before(date)) {
@@ -269,6 +281,8 @@ public class AllDayTasksView extends AbstractTasksView {
 			}
 			return null;
 		}
+		
+		protected abstract AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry);
 		
 		protected abstract Date getDate(AllDayTaskEntry entry);
 		
