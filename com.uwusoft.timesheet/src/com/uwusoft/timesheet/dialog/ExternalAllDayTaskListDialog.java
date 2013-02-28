@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.Task;
@@ -24,7 +25,9 @@ public class ExternalAllDayTaskListDialog extends TaskListDialog {
 
 	@Override
 	protected void setSystems() {
-		systems = new String[] {LocalStorageService.getInstance().getAllDayTaskService().getSystem()};
+		String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
+				AllDayTaskService.SERVICE_NAME);
+		systems = new String[] {system};
 	}
 
 	@Override

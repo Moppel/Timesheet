@@ -3,8 +3,10 @@ package com.uwusoft.timesheet.nimsalldaytaskservice;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -34,6 +36,7 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 				getFieldEditorParent()));
 		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.FILTER, "Filter:", getFilterArray(),
 				getFieldEditorParent()));
+		if (StringUtils.isEmpty(getPreferenceStore().getString(AllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT))) return;
 		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.COMPONENT, "Component:", getComponentArray(),
 				getFieldEditorParent()));
         for (String task : LocalStorageService.getInstance().getAllDayTasks())
@@ -68,12 +71,13 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		Map<String, String> components = new HashMap<String, String>();
 		IssueService jiraService = new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
 				.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
-		for (Object componentMap : jiraService.getComponents(new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
-				.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY)).getProjectKey())) {
-		    @SuppressWarnings("unchecked")
-			Map<String, String> component =  (Map<String, String>) componentMap;
-		    components.put(component.get("name"), component.get("id"));			
-		}
+		if (!StringUtils.isEmpty(getPreferenceStore().getString(AllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT)))
+			for (Object componentMap : jiraService.getComponents(new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
+					.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY)).getProjectKey())) {
+				@SuppressWarnings("unchecked")
+				Map<String, String> component =  (Map<String, String>) componentMap;
+				components.put(component.get("name"), component.get("id"));			
+			}
 		return getArray(components);
 	}
 	
@@ -88,5 +92,18 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 			systemArray[row][1] = values[row];
 		}
 		return systemArray;
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent event) {
+		super.propertyChange(event);
+		/*performOk();
+		try {
+			((ScopedPreferenceStore) getPreferenceStore()).save();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		initialize();*/
 	}
 }

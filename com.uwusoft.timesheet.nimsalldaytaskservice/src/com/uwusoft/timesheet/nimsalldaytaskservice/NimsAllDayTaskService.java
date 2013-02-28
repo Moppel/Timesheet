@@ -16,9 +16,11 @@ import java.util.Vector;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
 import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
@@ -42,17 +44,19 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 
 	public NimsAllDayTaskService() throws CoreException {
 		super();
-		String s = Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PREFIX + PROJECT);
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		String s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
 		if (StringUtils.isEmpty(s)) { 
         	PreferencesDialog preferencesDialog;
         	do
         		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
         	while (preferencesDialog.open() != Dialog.OK);
 		}
+		s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
 		if (!StringUtils.isEmpty(s)) projectId = new Long(s);
-		s = Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PREFIX + FILTER);
+		s = preferenceStore.getString(AllDayTaskService.PREFIX + FILTER);
 		if (!StringUtils.isEmpty(s)) filterId = new Long(s);
-		s = Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PREFIX + COMPONENT);
+		s = preferenceStore.getString(AllDayTaskService.PREFIX + COMPONENT);
 		if (!StringUtils.isEmpty(s)) componentId = new Long(s);
 		
 		subTasks = new HashMap<String, String>();
@@ -99,7 +103,9 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 	@Override
 	public Collection<AllDayTaskEntry> getAllDayTaskEntries() {
 		List<AllDayTaskEntry> allDayTaskEntries = new ArrayList<AllDayTaskEntry>();
-		Project project = new Project(projectName, getSystem());
+		String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
+				AllDayTaskService.SERVICE_NAME);
+		Project project = new Project(projectName, system);
 		for (Object issueMap : getIssuesFromFilter("" + filterId)) {
 			@SuppressWarnings("rawtypes")
 			Map issue = (Map) issueMap;
@@ -231,11 +237,6 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		return projectKey;
 	}
 
-	@Override
-	public String getSystem() {
-		return "NIMS";
-	}
-    
 	private void addCustomField(Vector<Object> vector, String customFieldId, String value)
     {
         Hashtable<String, Serializable> customField = new Hashtable<String, Serializable>();

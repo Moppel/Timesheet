@@ -93,7 +93,18 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
         if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY)))
 			StorageSystemSetup.execute();
 				
-		final Date lastTaskEntryDate = getLastTaskEntryDate();
+        Job importAllDayTaskEntriesJob = new Job("Synchronizing all day task entries") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
+					createOrUpdateAllDayTaskEntry(entry, false);				
+				return Status.OK_STATUS;				
+			}
+        };
+        importAllDayTaskEntriesJob.setRule(mutex);
+        importAllDayTaskEntriesJob.schedule();
+        
+        final Date lastTaskEntryDate = getLastTaskEntryDate();
 		final Date importedEndDate = importLastEntryDate(lastTaskEntryDate);
 		
 		firstImportJob = new Job("Importing entries") {
@@ -101,10 +112,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			protected IStatus run(IProgressMonitor monitor) {				
 				if (getStorageService() == null)
 					return Status.CANCEL_STATUS;				
-				
-				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
-					createOrUpdateAllDayTaskEntry(entry, false);
-				
+								
 				Calendar cal = GregorianCalendar.getInstance();
 				cal.set(cal.get(Calendar.YEAR), Calendar.JANUARY, 1);
 				Date startDate = cal.getTime();
@@ -399,7 +407,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
 		Root<Task> root = query.from(Task.class);
 		Path<Project> project = root.get(Task_.project);
-		query.where(criteria.equal(project.get(Project_.system), getAllDayTaskService().getSystem()));
+		String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
+				AllDayTaskService.SERVICE_NAME);
+		query.where(criteria.equal(project.get(Project_.system), system));
 		List<String> tasks = new ArrayList<String>();
 		for (Task task : em.createQuery(query).getResultList())
 			tasks.add(task.getName());

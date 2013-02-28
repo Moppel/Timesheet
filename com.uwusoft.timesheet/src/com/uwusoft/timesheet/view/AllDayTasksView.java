@@ -24,10 +24,13 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.DateDialog;
 import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.InternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
@@ -306,7 +309,9 @@ public class AllDayTasksView extends AbstractTasksView {
 		@Override
 		protected Object openDialogBox(Control cellEditorWindow) {
 			TaskListDialog listDialog;
-			if (storageService.getAllDayTaskService().getSystem().equals(entry.getTask().getProject().getSystem()))
+			String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
+					AllDayTaskService.SERVICE_NAME);
+			if (system.equals(entry.getTask().getProject().getSystem()))
 				listDialog = new ExternalAllDayTaskListDialog(cellEditorWindow.getShell(), entry.getTask());
 			else
 				listDialog = new InternalAllDayTaskListDialog(cellEditorWindow.getShell(), entry.getTask());

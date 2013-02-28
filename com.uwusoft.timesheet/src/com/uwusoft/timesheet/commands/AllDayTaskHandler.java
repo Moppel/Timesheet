@@ -11,8 +11,10 @@ import org.eclipse.core.commands.common.NotDefinedException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.widgets.Display;
 
+import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.AllDayTasks;
@@ -36,8 +38,10 @@ public class AllDayTaskHandler extends AbstractHandler {
 				Date to = DateUtils.truncate(dateDialog.getTo(), Calendar.DATE);
 				String newTask = dateDialog.getTask().substring(dateDialog.getTask().indexOf(".") + 1, dateDialog.getTask().length()).replaceAll("_", " ");
 				AllDayTaskEntry entry;
+				String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
+						AllDayTaskService.SERVICE_NAME);
 				if (LocalStorageService.getInstance().getAllDayTaskService().taskAvailable(newTask))
-					entry = new AllDayTaskEntry(from, to, new Task(newTask, new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), LocalStorageService.getInstance().getAllDayTaskService().getSystem())));
+					entry = new AllDayTaskEntry(from, to, new Task(newTask, new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), system)));
 				else {
 					entry = new AllDayTaskEntry(from, to, TimesheetApp.createTask(dateDialog.getTask()));
 					entry.setSyncStatus(true);

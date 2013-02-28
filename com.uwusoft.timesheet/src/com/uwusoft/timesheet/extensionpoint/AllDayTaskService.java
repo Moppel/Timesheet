@@ -27,5 +27,4 @@ public interface AllDayTaskService {
 	
 	boolean updateAllDayTaskEntry(String key, String taskProperty, Date from, Date to);
 	
-	String getSystem();
 }
