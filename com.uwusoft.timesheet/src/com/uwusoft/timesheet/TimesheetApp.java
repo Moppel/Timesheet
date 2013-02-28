@@ -151,12 +151,16 @@ public class TimesheetApp implements IApplication {
 		Map<String,String> submissionSystems = new HashMap<String, String>();
 		for (String system : systems) {
 			if (!StringUtils.isEmpty(system)) {
-				String descriptiveName = Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
-						+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(SubmissionService.SERVICE_NAME));
+				String descriptiveName = getDescriptiveName(system, SubmissionService.SERVICE_NAME);
 				submissionSystems.put(descriptiveName, system);
 			}
 		}
 		return submissionSystems;
+	}
+
+	public static String getDescriptiveName(String system, String serviceName) {
+		return Character.toUpperCase(system.toCharArray()[system.lastIndexOf('.') + 1])
+				+ system.substring(system.lastIndexOf('.') + 2, system.indexOf(serviceName));
 	}
 	
 	public static String getTaskName(String propertyName) {

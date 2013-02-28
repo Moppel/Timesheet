@@ -38,13 +38,16 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.dialog.SingleSelectSystemDialog;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
@@ -359,8 +362,21 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
-		if (getProjects(getAllDayTaskService().getSystem()).isEmpty())
-			importTasks(getAllDayTaskService().getSystem(), getAllDayTaskService().getAssignedProjects(), true);
+		
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY))) {
+			// TODO first setup for all day task system
+			SingleSelectSystemDialog systemDialog;
+			do
+				systemDialog = new SingleSelectSystemDialog(Display.getDefault(), AllDayTaskService.SERVICE_ID, AllDayTaskService.SERVICE_NAME);
+			while (systemDialog.open() != Dialog.OK);
+			preferenceStore.setValue(AllDayTaskService.PROPERTY, systemDialog.getSelectedSystem());			
+		}
+		
+		String system = TimesheetApp.getDescriptiveName(preferenceStore.getString(AllDayTaskService.PROPERTY),
+				AllDayTaskService.SERVICE_NAME);
+		if (getProjects(system).isEmpty())
+			importTasks(system, getAllDayTaskService().getAssignedProjects(), true);
 		return getLastTaskEntryDate();
 	}
     
