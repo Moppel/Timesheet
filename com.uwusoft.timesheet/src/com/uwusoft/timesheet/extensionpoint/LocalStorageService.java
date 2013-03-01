@@ -97,10 +97,14 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 				
 		if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY)))
 			allDayTaskSystem = TimesheetApp.getDescriptiveName(firstAllDaySystemSetup(), AllDayTaskService.SERVICE_NAME);
+		else
+			allDayTaskSystem = TimesheetApp.getDescriptiveName(preferenceStore.getString(AllDayTaskService.PROPERTY), AllDayTaskService.SERVICE_NAME);
         
 		Job importAllDayTaskEntriesJob = new Job("Synchronizing all day task entries") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				if (getProjects(allDayTaskSystem).isEmpty())
+					importTasks(allDayTaskSystem, getAllDayTaskService().getAssignedProjects(), true);
 				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
 					createOrUpdateAllDayTaskEntry(entry, false);				
 				return Status.OK_STATUS;				
@@ -376,8 +380,6 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
 				
-		if (getProjects(allDayTaskSystem).isEmpty())
-			importTasks(allDayTaskSystem, getAllDayTaskService().getAssignedProjects(), true);
 		return getLastTaskEntryDate();
 	}
     
@@ -950,7 +952,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return storageService;
 	}
 	
-	public AllDayTaskService getAllDayTaskService() {
+	public static AllDayTaskService getAllDayTaskService() {
 		if (allDayTaskService == null) {
 			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 			if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY)))
@@ -962,23 +964,25 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return allDayTaskService;
 	}
 
-	private String firstAllDaySystemSetup() {
+	private static String firstAllDaySystemSetup() {
 		// TODO first setup for all day task system
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		SingleSelectSystemDialog systemDialog;
 		do
-			systemDialog = new SingleSelectSystemDialog(Display.getDefault(), AllDayTaskService.SERVICE_ID, AllDayTaskService.SERVICE_NAME);
+			systemDialog = new SingleSelectSystemDialog(Display.getDefault(), IssueService.SERVICE_ID, IssueService.SERVICE_NAME);
 		while (systemDialog.open() != Dialog.OK);
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		preferenceStore.setValue(AllDayTaskService.PROPERTY, systemDialog.getSelectedSystem());
+		preferenceStore.setValue(IssueService.PROPERTY, systemDialog.getSelectedSystem());
 		PreferencesDialog preferencesDialog;
     	do
     		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.jira3.Jira3PreferencePage");
     	while (preferencesDialog.open() != Dialog.OK);
-    	new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
-			.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
+		do
+			systemDialog = new SingleSelectSystemDialog(Display.getDefault(), AllDayTaskService.SERVICE_ID, AllDayTaskService.SERVICE_NAME);
+		while (systemDialog.open() != Dialog.OK);
+		preferenceStore.setValue(AllDayTaskService.PROPERTY, systemDialog.getSelectedSystem());
 		do
 			preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
-		while (preferencesDialog.open() != Dialog.OK);
+		while (preferencesDialog.open() != Dialog.OK || StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PREFIX + AllDayTaskService.COMPONENT)));
     	getAllDayTaskService();
 		return systemDialog.getSelectedSystem();
 	}

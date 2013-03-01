@@ -24,12 +24,15 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
+import com.uwusoft.timesheet.Activator;
+import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
 import com.uwusoft.timesheet.dialog.EndAllDayTaskDateDialog;
 import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.InternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.StartAllDayTaskDateDialog;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
+import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;

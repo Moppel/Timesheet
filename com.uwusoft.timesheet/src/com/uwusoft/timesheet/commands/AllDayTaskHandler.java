@@ -40,8 +40,8 @@ public class AllDayTaskHandler extends AbstractHandler {
 				AllDayTaskEntry entry;
 				String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
 						AllDayTaskService.SERVICE_NAME);
-				if (LocalStorageService.getInstance().getAllDayTaskService().taskAvailable(newTask))
-					entry = new AllDayTaskEntry(from, to, new Task(newTask, new Project(LocalStorageService.getInstance().getAllDayTaskService().getProjectName(), system)));
+				if (LocalStorageService.getAllDayTaskService().taskAvailable(newTask))
+					entry = new AllDayTaskEntry(from, to, new Task(newTask, new Project(LocalStorageService.getAllDayTaskService().getProjectName(), system)));
 				else {
 					entry = new AllDayTaskEntry(from, to, TimesheetApp.createTask(dateDialog.getTask()));
 					entry.setSyncStatus(true);

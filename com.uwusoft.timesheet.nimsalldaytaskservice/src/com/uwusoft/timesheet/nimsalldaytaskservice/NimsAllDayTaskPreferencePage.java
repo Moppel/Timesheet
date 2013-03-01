@@ -6,7 +6,6 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -15,6 +14,8 @@ import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.IssueService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.preferences.TaskFieldEditor;
+import com.uwusoft.timesheet.submission.model.SubmissionProject;
+import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.ExtensionManager;
 
 public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
@@ -39,8 +40,9 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		if (StringUtils.isEmpty(getPreferenceStore().getString(AllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT))) return;
 		addField(new ComboFieldEditor(AllDayTaskService.PREFIX + NimsAllDayTaskService.COMPONENT, "Component:", getComponentArray(),
 				getFieldEditorParent()));
-        for (String task : LocalStorageService.getInstance().getAllDayTasks())
-    		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.replaceAll("\\s", "_"), task + ":", getFieldEditorParent()));
+		for (SubmissionProject project : LocalStorageService.getAllDayTaskService().getAssignedProjects())
+			for (SubmissionTask task : project.getTasks())
+				addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.getName().replaceAll("\\s", "_"), task.getName() + ":", getFieldEditorParent()));
 	}
 
 	private String[][] getProjectArray() {
@@ -92,18 +94,5 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 			systemArray[row][1] = values[row];
 		}
 		return systemArray;
-	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent event) {
-		super.propertyChange(event);
-		/*performOk();
-		try {
-			((ScopedPreferenceStore) getPreferenceStore()).save();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		initialize();*/
 	}
 }

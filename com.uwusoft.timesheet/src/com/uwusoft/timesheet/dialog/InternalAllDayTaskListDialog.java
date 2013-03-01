@@ -25,7 +25,7 @@ public class InternalAllDayTaskListDialog extends TaskListDialog {
 		systems = new HashMap<String, Set<String>>();
 		for (String property : AllDayTaskFactory.getAllDayTasks()) {
 			Task task = TimesheetApp.createTask(property);
-			if (LocalStorageService.getInstance().getAllDayTaskService().taskAvailable(property.substring(property.indexOf(".") + 1)))
+			if (LocalStorageService.getAllDayTaskService().taskAvailable(property.substring(property.indexOf(".") + 1)))
 				continue;
 			if (!systems.containsKey(task.getProject().getSystem()))
 				systems.put(task.getProject().getSystem(), new LinkedHashSet<String>());

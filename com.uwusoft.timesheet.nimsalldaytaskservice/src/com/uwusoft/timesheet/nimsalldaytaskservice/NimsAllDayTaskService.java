@@ -33,8 +33,6 @@ import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTaskService {	
-	public static final String FILTER = "filter";
-	public static final String COMPONENT = "component";
 	
 	private Map<String, String> subTasks, subTaskIds;
 	private Long projectId, filterId, componentId;
@@ -46,12 +44,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		super();
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		String s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
-		/*if (StringUtils.isEmpty(s)) { 
-        	PreferencesDialog preferencesDialog;
-        	do
-        		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
-        	while (preferencesDialog.open() != Dialog.OK);
-		}*/
+		if (StringUtils.isEmpty(s))	showPreferencesDialog();
 		s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
 		if (!StringUtils.isEmpty(s)) projectId = new Long(s);
 		s = preferenceStore.getString(AllDayTaskService.PREFIX + FILTER);
@@ -85,6 +78,18 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		customFieldFormatter = new SimpleDateFormat("dd/MMM/yy", Locale.US);
 		summaryFormatter = new SimpleDateFormat("yyyyMMdd", Locale.US);
 		updatedFormatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
+	}
+
+	private void showPreferencesDialog() {
+		Display.getDefault().syncExec(new Runnable() {
+    		@Override
+    		public void run() {
+    			PreferencesDialog preferencesDialog;
+    			do
+    				preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
+    			while (preferencesDialog.open() != Dialog.OK);
+    		}
+		});
 	}
 
 	@Override
