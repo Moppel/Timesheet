@@ -46,12 +46,12 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		super();
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		String s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
-		if (StringUtils.isEmpty(s)) { 
+		/*if (StringUtils.isEmpty(s)) { 
         	PreferencesDialog preferencesDialog;
         	do
         		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
         	while (preferencesDialog.open() != Dialog.OK);
-		}
+		}*/
 		s = preferenceStore.getString(AllDayTaskService.PREFIX + PROJECT);
 		if (!StringUtils.isEmpty(s)) projectId = new Long(s);
 		s = preferenceStore.getString(AllDayTaskService.PREFIX + FILTER);

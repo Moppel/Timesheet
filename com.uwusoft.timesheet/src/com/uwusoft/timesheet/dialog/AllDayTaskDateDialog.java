@@ -43,9 +43,9 @@ public class AllDayTaskDateDialog extends Dialog {
 
 	private String title, task;
     private int fromDay, fromMonth, fromYear, toDay, toMonth, toYear;
-    private Combo taskCombo;
-	private DateTime dateTimeStart;
-	private DateTime dateTimeEnd;
+    protected Combo taskCombo;
+	protected DateTime dateTimeStart;
+	protected DateTime dateTimeEnd;
 	private Text status;
 	private final Period period;
     private Map<String, String> allDayTaskTranslations;
@@ -84,7 +84,7 @@ public class AllDayTaskDateDialog extends Dialog {
         }
         taskCombo.setItems(allDayTasks.toArray(new String[allDayTasks.size()]));
 		for (int i = 0; i < allDayTasks.size(); i++) {
-			if (task.equals(allDayTaskTranslations.get(allDayTasks.get(i)))) {
+			if (allDayTaskTranslations.get(allDayTasks.get(i)).endsWith(task)) {
 				taskCombo.select(i);
 				break;
 			}
@@ -119,7 +119,7 @@ public class AllDayTaskDateDialog extends Dialog {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-        dateTimeEnd.setFocus();
+        setEnabledAndFocus();
 		status = new Text(composite, SWT.NONE);
 		status.setEnabled(false);
 		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 0));
@@ -172,6 +172,14 @@ public class AllDayTaskDateDialog extends Dialog {
 
 		context.bindValue(SWTObservables.observeText(status), periodValidator
 				.getValidationStatus(), targetToModel, modelToTarget);
+	}
+	
+	protected void setEnabledAndFocus() {		
+        dateTimeEnd.setFocus();
+	}
+	
+	public Date getDate() {
+		return getTo();
 	}
     
 	@Override

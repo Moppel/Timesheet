@@ -47,6 +47,7 @@ import org.eclipse.ui.PlatformUI;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.SystemShutdownTimeCaptureService;
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.dialog.SingleSelectSystemDialog;
 import com.uwusoft.timesheet.extensionpoint.model.DailySubmissionEntry;
 import com.uwusoft.timesheet.extensionpoint.model.SubmissionEntry;
@@ -72,6 +73,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	public static EntityManagerFactory factory;	
 	private static EntityManager em;
     private Map<String,String> submissionSystems;
+    private String allDayTaskSystem;
     private Job firstImportJob, syncEntriesJob, syncTasksJob;
     private static LocalStorageService instance;
     private static StorageService storageService;
@@ -93,7 +95,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
         if (StringUtils.isEmpty(preferenceStore.getString(StorageService.PROPERTY)))
 			StorageSystemSetup.execute();
 				
-        Job importAllDayTaskEntriesJob = new Job("Synchronizing all day task entries") {
+		if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY)))
+			allDayTaskSystem = TimesheetApp.getDescriptiveName(firstAllDaySystemSetup(), AllDayTaskService.SERVICE_NAME);
+        
+		Job importAllDayTaskEntriesJob = new Job("Synchronizing all day task entries") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
@@ -370,21 +375,9 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		}
 		if (submissionSystems.isEmpty() && getProjects("Local").isEmpty())
 			importTasks("Local", new LocalSubmissionService().getAssignedProjects().values(), true);
-		
-		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-		if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY))) {
-			// TODO first setup for all day task system
-			SingleSelectSystemDialog systemDialog;
-			do
-				systemDialog = new SingleSelectSystemDialog(Display.getDefault(), AllDayTaskService.SERVICE_ID, AllDayTaskService.SERVICE_NAME);
-			while (systemDialog.open() != Dialog.OK);
-			preferenceStore.setValue(AllDayTaskService.PROPERTY, systemDialog.getSelectedSystem());			
-		}
-		
-		String system = TimesheetApp.getDescriptiveName(preferenceStore.getString(AllDayTaskService.PROPERTY),
-				AllDayTaskService.SERVICE_NAME);
-		if (getProjects(system).isEmpty())
-			importTasks(system, getAllDayTaskService().getAssignedProjects(), true);
+				
+		if (getProjects(allDayTaskSystem).isEmpty())
+			importTasks(allDayTaskSystem, getAllDayTaskService().getAssignedProjects(), true);
 		return getLastTaskEntryDate();
 	}
     
@@ -407,9 +400,7 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		CriteriaQuery<Task> query = criteria.createQuery(Task.class);
 		Root<Task> root = query.from(Task.class);
 		Path<Project> project = root.get(Task_.project);
-		String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
-				AllDayTaskService.SERVICE_NAME);
-		query.where(criteria.equal(project.get(Project_.system), system));
+		query.where(criteria.equal(project.get(Project_.system), allDayTaskSystem));
 		List<String> tasks = new ArrayList<String>();
 		for (Task task : em.createQuery(query).getResultList())
 			tasks.add(task.getName());
@@ -961,11 +952,35 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	
 	public AllDayTaskService getAllDayTaskService() {
 		if (allDayTaskService == null) {
+			IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+			if (StringUtils.isEmpty(preferenceStore.getString(AllDayTaskService.PROPERTY)))
+				firstAllDaySystemSetup();			
 			allDayTaskService = new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
-					.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY));
+					.getService(preferenceStore.getString(AllDayTaskService.PROPERTY));
 			if (allDayTaskService == null) MessageBox.setError("Jira service", "Can't reach remote Jira service");
 		}
 		return allDayTaskService;
+	}
+
+	private String firstAllDaySystemSetup() {
+		// TODO first setup for all day task system
+		SingleSelectSystemDialog systemDialog;
+		do
+			systemDialog = new SingleSelectSystemDialog(Display.getDefault(), AllDayTaskService.SERVICE_ID, AllDayTaskService.SERVICE_NAME);
+		while (systemDialog.open() != Dialog.OK);
+		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
+		preferenceStore.setValue(AllDayTaskService.PROPERTY, systemDialog.getSelectedSystem());
+		PreferencesDialog preferencesDialog;
+    	do
+    		preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.jira3.Jira3PreferencePage");
+    	while (preferencesDialog.open() != Dialog.OK);
+    	new ExtensionManager<IssueService>(IssueService.SERVICE_ID)
+			.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
+		do
+			preferencesDialog = new PreferencesDialog(Display.getDefault(), "com.uwusoft.timesheet.nimsalldaytaskservice.NimsAllDayTaskPreferencePage");
+		while (preferencesDialog.open() != Dialog.OK);
+    	getAllDayTaskService();
+		return systemDialog.getSelectedSystem();
 	}
 	
 	public void waitUntilJobsFinished() {

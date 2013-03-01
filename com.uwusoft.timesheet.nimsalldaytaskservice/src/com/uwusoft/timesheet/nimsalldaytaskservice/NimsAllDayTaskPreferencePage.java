@@ -73,7 +73,7 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 				.getService(Activator.getDefault().getPreferenceStore().getString(IssueService.PROPERTY));
 		if (!StringUtils.isEmpty(getPreferenceStore().getString(AllDayTaskService.PREFIX + NimsAllDayTaskService.PROJECT)))
 			for (Object componentMap : jiraService.getComponents(new ExtensionManager<AllDayTaskService>(AllDayTaskService.SERVICE_ID)
-					.getService(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY)).getProjectKey())) {
+					.getService(getPreferenceStore().getString(AllDayTaskService.PROPERTY)).getProjectKey())) {
 				@SuppressWarnings("unchecked")
 				Map<String, String> component =  (Map<String, String>) componentMap;
 				components.put(component.get("name"), component.get("id"));			

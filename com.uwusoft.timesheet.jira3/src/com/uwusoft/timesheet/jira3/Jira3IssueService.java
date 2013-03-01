@@ -29,7 +29,6 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
 
-import com.atlassian.core.util.collection.EasyList;
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.dialog.LoginDialog;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
@@ -47,7 +46,7 @@ public class Jira3IssueService implements IssueService {
     
 	public Jira3IssueService() throws CoreException {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
-        if (StringUtils.isEmpty(preferenceStore.getString(PREFIX + SubmissionService.URL))
+        /*if (StringUtils.isEmpty(preferenceStore.getString(PREFIX + SubmissionService.URL))
         		|| StringUtils.isEmpty(preferenceStore.getString(PREFIX + StorageService.USERNAME))) {
         		Display.getDefault().syncExec(new Runnable() {
             		@Override
@@ -58,7 +57,7 @@ public class Jira3IssueService implements IssueService {
                         while (preferencesDialog.open() != Dialog.OK);
             		}
             	});
-        	}
+        	}*/
 		// Initialize RPC Client
 		XmlRpcClientConfigImpl config = new XmlRpcClientConfigImpl();
 	    try {
