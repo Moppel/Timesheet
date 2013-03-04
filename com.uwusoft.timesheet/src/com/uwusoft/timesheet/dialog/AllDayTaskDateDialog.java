@@ -43,9 +43,8 @@ public class AllDayTaskDateDialog extends Dialog {
 
 	private String title, task;
     private int fromDay, fromMonth, fromYear, toDay, toMonth, toYear;
-    protected Combo taskCombo;
-	protected DateTime dateTimeStart;
-	protected DateTime dateTimeEnd;
+    private Combo taskCombo;
+	protected DateTime dateTimeStart, dateTimeEnd;
 	private Text status;
 	private final Period period;
     private Map<String, String> allDayTaskTranslations;
@@ -55,27 +54,57 @@ public class AllDayTaskDateDialog extends Dialog {
 	}
     
 	public AllDayTaskDateDialog(Display display, String title, String task, Date date) {
+		this(display, title, task, date, date);
+	}
+
+	public AllDayTaskDateDialog(Display display, String title, String task, Date startDate, Date endDate) {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
 		this.title = title;
 		this.task = task;
 		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
+		calendar.setTime(startDate);
 		fromDay = calendar.get(Calendar.DAY_OF_MONTH);
 		fromMonth = calendar.get(Calendar.MONTH);
 		fromYear = calendar.get(Calendar.YEAR);
+		calendar.setTime(endDate);
 		toDay = calendar.get(Calendar.DAY_OF_MONTH);
 		toMonth = calendar.get(Calendar.MONTH);
 		toYear = calendar.get(Calendar.YEAR);
-		this.period = new Period(new Date(), new Date());
+		period = new Period(startDate, endDate);
 		allDayTaskTranslations = new HashMap<String, String>();
 	}
-
+	
 	@Override
     protected Control createDialogArea(Composite parent) {
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(2, false));
         
-        (new Label(composite, SWT.NULL)).setText("Task: ");
+        createTaskPart(composite);
+		
+		(new Label(composite, SWT.NULL)).setText("From: ");
+		createStartDatePart(composite);
+
+		(new Label(composite, SWT.NULL)).setText("To: ");
+        createEndDatePart(composite);
+		
+        setFocus();
+        
+        status = new Text(composite, SWT.NONE);
+		status.setEnabled(false);
+		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 0));
+		status.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				if (getButton(IDialogConstants.OK_ID) != null)
+					getButton(IDialogConstants.OK_ID).setEnabled(Status.OK_STATUS.getMessage().equals(status.getText()));
+			}
+		});
+		createDatabinding();
+        return composite;
+	}
+
+	protected void createTaskPart(Composite composite) {
+		(new Label(composite, SWT.NULL)).setText("Task: ");
         taskCombo = new Combo(composite, SWT.READ_ONLY);
         List<String> allDayTasks = new ArrayList<String>();
         for (String allDayTask : AllDayTaskFactory.getAllDayTasks()) {
@@ -94,8 +123,9 @@ public class AllDayTaskDateDialog extends Dialog {
                 task = taskCombo.getText();
             }
         });
-		
-		(new Label(composite, SWT.NULL)).setText("From: ");
+	}
+
+	protected void createStartDatePart(Composite composite) {
 		dateTimeStart = new DateTime(composite, SWT.CALENDAR);
 		dateTimeStart.setDate(fromYear, fromMonth, fromDay);
 		dateTimeStart.addSelectionListener(new SelectionListener() {			
@@ -107,8 +137,10 @@ public class AllDayTaskDateDialog extends Dialog {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-        (new Label(composite, SWT.NULL)).setText("To: ");
-        dateTimeEnd = new DateTime(composite, SWT.CALENDAR);
+	}
+
+	protected void createEndDatePart(Composite composite) {
+		dateTimeEnd = new DateTime(composite, SWT.CALENDAR);
         dateTimeEnd.setDate(toYear, toMonth, toDay);
         dateTimeEnd.addSelectionListener(new SelectionListener() {			
 			public void widgetSelected(SelectionEvent e) {
@@ -119,24 +151,15 @@ public class AllDayTaskDateDialog extends Dialog {
 			public void widgetDefaultSelected(SelectionEvent e) {
 			}
 		});
-        setEnabledAndFocus();
-		status = new Text(composite, SWT.NONE);
-		status.setEnabled(false);
-		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 0));
-		status.addModifyListener(new ModifyListener() {
-			@Override
-			public void modifyText(ModifyEvent e) {
-				if (getButton(IDialogConstants.OK_ID) != null)
-					getButton(IDialogConstants.OK_ID).setEnabled(Status.OK_STATUS.getMessage().equals(status.getText()));
-			}
-		}); 
-		createDatabinding();
-        return composite;
+	}
+
+	protected void setFocus() {
+		dateTimeEnd.setFocus();
 	}
 
 	private void createDatabinding() { // see http://eclipsesource.com/blogs/2009/02/27/databinding-crossvalidation-with-a-multivalidator/
-		DateTimeObservableValue startObservable = new DateTimeObservableValue(this.dateTimeStart);
-		DateTimeObservableValue endObservable = new DateTimeObservableValue(this.dateTimeEnd);
+		DateTimeObservableValue startObservable = new DateTimeObservableValue(dateTimeStart);
+		DateTimeObservableValue endObservable = new DateTimeObservableValue(dateTimeEnd);
 
 		DataBindingContext context = new DataBindingContext();
 
@@ -146,14 +169,15 @@ public class AllDayTaskDateDialog extends Dialog {
 		UpdateValueStrategy targetToModel = new UpdateValueStrategy(
 				UpdateValueStrategy.POLICY_UPDATE);
 
-		context.bindValue(startObservable, BeansObservables.observeValue(this.period,
-				Period.PROP_START), targetToModel, modelToTarget);
+		context.bindValue(startObservable, BeansObservables
+				.observeValue(period, Period.PROP_START), targetToModel, modelToTarget);
 
 		context.bindValue(endObservable, BeansObservables
-				.observeValue(this.period, Period.PROP_END), targetToModel, modelToTarget);
+				.observeValue(period, Period.PROP_END), targetToModel, modelToTarget);
 
 		// bind status
 		PeriodValidator periodValidator = new PeriodValidator(startObservable, endObservable);
+		setKey(periodValidator);
 
 		modelToTarget = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
 		modelToTarget.setConverter(new Converter(IStatus.class, String.class) {
@@ -173,11 +197,10 @@ public class AllDayTaskDateDialog extends Dialog {
 		context.bindValue(SWTObservables.observeText(status), periodValidator
 				.getValidationStatus(), targetToModel, modelToTarget);
 	}
-	
-	protected void setEnabledAndFocus() {		
-        dateTimeEnd.setFocus();
+
+	protected void setKey(PeriodValidator periodValidator) {
 	}
-	
+
 	public Date getDate() {
 		return getTo();
 	}
