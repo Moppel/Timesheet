@@ -35,7 +35,7 @@ public abstract class AbstractTasksView extends ViewPart implements PropertyChan
         
 		createPartBeforeViewer(parent);
 		
-		viewer = new TableViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+		viewer = new TableViewer(parent, SWT.BORDER|SWT.HIDE_SELECTION|SWT.FULL_SELECTION|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
 		createColumns(parent, viewer);
 		final Table table = viewer.getTable();
 		table.setHeaderVisible(true);
