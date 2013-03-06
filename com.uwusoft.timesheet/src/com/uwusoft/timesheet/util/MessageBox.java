@@ -40,7 +40,12 @@ public class MessageBox {
 
 	public static void setMessage(final String title, final String message) {
 		if ((toolTip = getSystemTrayToolTip()) == null) {
-			MessageDialog.openInformation(shell, title, message);
+			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					MessageDialog.openInformation(shell, title, message);
+				}
+			});
 		}
 		else {
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
@@ -57,7 +62,12 @@ public class MessageBox {
 	
 	public static void setError(final String title, final String message) {
 		if ((toolTip = getSystemTrayToolTip()) == null) {
-			MessageDialog.openError(shell, title, message);
+			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+				@Override
+				public void run() {
+					MessageDialog.openError(shell, title, message);
+				}
+			});
 		}
 		else {
 			PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
