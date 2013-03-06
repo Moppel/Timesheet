@@ -19,6 +19,8 @@ import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -252,6 +254,16 @@ public class AllDayTasksView extends AbstractTasksView {
 			}
 			public Image getImage(Object obj) {
 	    		return null;
+			}
+			@Override
+			public Color getBackground(Object element) {
+				if (storageService.isDue(((AllDayTaskEntry)element)) != null)
+					return viewer.getTable().getDisplay().getSystemColor(SWT.COLOR_RED);
+				return super.getBackground(element);
+			}
+			@Override
+			public String getToolTipText(Object element) {
+				return storageService.isDue(((AllDayTaskEntry)element));
 			}
 		});
 	}

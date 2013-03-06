@@ -516,12 +516,18 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	private void createOrUpdateAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
-		if (allDayTaskSystem.equals(entry.getTask().getProject().getSystem()) && entry.getTask().getName().contains("Vacation")) { // TODO how to get vacation related tasks
-			long dayDiff = TimeUnit.DAYS.convert(entry.getFrom().getTime() - DateUtils.truncate(new Date(), Calendar.DATE).getTime(), TimeUnit.MILLISECONDS);
-			if (dayDiff < 14) MessageBox.setMessage("Vacation", "Sent Vacation task " + entry.getExternalId() + " to leader");
-		}
+		String message = isDue(entry);
+		if (message != null) MessageBox.setMessage(entry.getTask().getName(), message);
 		if (updateAllDayTaskEntry(entry).size() != 1)
 			createAllDayTaskEntry(entry, false);
+	}
+
+	public String isDue(AllDayTaskEntry entry) {
+		if (allDayTaskSystem.equals(entry.getTask().getProject().getSystem()) && entry.getTask().getName().contains("Vacation")) // TODO how to get vacation related tasks
+			if (TimeUnit.DAYS.convert(entry.getFrom().getTime() - DateUtils.truncate(new Date(), Calendar.DATE).getTime(), TimeUnit.MILLISECONDS)
+					< 14)
+			return "Send Vacation task " + entry.getExternalId() + " to leader";
+		return null;
 	}
 	
 	public void createAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {

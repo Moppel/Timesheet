@@ -4,9 +4,11 @@ import java.beans.PropertyChangeListener;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
 import org.eclipse.jface.viewers.ViewerCell;
+import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.layout.GridData;
@@ -36,6 +38,7 @@ public abstract class AbstractTasksView extends ViewPart implements PropertyChan
 		createPartBeforeViewer(parent);
 		
 		viewer = new TableViewer(parent, SWT.BORDER|SWT.HIDE_SELECTION|SWT.FULL_SELECTION|SWT.MULTI|SWT.H_SCROLL|SWT.V_SCROLL);
+		ColumnViewerToolTipSupport.enableFor(viewer, ToolTip.NO_RECREATE);
 		createColumns(parent, viewer);
 		final Table table = viewer.getTable();
 		table.setHeaderVisible(true);
