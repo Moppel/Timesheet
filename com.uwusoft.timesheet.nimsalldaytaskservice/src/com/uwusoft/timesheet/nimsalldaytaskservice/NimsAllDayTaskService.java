@@ -24,6 +24,7 @@ import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.dialog.PreferencesDialog;
 import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
+import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 import com.uwusoft.timesheet.jira3.Jira3IssueService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
 import com.uwusoft.timesheet.model.Project;
@@ -31,6 +32,7 @@ import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.submission.model.SubmissionProject;
 import com.uwusoft.timesheet.submission.model.SubmissionTask;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
+import com.uwusoft.timesheet.util.DesktopUtil;
 
 public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTaskService {	
 	
@@ -256,4 +258,8 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         v.add(p0);
         return v;
     }
+
+	@Override
+	public void openUrl(AllDayTaskEntry entry) {
+		DesktopUtil.openUrl(Activator.getDefault().getPreferenceStore().getString(Jira3IssueService.PREFIX + SubmissionService.URL) + "browse/" + entry.getExternalId());	}
 }

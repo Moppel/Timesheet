@@ -29,4 +29,5 @@ public interface AllDayTaskService {
 	
 	boolean updateAllDayTaskEntry(String key, String taskProperty, Date from, Date to);
 	
+	void openUrl(AllDayTaskEntry entry);
 }

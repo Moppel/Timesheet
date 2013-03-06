@@ -232,11 +232,11 @@ public class AllDayTasksView extends AbstractTasksView {
 		col.setEditingSupport(new EditingSupport(viewer) {
 
 		    protected boolean canEdit(Object element) {
-		        return false;
+		        return !StringUtils.isEmpty(((AllDayTaskEntry) element).getExternalId());
 		    }
 
 		    protected CellEditor getCellEditor(Object element) {
-		        return null;
+		        return new ExternalTaskDialogCellEditor(viewer.getTable(), (AllDayTaskEntry) element);
 		    }
 
 		    protected Object getValue(Object element) {
@@ -345,5 +345,21 @@ public class AllDayTasksView extends AbstractTasksView {
 			}
 			return null;
 		}		
+	}
+	
+	class ExternalTaskDialogCellEditor extends DialogCellEditor {
+		private AllDayTaskEntry entry;
+
+		public ExternalTaskDialogCellEditor(Composite parent, AllDayTaskEntry entry) {
+			super(parent);
+			this.entry = entry;
+		}
+		
+		@Override
+		protected Object openDialogBox(Control cellEditorWindow) {
+			LocalStorageService.getAllDayTaskService().openUrl(entry);
+			return entry.getExternalId();
+		}
+
 	}
 }
