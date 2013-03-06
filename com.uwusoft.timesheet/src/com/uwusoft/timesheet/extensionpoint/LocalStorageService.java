@@ -18,6 +18,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -515,6 +516,10 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	private void createOrUpdateAllDayTaskEntry(AllDayTaskEntry entry, boolean firePropertyChangeEvent) {
+		if (allDayTaskSystem.equals(entry.getTask().getProject().getSystem()) && entry.getTask().getName().contains("Vacation")) { // TODO how to get vacation related tasks
+			long dayDiff = TimeUnit.DAYS.convert(entry.getFrom().getTime() - DateUtils.truncate(new Date(), Calendar.DATE).getTime(), TimeUnit.MILLISECONDS);
+			if (dayDiff < 14) MessageBox.setMessage("Vacation", "Sent Vacation task " + entry.getExternalId() + " to leader");
+		}
 		if (updateAllDayTaskEntry(entry).size() != 1)
 			createAllDayTaskEntry(entry, false);
 	}
