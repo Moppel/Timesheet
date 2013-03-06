@@ -17,12 +17,18 @@ import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.Task;
 
 public class ExternalAllDayTaskListDialog extends TaskListDialog {
+	private boolean showAll = false;
 
 	public ExternalAllDayTaskListDialog(Shell shell, Task taskSelected) {
 		super(shell, taskSelected);
 		setTitle("External All Day Tasks");
 	}
 
+	public ExternalAllDayTaskListDialog(Shell shell, Task taskSelected, boolean showAll) {
+		this(shell, taskSelected);
+		this.showAll = showAll;
+	}
+	
 	@Override
 	protected void setSystems() {
 		String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
@@ -36,8 +42,8 @@ public class ExternalAllDayTaskListDialog extends TaskListDialog {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
     	for (String task : LocalStorageService.getInstance().getAllDayTasks()) {
     		String property = AllDayTaskService.PREFIX + task.replaceAll("\\s", "_");
-    		if (StringUtils.isEmpty(preferenceStore.getString(property))) continue;
-    		allDayTasks.add(property.substring(property.indexOf(".") + 1));
+    		if (!showAll && StringUtils.isEmpty(preferenceStore.getString(property))) continue;
+    		allDayTasks.add(task);
     	}
     	return new ArrayList<String>(allDayTasks);
 	}

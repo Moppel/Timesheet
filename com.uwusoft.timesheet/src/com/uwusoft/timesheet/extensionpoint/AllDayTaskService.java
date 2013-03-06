@@ -14,6 +14,7 @@ public interface AllDayTaskService {
 	public static final String PROJECT = "project";
 	public static final String FILTER = "filter";
 	public static final String COMPONENT = "component";
+	public static final String VACATION_PLANNING_TASK = "vacationPlanning.task";
 
 	String getProjectKey();
 	

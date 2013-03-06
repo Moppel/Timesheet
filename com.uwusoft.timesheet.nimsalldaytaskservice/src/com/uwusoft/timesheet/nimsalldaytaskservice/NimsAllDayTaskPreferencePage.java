@@ -43,6 +43,7 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		for (SubmissionProject project : LocalStorageService.getAllDayTaskService().getAssignedProjects())
 			for (SubmissionTask task : project.getTasks())
 				addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.getName().replaceAll("\\s", "_"), task.getName() + ":", getFieldEditorParent()));
+		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK, "Vacation Planning task" + ":", getFieldEditorParent(), true));
 	}
 
 	private String[][] getProjectArray() {

@@ -8,10 +8,12 @@ import org.eclipse.jface.preference.StringButtonFieldEditor;
 import org.eclipse.swt.widgets.Composite;
 
 import com.uwusoft.timesheet.TimesheetApp;
+import com.uwusoft.timesheet.dialog.ExternalAllDayTaskListDialog;
 import com.uwusoft.timesheet.dialog.TaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.SubmissionService;
 
 public class TaskFieldEditor extends StringButtonFieldEditor {
+	private boolean external = false;
 	
 	public TaskFieldEditor(String name, String labelText, Composite parent) {
 		super(name, labelText, parent);
@@ -19,9 +21,18 @@ public class TaskFieldEditor extends StringButtonFieldEditor {
         setChangeButtonText("Assign task");
 	}
 
+	public TaskFieldEditor(String name, String labelText, Composite parent, boolean external) {
+		this(name, labelText, parent);
+		this.external = external;
+	}
+	
 	@Override
 	protected String changePressed() {
-		TaskListDialog listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(oldValue));
+		TaskListDialog listDialog;
+		if (external)
+			listDialog = new ExternalAllDayTaskListDialog(getShell(), TimesheetApp.createTask(oldValue), true);
+		else
+			listDialog = new TaskListDialog(getShell(), TimesheetApp.createTask(oldValue));
 		if (listDialog.open() == Dialog.OK) {
 		    String selectedTask = Arrays.toString(listDialog.getResult());
 		    selectedTask = selectedTask.substring(selectedTask.indexOf("[") + 1, selectedTask.indexOf("]"));
