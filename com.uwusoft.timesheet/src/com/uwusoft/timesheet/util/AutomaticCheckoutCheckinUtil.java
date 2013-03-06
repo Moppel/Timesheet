@@ -59,7 +59,7 @@ public class AutomaticCheckoutCheckinUtil {
 			
 			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
 			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
-			while (end.before(start)) { // create missing whole day tasks until last business day
+			while (!end.after(start)) { // create missing whole day tasks until last business day
 				AllDayTaskDateDialog dateDialog = new AllDayTaskDateDialog(Display.getDefault(), "Select missing all day task",
 						Activator.getDefault().getPreferenceStore().getString(AllDayTasks.allDayTasks[0]), end);
 				if (dateDialog.open() == Dialog.OK) {
