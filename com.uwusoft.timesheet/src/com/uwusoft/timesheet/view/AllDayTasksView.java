@@ -38,6 +38,7 @@ import com.uwusoft.timesheet.extensionpoint.AllDayTaskService;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTaskEntry;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.util.BusinessDayUtil;
 
 public class AllDayTasksView extends AbstractTasksView {
@@ -161,7 +162,7 @@ public class AllDayTasksView extends AbstractTasksView {
 		    }
 
 		    protected Object getValue(Object element) {
-		        return BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo()); // TODO only count vacation related
+				return getRequestedDays(element);
 		    }
 
 		    protected void setValue(Object element, Object value) {
@@ -169,7 +170,9 @@ public class AllDayTasksView extends AbstractTasksView {
 		});
 		col.setLabelProvider(new AlternatingColumnProvider() {
 			public String getText(Object element) {
-		        return new Integer(BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo())).toString(); // TODO only count vacation related
+				Integer requestedDays = getRequestedDays(element);
+				if (requestedDays != null) return requestedDays.toString();
+		        return null;
 			}
 			public Image getImage(Object obj) {
 	    		return null;
@@ -318,6 +321,16 @@ public class AllDayTasksView extends AbstractTasksView {
 	@Override
 	protected boolean getConditionForDarkGrey(Object element) {
 		return false;
+	}
+
+	protected Integer getRequestedDays(Object element) {
+		Task vacationPlanningTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK);
+		Task vacationTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK);
+		AllDayTaskEntry entry = (AllDayTaskEntry) element;
+		if (vacationPlanningTask.getName().equals(entry.getTask().getName())
+				|| vacationTask.getName().equals(entry.getTask().getName()))
+			return BusinessDayUtil.getRequestedDays(((AllDayTaskEntry) element).getFrom(), ((AllDayTaskEntry) element).getTo());
+		return null;
 	}
 
 	class AllDayTaskListDialogCellEditor extends DialogCellEditor {
