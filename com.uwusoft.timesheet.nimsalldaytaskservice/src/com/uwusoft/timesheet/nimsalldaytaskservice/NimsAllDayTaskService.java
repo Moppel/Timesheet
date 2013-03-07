@@ -161,7 +161,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
         vacationLeft -= requestedDays;
         struct.put("summary", getSummary(from, to, requestedDays, vacationLeft));
         struct.put("project", projectKey);
-        struct.put("status", "10004");
+        struct.put("status", "10004"); // New
         struct.put("votes", "0");
         struct.put("priority", "3");
         struct.put("type", subTaskIds.get(taskProperty));
@@ -206,6 +206,7 @@ public class NimsAllDayTaskService extends Jira3IssueService implements	AllDayTa
 		int requestedDiff = requestedDays - requested;
         vacationLeft -= requestedDiff;
         struct.put("summary", getSummary(from, to, requestedDays, vacationLeft));
+        struct.put("status", "1"); // Open
         struct.put("type", subTaskIds.get(taskProperty));
         struct.put("updated", updatedFormatter.format(new Date()) +".0");
         Vector<Object> vector = new Vector<Object>(3);
