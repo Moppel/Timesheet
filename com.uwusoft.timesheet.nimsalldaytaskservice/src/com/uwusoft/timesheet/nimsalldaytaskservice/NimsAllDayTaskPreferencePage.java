@@ -54,7 +54,7 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		separator.setLayoutData(gridData);
 		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK, "Vacation Planning task:", getFieldEditorParent(), true));
 		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK, "Vacation task:", getFieldEditorParent(), true));
-		addField(new IntegerFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PERIOD, "Number of days for warning:", getFieldEditorParent()));
+		addField(new IntegerFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PERIOD, "Number of days for warning:", getFieldEditorParent())); // TODO
 	}
 
 	private String[][] getProjectArray() {
