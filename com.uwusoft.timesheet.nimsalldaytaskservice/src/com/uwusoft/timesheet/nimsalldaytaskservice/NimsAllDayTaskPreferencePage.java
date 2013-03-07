@@ -6,6 +6,10 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.jface.preference.IntegerFieldEditor;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
 
@@ -43,7 +47,14 @@ public class NimsAllDayTaskPreferencePage extends FieldEditorPreferencePage impl
 		for (SubmissionProject project : LocalStorageService.getAllDayTaskService().getAssignedProjects())
 			for (SubmissionTask task : project.getTasks())
 				addField(new TaskFieldEditor(AllDayTaskService.PREFIX + task.getName().replaceAll("\\s", "_"), task.getName() + ":", getFieldEditorParent()));
-		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK, "Vacation Planning task" + ":", getFieldEditorParent(), true));
+		Label separator = new Label(getFieldEditorParent(), SWT.SEPARATOR | SWT.HORIZONTAL);
+		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		gridData.horizontalSpan = 3;
+		gridData.heightHint = 10;
+		separator.setLayoutData(gridData);
+		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK, "Vacation Planning task:", getFieldEditorParent(), true));
+		addField(new TaskFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK, "Vacation task:", getFieldEditorParent(), true));
+		addField(new IntegerFieldEditor(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PERIOD, "Number of days for warning:", getFieldEditorParent()));
 	}
 
 	private String[][] getProjectArray() {

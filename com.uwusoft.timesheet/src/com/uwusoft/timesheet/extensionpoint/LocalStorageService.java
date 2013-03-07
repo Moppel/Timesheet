@@ -523,9 +523,12 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 
 	public String isDue(AllDayTaskEntry entry) {
-		if (allDayTaskSystem.equals(entry.getTask().getProject().getSystem()) && entry.getTask().getName().contains("Vacation")) // TODO how to get vacation related tasks
+		Task vacationPlanningTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK);
+		Task vacationTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK);
+		if (allDayTaskSystem.equals(entry.getTask().getProject().getSystem()) && entry.getTask().getName().equals(vacationPlanningTask.getName())
+				|| entry.getTask().getName().equals(vacationTask.getName()))
 			if (TimeUnit.DAYS.convert(entry.getFrom().getTime() - DateUtils.truncate(new Date(), Calendar.DATE).getTime(), TimeUnit.MILLISECONDS)
-					< 14)
+					< Activator.getDefault().getPreferenceStore().getInt(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PERIOD))
 			return "Send Vacation task " + entry.getExternalId() + " to leader";
 		return null;
 	}
@@ -576,12 +579,15 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 	}
 	
 	public Collection<String> getFollowingVacationEntryKeys(Date to) {
+		Task vacationPlanningTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK);
+		Task vacationTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK);
 		CriteriaBuilder criteria = em.getCriteriaBuilder();
 		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
 		Root<AllDayTaskEntry> taskEntry = query.from(AllDayTaskEntry.class);
 		Path<Task> task = taskEntry.get(AllDayTaskEntry_.task);
 		query.where(criteria.and(criteria.greaterThan(taskEntry.get(AllDayTaskEntry_.fromDate), new Timestamp(to.getTime())),
-				criteria.like(task.get(Task_.name), "Vacation%"))); // TODO how to get vacation related tasks
+				criteria.or(criteria.equal(task.get(Task_.name), vacationPlanningTask.getName()),
+							criteria.equal(task.get(Task_.name), vacationTask.getName()))));
 		List<String> keys = new ArrayList<String>();
 		for (AllDayTaskEntry entry : em.createQuery(query).getResultList())
 			keys.add(entry.getExternalId());

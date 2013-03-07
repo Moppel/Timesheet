@@ -179,7 +179,7 @@ public class TimesheetApp implements IApplication {
 	public static Task createTask(String propertyName) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();		
 		String[] task = preferenceStore.getString(propertyName).split(SubmissionService.separator);
-		if (task.length < 2) task = propertyName.split(SubmissionService.separator);
+		//if (task.length < 2) task = propertyName.split(SubmissionService.separator);
 		Project project = new Project();
 		if (task.length > 2) {
 			project.setName(task[1]);
