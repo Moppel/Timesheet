@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.core.databinding.DataBindingContext;
 import org.eclipse.core.databinding.UpdateValueStrategy;
 import org.eclipse.core.databinding.beans.BeansObservables;
@@ -233,7 +234,7 @@ public class AllDayTaskDateDialog extends Dialog {
 		calendar.set(Calendar.DAY_OF_MONTH, fromDay);
 		calendar.set(Calendar.MONTH, fromMonth);
 		calendar.set(Calendar.YEAR, fromYear);
-		return calendar.getTime();
+		return DateUtils.truncate(calendar.getTime(), Calendar.DATE);
     }
     
     public Date getTo() {
@@ -241,6 +242,6 @@ public class AllDayTaskDateDialog extends Dialog {
 		calendar.set(Calendar.DAY_OF_MONTH, toDay);
 		calendar.set(Calendar.MONTH, toMonth);
 		calendar.set(Calendar.YEAR, toYear);
-		return calendar.getTime();
+		return DateUtils.truncate(calendar.getTime(), Calendar.DATE);
     }
 }
