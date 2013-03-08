@@ -129,6 +129,8 @@ public class TaskListDialog extends ListDialog {
         systemCombo.setBounds(50, 50, 180, 65);
         systemCombo.addSelectionListener(new SelectionAdapter() {
             public void widgetSelected(SelectionEvent e) {
+            	projectSelected = null;
+            	taskSelected = null;
                 setTasksAndProjects();
             }
         });
@@ -188,7 +190,10 @@ public class TaskListDialog extends ListDialog {
 				}
 			}
 		}
-        else projectCombo.select(0);
+        else {
+        	projectCombo.select(0);
+			projectSelected = projects[0];
+        }
 		setTasks();
 	}
 

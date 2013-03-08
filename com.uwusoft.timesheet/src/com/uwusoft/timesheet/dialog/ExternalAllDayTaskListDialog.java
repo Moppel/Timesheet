@@ -37,16 +37,20 @@ public class ExternalAllDayTaskListDialog extends TaskListDialog {
 
 	@Override
 	protected List<String> getInternalTasks() {
-		Set<String> allDayTasks = new LinkedHashSet<String>();
+    	return new ArrayList<String>(getInternalTasks(showAll, taskSelected));
+	}
+
+	public static Set<String> getInternalTasks(boolean showAll, Task taskSelected) {
 		IPreferenceStore preferenceStore = Activator.getDefault().getPreferenceStore();
 		Task vacationPlanningTask = TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_PLANNING_TASK);
+		Set<String> allDayTasks = new LinkedHashSet<String>();
     	for (String task : LocalStorageService.getInstance().getAllDayTasks()) {
     		String property = AllDayTaskService.PREFIX + task.replaceAll("\\s", "_");
     		if (showAll || !taskSelected.getName().equals(task) && (vacationPlanningTask.getName().equals(task)
     				|| !StringUtils.isEmpty(preferenceStore.getString(property))))
     			allDayTasks.add(task);
     	}
-    	return new ArrayList<String>(allDayTasks);
+    	return allDayTasks;
 	}
 
 	@Override

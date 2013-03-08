@@ -77,7 +77,7 @@ public class AllDayTaskDateDialog extends Dialog {
 	@Override
     protected Control createDialogArea(Composite parent) {
         Composite composite = (Composite) super.createDialogArea(parent);
-        composite.setLayout(new GridLayout(2, false));
+        composite.setLayout(new GridLayout(getColumns(), false));
         
         createTaskPart(composite);
 		
@@ -91,7 +91,7 @@ public class AllDayTaskDateDialog extends Dialog {
         
         status = new Text(composite, SWT.NONE);
 		status.setEnabled(false);
-		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, 2, 0));
+		status.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false, getColumns(), 0));
 		status.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
@@ -101,6 +101,18 @@ public class AllDayTaskDateDialog extends Dialog {
 		});
 		createDatabinding();
         return composite;
+	}
+	
+	protected int getColumns() {
+		return 2;
+	}
+
+	public Text getStatus() {
+		return status;
+	}
+
+	public void setStatus(Text status) {
+		this.status = status;
 	}
 
 	protected void createTaskPart(Composite composite) {

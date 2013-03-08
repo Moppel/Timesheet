@@ -16,35 +16,35 @@ import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.model.Task;
 
 public class InternalAllDayTaskListDialog extends TaskListDialog {
-	private Map<String, Set<String>> projects;
-	private Map<String, Set<String>> systems;
+	protected Map<String, Set<String>> projectMap;
+	protected Map<String, Set<String>> systemMap;
 	
 	public InternalAllDayTaskListDialog(Shell shell, Task taskSelected) {
 		super(shell, taskSelected);
-		projects = new HashMap<String, Set<String>>();
-		systems = new HashMap<String, Set<String>>();
+		projectMap = new HashMap<String, Set<String>>();
+		systemMap = new HashMap<String, Set<String>>();
 		for (String property : AllDayTaskFactory.getAllDayTasks()) {
 			Task task = TimesheetApp.createTask(property);
-			if (LocalStorageService.getAllDayTaskService().taskAvailable(property.substring(property.indexOf(".") + 1)))
-				continue;
-			if (!systems.containsKey(task.getProject().getSystem()))
-				systems.put(task.getProject().getSystem(), new LinkedHashSet<String>());
-			systems.get(task.getProject().getSystem()).add(task.getProject().getName());
-			if (!projects.containsKey(task.getProject().getName()))
-				projects.put(task.getProject().getName(), new LinkedHashSet<String>());
-			projects.get(task.getProject().getName()).add(task.getName());
+			if (LocalStorageService.getAllDayTaskService().taskAvailable(property.substring(property.indexOf(".") + 1))
+					|| task.equals(taskSelected)) continue;
+			if (!systemMap.containsKey(task.getProject().getSystem()))
+				systemMap.put(task.getProject().getSystem(), new LinkedHashSet<String>());
+			systemMap.get(task.getProject().getSystem()).add(task.getProject().getName());
+			if (!projectMap.containsKey(task.getProject().getName()))
+				projectMap.put(task.getProject().getName(), new LinkedHashSet<String>());
+			projectMap.get(task.getProject().getName()).add(task.getName());
 		}
 		setTitle("Internal All Day Tasks");
 	}
 
 	@Override
 	protected List<String> getInternalProjects() {
-		return new ArrayList<String>(systems.get(systemSelected));
+		return new ArrayList<String>(systemMap.get(systemSelected));
 	}
 
 	@Override
 	protected List<String> getInternalTasks() {
-		return new ArrayList<String>(projects.get(projectSelected));
+		return new ArrayList<String>(projectMap.get(projectSelected));
 	}
 
 	@Override
