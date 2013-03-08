@@ -11,11 +11,11 @@ import org.eclipse.swt.widgets.Shell;
 import com.uwusoft.timesheet.validation.PeriodValidator;
 
 public class StartAllDayTaskDateDialog extends AllDayTaskDateDialog {
-	private String key;
+	private Long id;
 
-	public StartAllDayTaskDateDialog(Display display, String title,	String task, Date startDate, Date endDate, String key) {
+	public StartAllDayTaskDateDialog(Display display, String title,	String task, Date startDate, Date endDate, Long id) {
 		super(display, title, task, startDate, endDate);
-		this.key = key;
+		this.id = id;
 	}
 
 	@Override
@@ -29,8 +29,8 @@ public class StartAllDayTaskDateDialog extends AllDayTaskDateDialog {
 	}
 
 	@Override
-	protected void setKey(PeriodValidator periodValidator) {
-		periodValidator.setKey(key);
+	protected void setId(PeriodValidator periodValidator) {
+		periodValidator.setId(id);
 	}
 
 	@Override

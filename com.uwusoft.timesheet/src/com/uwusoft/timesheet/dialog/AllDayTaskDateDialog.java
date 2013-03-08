@@ -190,7 +190,7 @@ public class AllDayTaskDateDialog extends Dialog {
 
 		// bind status
 		PeriodValidator periodValidator = new PeriodValidator(startObservable, endObservable);
-		setKey(periodValidator);
+		setId(periodValidator);
 
 		modelToTarget = new UpdateValueStrategy(UpdateValueStrategy.POLICY_UPDATE);
 		modelToTarget.setConverter(new Converter(IStatus.class, String.class) {
@@ -211,7 +211,8 @@ public class AllDayTaskDateDialog extends Dialog {
 				.getValidationStatus(), targetToModel, modelToTarget);
 	}
 
-	protected void setKey(PeriodValidator periodValidator) {
+	protected void setId(PeriodValidator periodValidator) {
+		periodValidator.setId(0L);
 	}
 
 	public Date getDate() {

@@ -5,14 +5,12 @@ import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.DialogCellEditor;
@@ -74,7 +72,7 @@ public class AllDayTasksView extends AbstractTasksView {
 
 					@Override
 					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
-						return new StartAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set start date of " + entry.getExternalId(), entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getExternalId());
+						return new StartAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set start date", entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getId());
 					}		        	
 
 					@Override
@@ -118,7 +116,7 @@ public class AllDayTasksView extends AbstractTasksView {
 
 					@Override
 					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
-						return new EndAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set end date of " + entry.getExternalId(), entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getExternalId());
+						return new EndAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set end date", entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getId());
 					}		        	
 
 					@Override
@@ -287,7 +285,7 @@ public class AllDayTasksView extends AbstractTasksView {
 		protected Object openDialogBox(Control cellEditorWindow) {
 			AllDayTaskDateDialog dateDialog = getDateDialog(cellEditorWindow, entry);
 			if (dateDialog.open() == Dialog.OK) {
-    			Date date = DateUtils.truncate(dateDialog.getDate(), Calendar.DATE);
+    			Date date = dateDialog.getDate();
     			if (getDate(entry).after(date) || getDate(entry).before(date)) {
     				setDate(entry, new Timestamp(date.getTime()));
     				entry.setSyncStatus(false);

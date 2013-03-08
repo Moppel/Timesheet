@@ -19,7 +19,7 @@ public class PeriodValidator extends MultiValidator {
 	private final IObservableValue start;
 	private final IObservableValue end;
 	
-	private String key;
+	private Long id;
 	
 	private List<AllDayTaskEntry> allDayTaskEntries;
 
@@ -29,8 +29,8 @@ public class PeriodValidator extends MultiValidator {
 		allDayTaskEntries = LocalStorageService.getInstance().getAllDayTaskEntries();
 	}
 
-	public void setKey(String key) {
-		this.key = key;
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class PeriodValidator extends MultiValidator {
 			return status;
 		}
 		for (AllDayTaskEntry entry : allDayTaskEntries) {
-			if (key != null && key.equals(entry.getExternalId())) continue;
+			if (id.equals(entry.getId())) continue;
 			if (startDate.compareTo(entry.getFrom()) >= 0 && startDate.compareTo(entry.getTo()) <= 0) {
 				status = ValidationStatus.error("The start date is within "
 						+ (entry.getExternalId()== null ? "another entry" : entry.getExternalId() + "(Issue Key)"));
