@@ -6,9 +6,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
 
 import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
@@ -28,8 +26,7 @@ public class AllDayTaskHandler extends AbstractHandler {
 		AllDayTasks allDayTasks = AllDayTasks.getInstance();
 		Date startDate = allDayTasks.getNextBegin(storageService.getLastTaskEntryDate());
 		String task = event.getParameter("Timesheet.commands.task");
-		AllDayTaskListDialog dateDialog = new AllDayTaskListDialog(new Shell(Display.getDefault(), SWT.NO_TRIM | SWT.ON_TOP),
-				TimesheetApp.createTask(task), startDate);
+		AllDayTaskListDialog dateDialog = new AllDayTaskListDialog(Display.getDefault(), TimesheetApp.createTask(task), startDate);
 		if (dateDialog.open() == Dialog.OK) {
 			String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
 					AllDayTaskService.SERVICE_NAME);

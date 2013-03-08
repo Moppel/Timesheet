@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.widgets.Composite;
@@ -27,8 +28,8 @@ public class AllDayTaskListDialog extends InternalAllDayTaskListDialog {
 			AllDayTaskService.SERVICE_NAME);
 	private AllDayTaskDateDialog allDayTaskDateDialog;
 
-	public AllDayTaskListDialog(Shell shell, Task taskSelected, Date date) {
-		super(shell, taskSelected);
+	public AllDayTaskListDialog(Display display, Task taskSelected, Date date) {
+		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP), taskSelected);
 		allDayTaskDateDialog = new AllDayTaskDateDialog(Display.getDefault(), allDayTaskSystem, date) {
 			@Override
 			protected void createTaskPart(Composite composite) {
@@ -45,6 +46,11 @@ public class AllDayTaskListDialog extends InternalAllDayTaskListDialog {
 		setTitle("All Day Tasks");
 	}
 
+	public AllDayTaskListDialog(Display display, Task taskSelected, String title, Date date) {
+		this(display, taskSelected, date);
+		setTitle(title);
+	}
+	
 	@Override
 	protected Control createDialogArea(Composite composite) {
 		Control parent = allDayTaskDateDialog.createDialogArea((Composite) super.createDialogArea(composite));

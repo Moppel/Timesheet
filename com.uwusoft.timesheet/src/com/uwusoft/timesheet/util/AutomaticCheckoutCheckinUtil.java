@@ -14,13 +14,14 @@ import org.eclipse.ui.commands.ICommandService;
 import org.eclipse.ui.handlers.IHandlerService;
 import org.eclipse.ui.services.ISourceProviderService;
 
-import com.uwusoft.timesheet.Activator;
 import com.uwusoft.timesheet.TimesheetApp;
 import com.uwusoft.timesheet.commands.SessionSourceProvider;
-import com.uwusoft.timesheet.dialog.AllDayTaskDateDialog;
+import com.uwusoft.timesheet.dialog.AllDayTaskListDialog;
 import com.uwusoft.timesheet.extensionpoint.LocalStorageService;
 import com.uwusoft.timesheet.extensionpoint.StorageService;
 import com.uwusoft.timesheet.model.AllDayTasks;
+import com.uwusoft.timesheet.model.Project;
+import com.uwusoft.timesheet.model.Task;
 import com.uwusoft.timesheet.model.TaskEntry;
 
 public class AutomaticCheckoutCheckinUtil {
@@ -60,11 +61,11 @@ public class AutomaticCheckoutCheckinUtil {
 			Date end = BusinessDayUtil.getNextBusinessDay(shutdownDate,	true); // create missing holidays and handle week change
 			Date start = BusinessDayUtil.getPreviousBusinessDay(startDate);
 			while (!end.after(start)) { // create missing whole day tasks until last business day
-				AllDayTaskDateDialog dateDialog = new AllDayTaskDateDialog(Display.getDefault(), "Select missing all day task",
-						Activator.getDefault().getPreferenceStore().getString(AllDayTasks.allDayTasks[0]), end);
+				AllDayTaskListDialog dateDialog = new AllDayTaskListDialog(Display.getDefault(),
+						TimesheetApp.createTask(AllDayTasks.allDayTasks[0]), "Select missing all day task", end);
 				if (dateDialog.open() == Dialog.OK) {
 					do {
-						storageService.createTaskEntry(new TaskEntry(end, TimesheetApp.createTask(dateDialog.getTask()),
+						storageService.createTaskEntry(new TaskEntry(end, new Task(dateDialog.getTask(), new Project(dateDialog.getProject(), dateDialog.getSystem())),
 								AllDayTasks.getInstance().getTotal(), true));
 					} while (!(end = BusinessDayUtil.getNextBusinessDay(end, true)).after(dateDialog.getTo()));
 				}
