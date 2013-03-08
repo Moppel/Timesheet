@@ -77,6 +77,25 @@ public class Task {
 		return "Task [name=" + name + (project == null ? "" : " (project: " + project.getName() + ", system: " + project.getSystem() + ")") + "]";
 	}
 	
+	@Override
+	public int hashCode() {
+		int result = 17;
+		result = 31 * result + name.hashCode();
+		if (project == null) return result; 
+		result = 31 * result + project.getName().hashCode();
+		result = 31 * result + project.getSystem().hashCode();
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Task)) return false;
+		Task task = (Task) obj;
+		return name.equals(task.getName())
+				&& project.getName().equals(task.getProject().getName())
+				&& project.getSystem().equals(task.getProject().getSystem());
+	}
+
 	public String display() {
 		return name + (project == null ? "" : "\nProject: " + project.getName() + "\nSystem: " + project.getSystem()); 		
 	}
