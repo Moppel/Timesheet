@@ -1,9 +1,7 @@
 package com.uwusoft.timesheet.commands;
 
-import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -26,22 +24,21 @@ public class AllDayTaskHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		
+		LocalStorageService storageService = LocalStorageService.getInstance();
 		AllDayTasks allDayTasks = AllDayTasks.getInstance();
-		Date startDate = allDayTasks.getNextBegin(new Date());
+		Date startDate = allDayTasks.getNextBegin(storageService.getLastTaskEntryDate());
 		String task = event.getParameter("Timesheet.commands.task");
 		AllDayTaskListDialog dateDialog = new AllDayTaskListDialog(new Shell(Display.getDefault(), SWT.NO_TRIM | SWT.ON_TOP),
 				TimesheetApp.createTask(task), startDate);
 		if (dateDialog.open() == Dialog.OK) {
 			String system = TimesheetApp.getDescriptiveName(Activator.getDefault().getPreferenceStore().getString(AllDayTaskService.PROPERTY),
 					AllDayTaskService.SERVICE_NAME);
-			AllDayTaskEntry entry = new AllDayTaskEntry(DateUtils.truncate(dateDialog.getFrom(), Calendar.DATE),
-					DateUtils.truncate(dateDialog.getTo(), Calendar.DATE),
+			AllDayTaskEntry entry = new AllDayTaskEntry(dateDialog.getFrom(), dateDialog.getTo(),
 					new Task(dateDialog.getTask(), new Project(dateDialog.getProject(), dateDialog.getSystem())));
 			if (!system.equals(dateDialog.getSystem()))
 				entry.setSyncStatus(true);
-			LocalStorageService.getInstance().createAllDayTaskEntry(entry, true);
-			LocalStorageService.getInstance().synchronizeAllDayTaskEntries();
+			storageService.createAllDayTaskEntry(entry, true);
+			storageService.synchronizeAllDayTaskEntries();
 		}
 		return null;
 	}
