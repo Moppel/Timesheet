@@ -200,7 +200,9 @@ public class AllDayTasksView extends AbstractTasksView {
 				return ((AllDayTaskEntry) element).getTask().getName();
 			}
 			public Image getImage(Object obj) {
-	    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/task_16.png").createImage();
+				if (((AllDayTaskEntry) obj).getTask().equals(TimesheetApp.createTask(AllDayTaskService.PREFIX + AllDayTaskService.VACATION_TASK)))
+					return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/vacation_16.gif").createImage();
+	    		return AbstractUIPlugin.imageDescriptorFromPlugin("com.uwusoft.timesheet", "/icons/genericissue_16.gif").createImage();
 			}
 		});
 		// Fifth column is for the project
