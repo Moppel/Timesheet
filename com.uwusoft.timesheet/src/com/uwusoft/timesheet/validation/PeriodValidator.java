@@ -35,10 +35,19 @@ public class PeriodValidator extends MultiValidator {
 
 	@Override
 	protected IStatus validate() {
+		Date today = DateUtils.truncate(new Date(), Calendar.DATE);
 		Date startDate = (Date) DateUtils.truncate(start.getValue(), Calendar.DATE);
 		Date endDate = (Date) DateUtils.truncate(end.getValue(), Calendar.DATE);
 		IStatus status = ValidationStatus.ok();
 
+		if (!startDate.after(today)) {
+			status = ValidationStatus.error("The start date has to be after today.");
+			return status;
+		}
+		if (!endDate.after(today)) {
+			status = ValidationStatus.error("The end date has to be after today.");
+			return status;
+		}
 		if (startDate.after(endDate)) {
 			status = ValidationStatus.error("The start date has to be before the end date.");
 			return status;
