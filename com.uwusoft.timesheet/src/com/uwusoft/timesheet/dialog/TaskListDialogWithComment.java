@@ -39,7 +39,7 @@ public class TaskListDialogWithComment extends TaskListDialog {
 		commentText.addModifyListener(new ModifyListener() {
 			public void modifyText(ModifyEvent e) {
 				if (!StringUtils.isEmpty(task))
-				comment = commentText.getText();
+					comment = commentText.getText();
 			}        	
 		});
 		getTableViewer().addSelectionChangedListener(new ISelectionChangedListener() {
