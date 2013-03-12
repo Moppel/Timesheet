@@ -1,11 +1,7 @@
 package com.uwusoft.timesheet.dialog;
 
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.core.databinding.DataBindingContext;
@@ -20,12 +16,10 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
-import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DateTime;
@@ -34,34 +28,29 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import com.uwusoft.timesheet.Messages;
-import com.uwusoft.timesheet.commands.AllDayTaskFactory;
 import com.uwusoft.timesheet.validation.DateTimeObservableValue;
 import com.uwusoft.timesheet.validation.Period;
 import com.uwusoft.timesheet.validation.PeriodValidator;
 
 public class AllDayTaskDateDialog extends Dialog {
 
-	private String title, task;
+	private String title;
     private int fromDay, fromMonth, fromYear, toDay, toMonth, toYear;
-    private Combo taskCombo;
 	protected DateTime dateTimeStart, dateTimeEnd;
 	private Text status;
 	private final Period period;
-    private Map<String, String> allDayTaskTranslations;
 
-	public AllDayTaskDateDialog(Display display, String task, Date date) {
-		this(display, "Date", task, date);
+	public AllDayTaskDateDialog(Display display, Date date) {
+		this(display, "Date", date);
 	}
     
-	public AllDayTaskDateDialog(Display display, String title, String task, Date date) {
-		this(display, title, task, date, date);
+	public AllDayTaskDateDialog(Display display, String title, Date date) {
+		this(display, title, date, date);
 	}
 
-	public AllDayTaskDateDialog(Display display, String title, String task, Date startDate, Date endDate) {
+	public AllDayTaskDateDialog(Display display, String title, Date startDate, Date endDate) {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP));
 		this.title = title;
-		this.task = task;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(startDate);
 		fromDay = calendar.get(Calendar.DAY_OF_MONTH);
@@ -72,7 +61,6 @@ public class AllDayTaskDateDialog extends Dialog {
 		toMonth = calendar.get(Calendar.MONTH);
 		toYear = calendar.get(Calendar.YEAR);
 		period = new Period(startDate, endDate);
-		allDayTaskTranslations = new HashMap<String, String>();
 	}
 	
 	@Override
@@ -80,8 +68,6 @@ public class AllDayTaskDateDialog extends Dialog {
         Composite composite = (Composite) super.createDialogArea(parent);
         composite.setLayout(new GridLayout(getColumns(), false));
         
-        createTaskPart(composite);
-		
 		(new Label(composite, SWT.NULL)).setText("From: ");
 		createStartDatePart(composite);
 
@@ -114,28 +100,6 @@ public class AllDayTaskDateDialog extends Dialog {
 
 	public void setStatus(Text status) {
 		this.status = status;
-	}
-
-	protected void createTaskPart(Composite composite) {
-		(new Label(composite, SWT.NULL)).setText("Task: ");
-        taskCombo = new Combo(composite, SWT.READ_ONLY);
-        List<String> allDayTasks = new ArrayList<String>();
-        for (String allDayTask : AllDayTaskFactory.getAllDayTasks()) {
-        	allDayTasks.add(Messages.getString(allDayTask));
-        	allDayTaskTranslations.put(Messages.getString(allDayTask), allDayTask);
-        }
-        taskCombo.setItems(allDayTasks.toArray(new String[allDayTasks.size()]));
-		for (int i = 0; i < allDayTasks.size(); i++) {
-			if (allDayTaskTranslations.get(allDayTasks.get(i)).endsWith(task)) {
-				taskCombo.select(i);
-				break;
-			}
-		}
-		taskCombo.addSelectionListener(new SelectionAdapter() {
-            public void widgetSelected(SelectionEvent e) {
-                task = taskCombo.getText();
-            }
-        });
 	}
 
 	protected void createStartDatePart(Composite composite) {
@@ -226,10 +190,6 @@ public class AllDayTaskDateDialog extends Dialog {
         newShell.setSize(260, 425);
     }
 
-	public String getTask() {
-		return allDayTaskTranslations.get(task) == null ? task : allDayTaskTranslations.get(task);
-	}
-    
     public Date getFrom() {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.DAY_OF_MONTH, fromDay);

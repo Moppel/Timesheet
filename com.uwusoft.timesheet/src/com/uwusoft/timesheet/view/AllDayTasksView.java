@@ -72,7 +72,7 @@ public class AllDayTasksView extends AbstractTasksView {
 
 					@Override
 					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
-						return new StartAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set start date", entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getId());
+						return new StartAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set start date", entry.getFrom(), entry.getTo(), entry.getId());
 					}		        	
 
 					@Override
@@ -116,7 +116,7 @@ public class AllDayTasksView extends AbstractTasksView {
 
 					@Override
 					protected AllDayTaskDateDialog getDateDialog(Control cellEditorWindow, AllDayTaskEntry entry) {
-						return new EndAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set end date", entry.getTask().getName(), entry.getFrom(), entry.getTo(), entry.getId());
+						return new EndAllDayTaskDateDialog(cellEditorWindow.getDisplay(), "Set end date", entry.getFrom(), entry.getTo(), entry.getId());
 					}		        	
 
 					@Override

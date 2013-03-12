@@ -32,10 +32,6 @@ public class AllDayTaskListDialog extends InternalAllDayTaskListDialog {
 		super(new Shell(display, SWT.NO_TRIM | SWT.ON_TOP), taskSelected);
 		allDayTaskDateDialog = new AllDayTaskDateDialog(Display.getDefault(), allDayTaskSystem, date) {
 			@Override
-			protected void createTaskPart(Composite composite) {
-			}
-
-			@Override
 			protected int getColumns() {
 				return 4;
 			}

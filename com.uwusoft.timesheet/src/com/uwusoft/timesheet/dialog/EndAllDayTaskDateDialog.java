@@ -13,13 +13,9 @@ import com.uwusoft.timesheet.validation.PeriodValidator;
 public class EndAllDayTaskDateDialog extends AllDayTaskDateDialog {
 	private Long id;
 
-	public EndAllDayTaskDateDialog(Display display, String title, String task, Date startDate, Date endDate, Long id) {
-		super(display, title, task, startDate, endDate);
+	public EndAllDayTaskDateDialog(Display display, String title, Date startDate, Date endDate, Long id) {
+		super(display, title, startDate, endDate);
 		this.id = id;
-	}
-
-	@Override
-	protected void createTaskPart(Composite composite) {
 	}
 
 	@Override
