@@ -106,8 +106,13 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 			protected IStatus run(IProgressMonitor monitor) {
 				if (getProjects(allDayTaskSystem).isEmpty())
 					importTasks(allDayTaskSystem, getAllDayTaskService().getAssignedProjects(), true);
-				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries())
-					createOrUpdateAllDayTaskEntry(entry, false);				
+				List<String> keys = new ArrayList<String>();
+				for (AllDayTaskEntry entry: getAllDayTaskService().getAllDayTaskEntries()) {
+					createOrUpdateAllDayTaskEntry(entry, false);
+					keys.add(entry.getExternalId());
+				}
+				if (!keys.isEmpty())
+					removeRemainingAllDayTaskEntries(keys);
 				return Status.OK_STATUS;				
 			}
         };
@@ -410,6 +415,20 @@ public class LocalStorageService extends EventManager implements ImportTaskServi
 		return tasks;
     }
     
+	private void removeRemainingAllDayTaskEntries(List<String> keys) {
+		boolean active = beginTransaction();
+		CriteriaBuilder criteria = em.getCriteriaBuilder();
+		CriteriaQuery<AllDayTaskEntry> query = criteria.createQuery(AllDayTaskEntry.class);
+		Root<AllDayTaskEntry> root = query.from(AllDayTaskEntry.class);
+		Path<Task> task = root.get(AllDayTaskEntry_.task);
+		Path<Project> project = task.get(Task_.project);
+		query.where(criteria.and(criteria.equal(project.get(Project_.system), allDayTaskSystem),
+				criteria.not(root.get(AllDayTaskEntry_.externalId).in(keys))));		
+		for (AllDayTaskEntry entry : em.createQuery(query).getResultList())
+			em.remove(entry);
+		commitTransaction(active);
+	}
+
 	public List<String> getProjects(String system) {
 		List<String> projects = new ArrayList<String>();
 		for (Project project : getProjectList(system)) projects.add(project.getName());
